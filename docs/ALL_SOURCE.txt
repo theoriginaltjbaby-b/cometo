@@ -1,17 +1,23 @@
 COMETO - all source files. Index:
   project.godot
+  art/shaders/sea.gdshader
+  art/shaders/wet_ground.gdshader
   art_provisional/char_sprite.gd
   art_provisional/figure_3d.gd
   art_provisional/fog.gdshader
   art_provisional/prov_block.gd
   art_provisional/prov_rail.gd
   art_provisional/rain.gd
+  art_provisional/rain_3d.gd
   core/data.gd
   core/dialogue.gd
   core/game_state.gd
   core/input_setup.gd
   core/journal.gd
   core/save_manager.gd
+  core/weather_manager.gd
+  core/world_calendar.gd
+  core/world_time_manager.gd
   data/dialogue/anjabi/cart_bridge.json
   data/dialogue/anjabi/cart_buffer.json
   data/dialogue/anjabi/cliff_edge.json
@@ -26,11 +32,13 @@ COMETO - all source files. Index:
   data/dialogue/anjabi/trench.json
   data/journal/clues.json
   data/journal/quests.json
+  game/environment_controller.gd
   game/main.gd
   game/main.tscn
   game/actors/npc.gd
   game/actors/npc.tscn
   game/actors/npc_3d.gd
+  game/actors/townsfolk.gd
   game/camera/follow_camera.gd
   game/interaction/interactable.gd
   game/interaction/interactable_3d.gd
@@ -57,12 +65,16 @@ COMETO - all source files. Index:
   maps/anjabi/town.tscn
   maps/anjabi/town_3d.gd
   maps/anjabi/town_3d.tscn
+  tests/overview.gd
+  tests/overview.tscn
   tests/perf_probe.gd
   tests/perf_probe.tscn
   tests/screenshot.gd
   tests/screenshot.tscn
   tests/screenshot_3d.gd
   tests/screenshot_3d.tscn
+  tests/screenshot_time.gd
+  tests/screenshot_time.tscn
   tests/screenshot_town.gd
   tests/screenshot_town.tscn
   tests/slice_test.gd
@@ -71,19 +83,30 @@ COMETO - all source files. Index:
   tools/build_town_mask.gd
   tools/bundle_source.py
   tools/package_review.sh
+  ui/compass.gd
   ui/dialogue_box.gd
   ui/game_ui.gd
   ui/hud.gd
   ui/journal_panel.gd
   ui/pause_menu.gd
+  ui/quest_tracker.gd
+  ui/tech_panel_style.gd
   ui/touch_controls.gd
   ui/ui_theme.gd
+  ui/world_clock_hud.gd
 
 
 ==============================================================================
 == project.godot
 ==============================================================================
 ; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
 [application]
@@ -91,8 +114,8 @@ config_version=5
 config/name="COMETO"
 run/main_scene="res://game/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.png"
 boot_splash/bg_color=Color(0.04, 0.06, 0.08, 1)
+config/icon="res://icon.png"
 
 [autoload]
 
@@ -100,6 +123,8 @@ GameState="*res://core/game_state.gd"
 Journal="*res://core/journal.gd"
 Dialogue="*res://core/dialogue.gd"
 SaveManager="*res://core/save_manager.gd"
+WorldTime="*res://core/world_time_manager.gd"
+Weather="*res://core/weather_manager.gd"
 
 [display]
 
@@ -111,20 +136,245 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
 
+[dotnet]
+
+project/assembly_name="COMETO"
+
+[shader_globals]
+
+weather_wet={
+"type": "float",
+"value": 1.0
+}
+weather_snow={
+"type": "float",
+"value": 0.0
+}
+
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 scaling_3d/mode.ios=1
+environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)
+2d/snap/snap_2d_transforms_to_pixel=true
 scaling_3d/scale.ios=0.7
 lights_and_shadows/directional_shadow/size.ios=2048
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality.ios=1
 anti_aliasing/quality/msaa_3d.ios=0
 
-renderer/rendering_method="mobile"
-renderer/rendering_method.web="gl_compatibility"
-textures/canvas_textures/default_texture_filter=0
-2d/snap/snap_2d_transforms_to_pixel=true
-environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)
+
+==============================================================================
+== art/shaders/sea.gdshader
+==============================================================================
+shader_type spatial;
+// Storm sea for Anjabi: two drifting noise layers make swell, glossy highlights catch
+// the lamps and the afterglow, whitecaps form where the layers peak. World-space, so
+// one big plane tiles anywhere. Mobile-friendly: one texture, no screen reads.
+
+render_mode blend_mix, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec4 deep : source_color = vec4(0.02, 0.06, 0.08, 1.0);
+uniform vec4 shallow : source_color = vec4(0.06, 0.17, 0.19, 1.0);
+uniform vec4 foam_color : source_color = vec4(0.62, 0.68, 0.7, 1.0);
+uniform float speed = 0.02;
+uniform float bump_strength = 2.2;
+uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
+
+varying vec3 wpos;
+
+// The shared noise texture is colour-ramped to roughly 0.6..1.05; remap to 0..1.
+float nz(vec2 uv) {
+	return clamp((texture(noise_tex, uv).r - 0.6) / 0.45, 0.0, 1.0);
+}
+
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+	vec2 uv = wpos.xz * 0.035;
+	float t = TIME * speed;
+	float a = nz(uv + vec2(t, t * 0.6));
+	float b = nz(uv * 2.7 - vec2(t * 1.4, -t * 0.8));
+	float c = nz(uv * 7.0 + vec2(-t * 2.0, t * 1.7));
+	float h = a * 0.55 + b * 0.3 + c * 0.15;
+	vec3 col = mix(deep.rgb, shallow.rgb, smoothstep(0.3, 0.75, h));
+	float foam = smoothstep(0.7, 0.82, a * 0.5 + b * 0.5) * smoothstep(0.45, 0.7, c);
+	ALBEDO = mix(col, foam_color.rgb, foam * 0.6);
+	ROUGHNESS = mix(0.16, 0.7, foam);
+	SPECULAR = 0.3;
+	float hh = h * 0.12;
+	vec3 dpdx = dFdx(VERTEX);
+	vec3 dpdy = dFdy(VERTEX);
+	vec3 r1 = cross(dpdy, NORMAL);
+	vec3 r2 = cross(NORMAL, dpdx);
+	float det = dot(dpdx, r1);
+	vec3 grad = sign(det) * (dFdx(hh) * r1 + dFdy(hh) * r2);
+	NORMAL = normalize(abs(det) * NORMAL - grad * bump_strength);
+}
+
+
+==============================================================================
+== art/shaders/wet_ground.gdshader
+==============================================================================
+shader_type spatial;
+// Rain-soaked ground for Anjabi. World-space, so any slab or terrain mesh tiles
+// seamlessly with no UVs. Up-facing surfaces get cobblestones (staggered rows,
+// per-stone tint, mortar joints, rounded bump), a wet sheen and puddles that pool in
+// the joints; side faces get plain wet stone. Mobile-friendly: one noise texture,
+// no screen reads.
+
+render_mode blend_mix, cull_back, diffuse_burley, specular_schlick_ggx;
+
+uniform vec4 base_color : source_color = vec4(0.36, 0.35, 0.34, 1.0);
+uniform vec4 mortar_color : source_color = vec4(0.10, 0.10, 0.11, 1.0);
+// 1 = cobbles, 0 = plain wet ground (gravel, mud, moss).
+uniform float cobble : hint_range(0.0, 1.0) = 1.0;
+uniform float stone_size = 0.3;
+uniform float wetness : hint_range(0.0, 1.0) = 0.8;
+uniform float puddles : hint_range(0.0, 1.0) = 0.55;
+uniform float bump_strength = 1.6;
+// Walkway slopes steeper than this (normal.y below it) are drawn as stone steps.
+uniform float stair_start = 0.99;
+uniform float step_height = 0.18;
+// Terrain meshes carry their colour in COLOR.rgb (sRGB) and cobble amount in COLOR.a.
+uniform bool use_vertex_color = false;
+// Set by EnvironmentController: 1 while it rains (dries slowly), and settled snow 0..1.
+global uniform float weather_wet;
+global uniform float weather_snow;
+uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
+
+varying vec3 wpos;
+
+// The shared noise texture is colour-ramped to roughly 0.6..1.05; remap to 0..1.
+float nz(vec2 uv) {
+	return clamp((texture(noise_tex, uv).r - 0.6) / 0.45, 0.0, 1.0);
+}
+varying vec3 wnrm;
+
+void vertex() {
+	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	wnrm = normalize((MODEL_MATRIX * vec4(NORMAL, 0.0)).xyz);
+}
+
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+// x: distance to the stone's edge (cells), y: per-stone random.
+vec2 cobbles(vec2 p, float warp) {
+	p += (warp - 0.5) * vec2(0.22, 0.16);
+	p /= stone_size;
+	float row = floor(p.y);
+	p.x += mod(row, 2.0) * 0.5 + hash(vec2(row, 7.3)) * 0.35;
+	p.x *= 0.72;
+	// stones of varying width within a row
+	p.x += hash(vec2(floor(p.x), row)) * 0.25;
+	vec2 cell = floor(p);
+	vec2 f = fract(p);
+	vec2 d = min(f, 1.0 - f);
+	// rounded corners
+	float e = min(d.x, d.y);
+	float corner = length(max(vec2(0.18) - d, vec2(0.0)));
+	e = min(e, 0.18 - corner);
+	return vec2(e, hash(cell));
+}
+
+void fragment() {
+	float up = smoothstep(0.55, 0.85, wnrm.y);
+	vec3 col = base_color.rgb;
+	float amount = cobble;
+	float planks = 0.0;
+	if (use_vertex_color) {
+		col = pow(COLOR.rgb, vec3(2.2));
+		// alpha: 1 = cobbles, ~0.5 = timber boardwalk, 0 = plain
+		planks = step(0.3, COLOR.a) * step(COLOR.a, 0.7);
+		amount = COLOR.a * (1.0 - planks);
+	}
+	amount *= up;
+	float n = nz(wpos.xz * 0.06);
+	float n2 = nz(wpos.xz * 0.5 + vec2(wpos.y * 0.3));
+
+	float warp = nz(wpos.xz * 0.9);
+	vec2 c = cobbles(wpos.xz, warp);
+	float stone = smoothstep(0.015, 0.07, c.x);
+	float dome = smoothstep(0.0, 0.32, c.x);
+	vec3 stone_col = col * (0.72 + 0.5 * c.y) * (0.8 + 0.4 * n2);
+	stone_col = mix(stone_col, stone_col * vec3(1.08, 0.98, 0.9), step(0.8, c.y));
+	vec3 joint_col = mortar_color.rgb * (0.7 + 0.6 * n2);
+	vec3 paved = mix(joint_col, stone_col, stone);
+	vec3 plain = col * (0.7 + 0.5 * n2) * (0.85 + 0.3 * n);
+	// steep faces: layered rock with dark crevices and a little lichen
+	float steep = 1.0 - up;
+	float strata = nz(vec2((wpos.x + wpos.z) * 0.12, wpos.y * 0.9));
+	float crack = smoothstep(0.42, 0.5, nz(vec2((wpos.x - wpos.z) * 0.35, wpos.y * 1.6)));
+	vec3 rock = col * vec3(1.0, 0.94, 0.86) * (0.35 + 0.95 * strata) * mix(0.35, 1.0, crack);
+	rock = mix(rock, vec3(0.16, 0.22, 0.12), smoothstep(0.62, 0.75, n2) * 0.5);
+	plain = mix(plain, rock, steep);
+	col = mix(plain, paved, amount);
+	// boardwalk: 0.28 m boards running east-west, staggered butt joints, dark gaps
+	float bw = wpos.z / 0.28;
+	float board = floor(bw);
+	float fb = fract(bw);
+	float along = fract((wpos.x + hash(vec2(board, 1.7)) * 5.0) / 2.6);
+	float gap = smoothstep(0.0, 0.07, min(fb, 1.0 - fb)) * smoothstep(0.0, 0.012, min(along, 1.0 - along));
+	vec3 wood = col * (0.7 + 0.5 * hash(vec2(board, 9.1))) * (0.85 + 0.3 * nz(vec2(wpos.x * 0.8, wpos.z * 6.0)));
+	col = mix(col, mix(wood * 0.25, wood, gap), planks * up);
+	stone = mix(stone, gap, planks * up);
+	amount = max(amount, planks * up * 0.6);
+
+	// puddles: low-frequency noise, pooling first in the joints
+	float pool = n + (1.0 - stone) * 0.1 * amount - (1.0 - up) * 2.0;
+	float puddle = smoothstep(0.52, 0.6, pool) * puddles * mix(0.35, 1.0, max(amount, planks)) * weather_wet;
+	float wet = clamp(wetness * (0.65 + 0.35 * n2) + (1.0 - stone) * amount * 0.3, 0.0, 1.0) * mix(0.3, 1.0, weather_wet);
+
+	// stairs: on sloped paved walkways, level treads at fixed risers following contours
+	float stairs = smoothstep(stair_start, stair_start - 0.03, wnrm.y) * smoothstep(0.5, 0.62, wnrm.y) * step(0.5, amount + planks * 0.0);
+	float sy = wpos.y / step_height;
+	float fs = fract(sy);
+	float step_id = floor(sy);
+	float riser = 1.0 - smoothstep(0.0, 0.2, fs);
+	float nose = smoothstep(0.82, 0.97, fs);
+	vec3 tread = base_color.rgb;
+	if (use_vertex_color) {
+		tread = pow(COLOR.rgb, vec3(2.2));
+	}
+	tread *= (0.85 + 0.3 * hash(vec2(step_id, 3.3))) * (0.85 + 0.3 * n2);
+	float slab_joint = smoothstep(0.0, 0.03, abs(fract((wpos.x + wpos.z) * 0.9 + hash(vec2(step_id, 1.1))) - 0.5) - 0.47);
+	tread = mix(tread, tread * 0.5, slab_joint);
+	vec3 stair_col = mix(tread, tread * 0.15, riser) + nose * 0.1;
+	col = mix(col, stair_col, stairs);
+	puddle *= 1.0 - stairs * 0.85;
+	stone = mix(stone, 1.0, stairs);
+
+	ALBEDO = col * mix(1.0, 0.5, wet);
+	ALBEDO = mix(ALBEDO, ALBEDO * 0.3 + vec3(0.01, 0.015, 0.02), puddle);
+	// settled snow: patchy at first, then covering level ground; treads show through a little
+	float snow = smoothstep(0.8, 0.95, wnrm.y) * (1.0 - smoothstep(0.25, 0.75, n2 * 0.6 + n * 0.4 - weather_snow * 0.9 + 0.4)) * weather_snow * (1.0 - puddle * 0.5);
+	ALBEDO = mix(ALBEDO, vec3(0.4, 0.45, 0.53) * (0.9 + 0.2 * n2), snow * 0.85);
+	float rough = mix(0.8, 0.18, wet);
+	rough = mix(rough, 0.9, snow);
+	rough = mix(rough, 0.92, steep);
+	rough = mix(rough, 0.95, (1.0 - stone) * amount * (1.0 - wet * 0.6));
+	ROUGHNESS = mix(rough, 0.03, puddle);
+	SPECULAR = mix(0.55, 0.25, steep);
+
+	// bump: rounded stones, flattened under puddles
+	float h = dome * amount * (1.0 - puddle) * 0.03 * (1.0 - stairs);
+	// cancel the ramp's slope on each tread so treads read level and risers steep
+	h -= fs * step_height * stairs / bump_strength;
+	vec3 dpdx = dFdx(VERTEX);
+	vec3 dpdy = dFdy(VERTEX);
+	float dhdx = dFdx(h);
+	float dhdy = dFdy(h);
+	vec3 r1 = cross(dpdy, NORMAL);
+	vec3 r2 = cross(NORMAL, dpdx);
+	float det = dot(dpdx, r1);
+	vec3 grad = sign(det) * (dhdx * r1 + dhdy * r2);
+	NORMAL = normalize(abs(det) * NORMAL - grad * bump_strength);
+}
 
 
 ==============================================================================
@@ -250,8 +500,21 @@ var coat := Color(0.35, 0.4, 0.45)
 var accent := Color(0.7, 0.45, 0.2)
 var skin := Color(0.78, 0.6, 0.48)
 var hood := false
+## Look options (see configure()): hair "short" | "bun" | "long" | "bald";
+## hat "" | "cap" | "hardhat" | "brim"; long_coat, apron, satchel.
+var hair := "short"
+var hair_color := Color(0.12, 0.08, 0.06)
+var hat := ""
+var long_coat := false
+var apron := false
+var satchel := true
 ## Draw a faint silhouette wherever the figure is hidden behind scenery (player only).
 var xray := false
+
+
+func configure(look: Dictionary) -> void:
+	for k: String in look:
+		set(k, look[k])
 
 
 var _hips: Node3D
@@ -260,6 +523,14 @@ var _leg_r: Node3D
 var _arm_l: Node3D
 var _arm_r: Node3D
 var _torso: Node3D
+var _knee_l: Node3D
+var _knee_r: Node3D
+var _elbow_l: Node3D
+var _elbow_r: Node3D
+## Neck joint; the head's parts hang under its child so it can nod and turn.
+var _neck: Node3D
+var _head_parts: Node3D
+var _run := 0.0
 var _phase := 0.0
 var _amount := 0.0
 var _speed := 0.0
@@ -283,15 +554,34 @@ func _ready() -> void:
 	var skirt := CylinderMesh.new()
 	skirt.top_radius = 0.19
 	skirt.bottom_radius = 0.27
-	skirt.height = 0.5
+	var skirt_h := 0.66 if long_coat else 0.5
+	skirt.height = skirt_h
+	skirt.bottom_radius = 0.29 if long_coat else 0.27
 	skirt.radial_segments = 12
-	_part(_torso, skirt, coat_m, Vector3(0, -0.05, 0.01), Vector3(1, 1, 0.85))
+	_part(_torso, skirt, coat_m, Vector3(0, 0.2 - skirt_h * 0.5, 0.01), Vector3(1, 1, 0.85))
 	var hem := CylinderMesh.new()
 	hem.top_radius = 0.272
 	hem.bottom_radius = 0.272
 	hem.height = 0.04
 	hem.radial_segments = 12
-	_part(_torso, hem, dark_m, Vector3(0, -0.29, 0.01), Vector3(1, 1, 0.85))
+	hem.top_radius = skirt.bottom_radius + 0.003
+	hem.bottom_radius = hem.top_radius
+	_part(_torso, hem, dark_m, Vector3(0, 0.2 - skirt_h + 0.01, 0.01), Vector3(1, 1, 0.85))
+	# lapels and buttons down the front
+	var lap := BoxMesh.new()
+	lap.size = Vector3(0.07, 0.3, 0.02)
+	_part(_torso, lap, dark_m, Vector3(-0.055, 0.45, -0.152)).rotation.z = -0.35
+	_part(_torso, lap, dark_m, Vector3(0.055, 0.45, -0.152)).rotation.z = 0.35
+	var btn := SphereMesh.new()
+	btn.radius = 0.014
+	btn.height = 0.028
+	var btn_m := _mat(Color(0.75, 0.6, 0.3), 0.4, 0.8)
+	for k in 3:
+		_part(_torso, btn, btn_m, Vector3(0.0, 0.32 - k * 0.11, -0.158))
+	if apron:
+		var ap := BoxMesh.new()
+		ap.size = Vector3(0.3, 0.55, 0.02)
+		_part(_torso, ap, _mat(Color(0.72, 0.66, 0.55), 0.9), Vector3(0, -0.02, -0.2)).rotation.x = 0.1
 	var chest := CapsuleMesh.new()
 	chest.radius = 0.19
 	chest.height = 0.6
@@ -316,101 +606,315 @@ func _ready() -> void:
 	scarf.size = Vector3(0.09, 0.26, 0.04)
 	_part(_torso, scarf, accent_m, Vector3(0.06, 0.45, -0.165), Vector3.ONE).rotation.z = 0.12
 	var bag_m := _mat(Color(0.3, 0.2, 0.13), 0.8)
+	if not satchel:
+		bag_m = null
 	var bag := BoxMesh.new()
 	bag.size = Vector3(0.08, 0.2, 0.24)
-	_part(_torso, bag, bag_m, Vector3(0.27, 0.06, 0.02))
-	var strap := BoxMesh.new()
-	strap.size = Vector3(0.04, 0.62, 0.02)
-	var st := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, -0.155))
-	st.rotation.z = -0.62
-	var st2 := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, 0.155))
-	st2.rotation.z = -0.62
+	if satchel:
+		_part(_torso, bag, bag_m, Vector3(0.27, 0.06, 0.02))
+		var strap := BoxMesh.new()
+		strap.size = Vector3(0.04, 0.62, 0.02)
+		var st := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, -0.155))
+		st.rotation.z = -0.62
+		var st2 := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, 0.155))
+		st2.rotation.z = -0.62
 	_arm_l = _limb(_torso, Vector3(-0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
 	_arm_r = _limb(_torso, Vector3(0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
-	# head
+	_neck = Node3D.new()
+	_neck.position = Vector3(0, 0.64, 0)
+	_torso.add_child(_neck)
+	_head_parts = Node3D.new()
+	_head_parts.position = Vector3(0, -0.64, 0)
+	_neck.add_child(_head_parts)
+	_head()
+	_knee_l = _leg_l.get_node("Lower")
+	_knee_r = _leg_r.get_node("Lower")
+	_elbow_l = _arm_l.get_node("Lower")
+	_elbow_r = _arm_r.get_node("Lower")
+	for pivot: Node3D in [_torso, _head_parts, _leg_l, _leg_r, _arm_l, _arm_r, _knee_l, _knee_r, _elbow_l, _elbow_r]:
+		_merge(pivot)
+
+
+## Collapses the primitive parts under one limb pivot into a single mesh with the
+## colours in vertex colours: one surface for cloth and skin, one for metal fittings.
+## Emissive parts stay separate. Turns ~50 draws per figure into ~6.
+func _merge(pivot: Node3D) -> void:
+	var groups := {}
+	for c in pivot.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null:
+			continue
+		var m := mi.material_override as StandardMaterial3D
+		if m == null or m.emission_enabled:
+			continue
+		var key := "metal" if m.metallic > 0.5 else "matte"
+		if not groups.has(key):
+			groups[key] = []
+		(groups[key] as Array).append(mi)
+	if groups.is_empty():
+		return
+	var mesh := ArrayMesh.new()
+	for key: String in groups:
+		var verts := PackedVector3Array()
+		var norms := PackedVector3Array()
+		var cols := PackedColorArray()
+		var idx := PackedInt32Array()
+		for mi: MeshInstance3D in groups[key]:
+			var a := mi.mesh.surface_get_arrays(0)
+			var x := mi.transform
+			var nb := x.basis.inverse().transposed()
+			var col := (mi.material_override as StandardMaterial3D).albedo_color
+			var base := verts.size()
+			var v: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+			var n: PackedVector3Array = a[Mesh.ARRAY_NORMAL]
+			for i in v.size():
+				verts.append(x * v[i])
+				norms.append((nb * n[i]).normalized())
+				cols.append(col)
+			var ii: PackedInt32Array = a[Mesh.ARRAY_INDEX]
+			if ii.is_empty():
+				for i in v.size():
+					idx.append(base + i)
+			else:
+				for i in ii:
+					idx.append(base + i)
+			mi.queue_free()
+			pivot.remove_child(mi)
+		var arr := []
+		arr.resize(Mesh.ARRAY_MAX)
+		arr[Mesh.ARRAY_VERTEX] = verts
+		arr[Mesh.ARRAY_NORMAL] = norms
+		arr[Mesh.ARRAY_COLOR] = cols
+		arr[Mesh.ARRAY_INDEX] = idx
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		var mat := _mat(Color.WHITE, 0.4 if key == "metal" else 0.78, 0.7 if key == "metal" else 0.05)
+		mat.vertex_color_use_as_albedo = true
+		mat.vertex_color_is_srgb = true
+		mesh.surface_set_material(mesh.get_surface_count() - 1, mat)
+	var merged := MeshInstance3D.new()
+	merged.name = "Merged"
+	merged.mesh = mesh
+	pivot.add_child(merged)
+
+
+func _head() -> void:
+	var skin_m := _mat(skin, 0.7)
+	var hair_m := _mat(hair_color, 0.75)
+	var neck := CylinderMesh.new()
+	neck.top_radius = 0.06
+	neck.bottom_radius = 0.07
+	neck.height = 0.1
+	_part(_head_parts, neck, skin_m, Vector3(0, 0.66, 0))
 	var head := SphereMesh.new()
-	head.radius = 0.19
-	head.height = 0.4
-	_part(_torso, head, skin_m, Vector3(0, 0.81, 0))
-	var eye := BoxMesh.new()
-	eye.size = Vector3(0.035, 0.035, 0.02)
-	var eye_m := _mat(Color(0.06, 0.05, 0.06), 0.5)
-	_part(_torso, eye, eye_m, Vector3(-0.065, 0.83, -0.175))
-	_part(_torso, eye, eye_m, Vector3(0.065, 0.83, -0.175))
+	head.radius = 0.17
+	head.height = 0.37
+	_part(_head_parts, head, skin_m, Vector3(0, 0.82, 0), Vector3(0.95, 1, 1))
+	# face: eye whites and pupils, brows, nose, mouth, a little colour in the cheeks
+	var white := SphereMesh.new()
+	white.radius = 0.028
+	white.height = 0.04
+	var pupil := SphereMesh.new()
+	pupil.radius = 0.017
+	pupil.height = 0.026
+	var white_m := _mat(Color(0.92, 0.9, 0.86), 0.5)
+	var pupil_m := _mat(Color(0.07, 0.05, 0.05), 0.3)
+	var brow := BoxMesh.new()
+	brow.size = Vector3(0.055, 0.012, 0.012)
+	for sx: float in [-1.0, 1.0]:
+		_part(_head_parts, white, white_m, Vector3(sx * 0.058, 0.835, -0.148))
+		_part(_head_parts, pupil, pupil_m, Vector3(sx * 0.058, 0.833, -0.166))
+		_part(_head_parts, brow, hair_m, Vector3(sx * 0.06, 0.875, -0.152)).rotation.z = -sx * 0.12
+		var cheek := SphereMesh.new()
+		cheek.radius = 0.03
+		cheek.height = 0.02
+		_part(_head_parts, cheek, _mat(skin.lerp(Color(0.85, 0.4, 0.38), 0.35), 0.8), Vector3(sx * 0.095, 0.79, -0.135))
+	var nose := SphereMesh.new()
+	nose.radius = 0.022
+	nose.height = 0.04
+	_part(_head_parts, nose, _mat(skin.darkened(0.08), 0.7), Vector3(0, 0.8, -0.168))
+	var mouth := BoxMesh.new()
+	mouth.size = Vector3(0.045, 0.01, 0.01)
+	_part(_head_parts, mouth, _mat(skin.darkened(0.35), 0.7), Vector3(0, 0.755, -0.158))
 	if hood:
 		var h := SphereMesh.new()
-		h.radius = 0.22
-		h.height = 0.46
-		_part(_torso, h, coat_m, Vector3(0, 0.84, 0.035), Vector3(1, 1, 0.95))
-		var face := SphereMesh.new()
-		face.radius = 0.17
-		face.height = 0.34
-		_part(_torso, face, skin_m, Vector3(0, 0.8, -0.05))
+		h.radius = 0.2
+		h.height = 0.43
+		_part(_head_parts, h, _mat(coat, 0.85), Vector3(0, 0.84, 0.04), Vector3(1, 1, 0.95))
 		var peak := BoxMesh.new()
-		peak.size = Vector3(0.36, 0.05, 0.1)
-		_part(_torso, peak, coat_m, Vector3(0, 0.98, -0.17)).rotation.x = 0.35
-	else:
-		var hair := SphereMesh.new()
-		hair.radius = 0.2
-		hair.height = 0.26
-		hair.is_hemisphere = true
-		_part(_torso, hair, _mat(Color(0.12, 0.09, 0.08), 0.8), Vector3(0, 0.85, 0.02))
+		peak.size = Vector3(0.33, 0.045, 0.09)
+		_part(_head_parts, peak, _mat(coat, 0.85), Vector3(0, 0.98, -0.14)).rotation.x = 0.35
+		return
+	if hair != "bald":
+		var cap := SphereMesh.new()
+		cap.radius = 0.178
+		cap.height = 0.24
+		cap.is_hemisphere = true
+		_part(_head_parts, cap, hair_m, Vector3(0, 0.85, 0.012), Vector3(0.97, 1, 1))
+		var back := SphereMesh.new()
+		back.radius = 0.17
+		back.height = 0.3
+		_part(_head_parts, back, hair_m, Vector3(0, 0.81, 0.04), Vector3(0.97, 1, 0.9))
+		var fringe := BoxMesh.new()
+		fringe.size = Vector3(0.24, 0.05, 0.05)
+		_part(_head_parts, fringe, hair_m, Vector3(0, 0.93, -0.13)).rotation.x = -0.4
+	if hair == "bun":
+		var bun := SphereMesh.new()
+		bun.radius = 0.075
+		bun.height = 0.15
+		_part(_head_parts, bun, hair_m, Vector3(0, 0.93, 0.15))
+	elif hair == "long":
+		var fall := BoxMesh.new()
+		fall.size = Vector3(0.28, 0.32, 0.08)
+		_part(_head_parts, fall, hair_m, Vector3(0, 0.66, 0.11))
+	match hat:
+		"cap":
+			var crown := CylinderMesh.new()
+			crown.top_radius = 0.16
+			crown.bottom_radius = 0.18
+			crown.height = 0.1
+			var m := _mat(accent.darkened(0.3), 0.85)
+			_part(_head_parts, crown, m, Vector3(0, 0.96, 0))
+			var bill := BoxMesh.new()
+			bill.size = Vector3(0.22, 0.02, 0.12)
+			_part(_head_parts, bill, m, Vector3(0, 0.93, -0.2))
+		"hardhat":
+			var shell := SphereMesh.new()
+			shell.radius = 0.2
+			shell.height = 0.22
+			shell.is_hemisphere = true
+			var y := _mat(Color(0.85, 0.62, 0.12), 0.45)
+			_part(_head_parts, shell, y, Vector3(0, 0.9, 0))
+			var rim := CylinderMesh.new()
+			rim.top_radius = 0.235
+			rim.bottom_radius = 0.235
+			rim.height = 0.025
+			_part(_head_parts, rim, y, Vector3(0, 0.9, 0))
+			var lamp := CylinderMesh.new()
+			lamp.top_radius = 0.035
+			lamp.bottom_radius = 0.035
+			lamp.height = 0.04
+			var lm := _mat(Color(1.0, 0.9, 0.6), 0.3)
+			lm.emission_enabled = true
+			lm.emission = Color(1.0, 0.85, 0.5)
+			lm.emission_energy_multiplier = 2.0
+			_part(_head_parts, lamp, lm, Vector3(0, 0.98, -0.19)).rotation.x = PI * 0.5
+		"brim":
+			var m2 := _mat(Color(0.14, 0.12, 0.11), 0.85)
+			var brim := CylinderMesh.new()
+			brim.top_radius = 0.28
+			brim.bottom_radius = 0.28
+			brim.height = 0.02
+			_part(_head_parts, brim, m2, Vector3(0, 0.92, 0))
+			var crown2 := CylinderMesh.new()
+			crown2.top_radius = 0.14
+			crown2.bottom_radius = 0.16
+			crown2.height = 0.14
+			_part(_head_parts, crown2, m2, Vector3(0, 0.99, 0))
 
 
+## speed_ratio is speed / walk speed: 1 is a walk, about 1.6 and up is a run.
 func set_motion(moving: bool, speed_ratio: float = 1.0) -> void:
-	_speed = clampf(speed_ratio, 0.0, 1.2) if moving else 0.0
+	_speed = clampf(speed_ratio, 0.0, 2.4) if moving else 0.0
 
 
+## Procedural gait. One phase drives everything: thighs swing opposite each other, the
+## knee folds while its leg travels forward, arms counter-swing with a bent elbow, the
+## torso leans and twists against the hips, and the head stays level. `_run` blends the
+## walk into a run (longer stride, higher knees, pumping arms, more lean and bounce).
 func _process(delta: float) -> void:
 	_t += delta
-	_amount = move_toward(_amount, 1.0 if _speed > 0.05 else 0.0, delta * 6.0)
-	_phase += delta * 10.0 * maxf(_speed, 0.4) * _amount
-	var s := sin(_phase) * _amount
-	_leg_l.rotation.x = s * 0.6
-	_leg_r.rotation.x = -s * 0.6
-	_arm_l.rotation.x = -s * 0.5
-	_arm_r.rotation.x = s * 0.5
-	_arm_l.rotation.z = -0.08
-	_arm_r.rotation.z = 0.08
-	var breathe := sin(_t * 2.0) * 0.012 * (1.0 - _amount)
-	_hips.position.y = 0.82 + absf(cos(_phase)) * 0.04 * _amount
-	_torso.rotation.x = -0.08 * _amount
+	_amount = move_toward(_amount, 1.0 if _speed > 0.05 else 0.0, delta * 7.0)
+	_run = move_toward(_run, smoothstep(1.15, 1.45, _speed), delta * 5.0)
+	_phase += delta * lerpf(10.0 * maxf(_speed, 0.4), 14.5, _run) * _amount
+	var a := _amount
+	var idle := 1.0 - a
+	var sw := sin(_phase)
+	var cw := cos(_phase)
+	# legs
+	var hip := lerpf(0.55, 0.95, _run) * a
+	var knee := lerpf(0.7, 1.55, _run) * a
+	var lift := 0.14 * _run * a
+	_leg_l.rotation.x = sw * hip + lift
+	_leg_r.rotation.x = -sw * hip + lift
+	_knee_l.rotation.x = -(0.06 * a + knee * pow(0.5 + 0.5 * cw, 1.6))
+	_knee_r.rotation.x = -(0.06 * a + knee * pow(0.5 - 0.5 * cw, 1.6))
+	# arms: opposite the legs, elbows bent more the faster we go
+	var arm := lerpf(0.45, 0.9, _run) * a
+	var sway := sin(_t * 1.3) * 0.03 * idle
+	_arm_l.rotation.x = -sw * arm + sway
+	_arm_r.rotation.x = sw * arm - sway
+	var splay := lerpf(0.08, 0.16, _run * a)
+	_arm_l.rotation.z = -splay
+	_arm_r.rotation.z = splay
+	var bend := lerpf(0.1, lerpf(0.3, 1.35, _run), a)
+	_elbow_l.rotation.x = bend + maxf(-sw, 0.0) * 0.3 * a
+	_elbow_r.rotation.x = bend + maxf(sw, 0.0) * 0.3 * a
+	# body
+	var breathe := sin(_t * 2.0) * 0.012 * idle
+	_hips.position.y = 0.82 + absf(cw) * lerpf(0.035, 0.075, _run) * a - 0.03 * _run * a
+	_hips.rotation.z = sw * 0.03 * a
+	var lean := lerpf(0.06, 0.26, _run) * a
+	var twist := sw * lerpf(0.07, 0.17, _run) * a
+	_torso.rotation.x = -lean
+	_torso.rotation.y = twist
 	_torso.scale = Vector3(1.0, 1.0 + breathe, 1.0)
+	# head stays level and forward; glances about when idle
+	_neck.rotation.x = lean * 0.7
+	_neck.rotation.y = -twist * 0.7 + sin(_t * 0.37) * 0.14 * idle
+	_neck.rotation.z = sin(_t * 0.23 + 1.0) * 0.03 * idle
 
 
+## Two-segment limb. Returns the upper pivot (hip or shoulder); the knee or elbow is
+## its child "Lower".
 func _limb(parent: Node3D, at: Vector3, r: float, length: float, m: Material, end_m: Material) -> Node3D:
 	var pivot := Node3D.new()
 	pivot.position = at
 	parent.add_child(pivot)
-	var c := CylinderMesh.new()
-	c.top_radius = r * 1.15
-	c.bottom_radius = r * 0.85
-	c.height = length - r
-	c.radial_segments = 8
-	_part(pivot, c, m, Vector3(0, -length * 0.5 + r * 0.25, 0))
+	var half := length * 0.5
+	var up := CylinderMesh.new()
+	up.top_radius = r * 1.15
+	up.bottom_radius = r
+	up.height = half
+	up.radial_segments = 8
+	_part(pivot, up, m, Vector3(0, -half * 0.5, 0))
 	var joint := SphereMesh.new()
 	joint.radius = r * 1.15
 	joint.height = r * 2.3
 	_part(pivot, joint, m, Vector3.ZERO)
+	var lower := Node3D.new()
+	lower.name = "Lower"
+	lower.position = Vector3(0, -half, 0)
+	pivot.add_child(lower)
+	var kn := SphereMesh.new()
+	kn.radius = r * 1.02
+	kn.height = r * 2.04
+	_part(lower, kn, m, Vector3.ZERO)
+	var lo := CylinderMesh.new()
+	lo.top_radius = r
+	lo.bottom_radius = r * 0.85
+	lo.height = half - r * 0.5
+	lo.radial_segments = 8
+	_part(lower, lo, m, Vector3(0, -(half - r * 0.5) * 0.5, 0))
 	if end_m.get_meta("boot", false):
 		var b := BoxMesh.new()
 		b.size = Vector3(r * 2.2, r * 1.4, r * 3.6)
-		_part(pivot, b, end_m, Vector3(0, -length + r * 0.5, -r * 0.7))
+		_part(lower, b, end_m, Vector3(0, -half + r * 0.5, -r * 0.7))
 		var cuff := CylinderMesh.new()
 		cuff.top_radius = r * 1.25
 		cuff.bottom_radius = r * 1.15
 		cuff.height = r * 2.6
 		cuff.radial_segments = 8
-		_part(pivot, cuff, end_m, Vector3(0, -length + r * 1.9, 0))
+		_part(lower, cuff, end_m, Vector3(0, -half + r * 1.9, 0))
 	else:
 		var sp := SphereMesh.new()
 		sp.radius = r * 1.05
 		sp.height = r * 2.1
-		_part(pivot, sp, end_m, Vector3(0, -length + r * 0.6, 0))
+		_part(lower, sp, end_m, Vector3(0, -half + r * 0.6, 0))
 	return pivot
 
 
 func _part(parent: Node3D, mesh: Mesh, m: Material, at: Vector3, s: Vector3 = Vector3.ONE) -> MeshInstance3D:
+	_lower_poly(mesh)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = m
@@ -418,6 +922,26 @@ func _part(parent: Node3D, mesh: Mesh, m: Material, at: Vector3, s: Vector3 = Ve
 	mi.scale = s
 	parent.add_child(mi)
 	return mi
+
+
+## Godot's primitive defaults (64 segments, 32 rings) cost thousands of triangles per
+## eye or button; at handheld scale a few segments read the same. Caps what was not set.
+func _lower_poly(mesh: Mesh) -> void:
+	var big := 0.0
+	if mesh is SphereMesh:
+		var sm := mesh as SphereMesh
+		big = sm.radius
+		sm.radial_segments = mini(sm.radial_segments, 16 if big > 0.1 else (10 if big > 0.04 else 6))
+		sm.rings = mini(sm.rings, 10 if big > 0.1 else (6 if big > 0.04 else 4))
+	elif mesh is CylinderMesh:
+		var cm := mesh as CylinderMesh
+		big = maxf(cm.top_radius, cm.bottom_radius)
+		cm.radial_segments = mini(cm.radial_segments, 14 if big > 0.15 else (10 if big > 0.04 else 6))
+		cm.rings = 0
+	elif mesh is CapsuleMesh:
+		var cp := mesh as CapsuleMesh
+		cp.radial_segments = mini(cp.radial_segments, 12)
+		cp.rings = mini(cp.rings, 4)
 
 
 func _mat(c: Color, rough: float, metal: float = 0.0) -> StandardMaterial3D:
@@ -754,6 +1278,154 @@ func _draw() -> void:
 
 
 ==============================================================================
+== art_provisional/rain_3d.gd
+==============================================================================
+class_name Rain3D
+extends GPUParticles3D
+## Precipitation around the player: rain streaks that catch the lamps, splashes on the
+## ground, and snow. Follows its parent (the player); particles stay in world space.
+## One set of emitters is reused for every weather: EnvironmentController calls
+## set_precipitation(rain, snow) with 0..1 amounts and the emitters thin out or stop.
+
+var _splash: GPUParticles3D
+var _snow: GPUParticles3D
+
+
+func _init() -> void:
+	add_to_group(&"precipitation")
+	amount = 1600
+	lifetime = 0.9
+	preprocess = 1.0
+	local_coords = false
+	visibility_aabb = AABB(Vector3(-20, -14, -20), Vector3(40, 30, 40))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(16, 0.5, 16)
+	pm.direction = Vector3(-0.15, -1, 0.1)
+	pm.spread = 2.0
+	pm.initial_velocity_min = 16.0
+	pm.initial_velocity_max = 20.0
+	pm.gravity = Vector3(0, -6, 0)
+	pm.particle_flag_align_y = true
+	process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.012, 0.55)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.8, 0.86, 0.95, 0.14)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_FIXED_Y
+	m.billboard_keep_scale = true
+	q.material = m
+	draw_pass_1 = q
+	position = Vector3(0, 12, 0)
+	_splash = _splashes()
+	add_child(_splash)
+	_snow = _snowfall()
+	add_child(_snow)
+	set_precipitation(0.5, 0.0)
+
+
+## rain and snow are 0..1: 0 stops the emitter, 1 is the heaviest fall.
+func set_precipitation(rain: float, snow: float) -> void:
+	_level(self, rain)
+	_level(_splash, rain)
+	_level(_snow, snow)
+
+
+## Drop every live particle (used when the weather is set instantly, not blended).
+func clear_particles() -> void:
+	for p: GPUParticles3D in [self, _splash, _snow]:
+		p.restart()
+
+
+static func _level(p: GPUParticles3D, level: float) -> void:
+	var on := level > 0.02
+	if p.emitting != on:
+		p.emitting = on
+	if on:
+		p.amount_ratio = clampf(level, 0.05, 1.0)
+
+
+## Droplets bursting on the ground around the player.
+static func _splashes() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.amount = 460
+	p.lifetime = 0.35
+	p.local_coords = false
+	p.position = Vector3(0, -11.9, 0)
+	p.visibility_aabb = AABB(Vector3(-16, -2, -16), Vector3(32, 4, 32))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(11, 0.02, 11)
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 35.0
+	pm.initial_velocity_min = 0.6
+	pm.initial_velocity_max = 1.3
+	pm.gravity = Vector3(0, -9, 0)
+	pm.scale_min = 0.6
+	pm.scale_max = 1.2
+	p.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.035, 0.035)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.85, 0.9, 1.0, 0.35)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	q.material = m
+	p.draw_pass_1 = q
+	return p
+
+
+## Slow drifting flakes.
+static func _snowfall() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.amount = 700
+	p.lifetime = 7.0
+	p.preprocess = 7.0
+	p.local_coords = false
+	p.emitting = false
+	p.visibility_aabb = AABB(Vector3(-20, -14, -20), Vector3(40, 30, 40))
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
+	pm.emission_box_extents = Vector3(16, 0.5, 16)
+	pm.direction = Vector3(-0.2, -1, 0.1)
+	pm.spread = 14.0
+	pm.initial_velocity_min = 1.5
+	pm.initial_velocity_max = 2.4
+	pm.gravity = Vector3(-0.15, -0.1, 0)
+	pm.turbulence_enabled = true
+	pm.turbulence_noise_strength = 0.5
+	pm.turbulence_noise_scale = 2.5
+	pm.scale_min = 0.6
+	pm.scale_max = 1.4
+	p.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.06, 0.06)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.95, 0.97, 1.0, 0.8)
+	# soft round flake
+	var g := Gradient.new()
+	g.set_color(0, Color.WHITE)
+	g.set_color(1, Color(1, 1, 1, 0))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.width = 16
+	tex.height = 16
+	tex.fill = GradientTexture2D.FILL_RADIAL
+	tex.fill_from = Vector2(0.5, 0.5)
+	tex.fill_to = Vector2(1.0, 0.5)
+	m.albedo_texture = tex
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	q.material = m
+	p.draw_pass_1 = q
+	return p
+
+
+==============================================================================
 == core/data.gd
 ==============================================================================
 class_name Data
@@ -1065,6 +1737,12 @@ static func ensure() -> void:
 	_add(&"move_right", [KEY_D, KEY_RIGHT], JOY_AXIS_LEFT_X, 1.0)
 	_add(&"move_up", [KEY_W, KEY_UP], JOY_AXIS_LEFT_Y, -1.0)
 	_add(&"move_down", [KEY_S, KEY_DOWN], JOY_AXIS_LEFT_Y, 1.0)
+	_add(&"sprint", [KEY_SHIFT])
+	_add_button(&"sprint", JOY_BUTTON_B)
+	_add_button(&"sprint", JOY_BUTTON_X)
+	_add(&"debug_hour", [KEY_BRACKETRIGHT])
+	_add(&"debug_day", [KEY_BRACKETLEFT])
+	_add(&"debug_weather", [KEY_BACKSLASH])
 	_add(&"interact", [KEY_E, KEY_SPACE, KEY_ENTER])
 	_add(&"journal", [KEY_J, KEY_TAB])
 	_add(&"menu", [KEY_ESCAPE])
@@ -1248,6 +1926,8 @@ func save_game(slot: String = "manual") -> bool:
 		"time": Time.get_datetime_string_from_system(),
 		"flags": GameState.to_dict(),
 		"journal": Journal.to_dict(),
+		"world_time": WorldTime.to_dict(),
+		"weather": Weather.to_dict(),
 		"world": world.call("capture_world"),
 	}
 	var path := slot_path(slot)
@@ -1276,6 +1956,10 @@ func load_game(slot: String = "manual") -> bool:
 		return false
 	GameState.from_dict(data.get("flags", {}))
 	Journal.from_dict(data.get("journal", {}))
+	# clock first: the weather schedule is read against it, and the map built by
+	# restore_world() lights itself from both straight away
+	WorldTime.from_dict(data.get("world_time", {}))
+	Weather.from_dict(data.get("weather", {}))
 	world.call("restore_world", data.get("world", {}))
 	loaded.emit(slot)
 	return true
@@ -1291,6 +1975,595 @@ func _notification(what: int) -> void:
 			or what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		if autosave_enabled and world != null:
 			save_game("auto")
+
+
+==============================================================================
+== core/weather_manager.gd
+==============================================================================
+extends Node
+## Autoload "Weather": a small weather state machine driven by WorldTime.
+##
+## Weather is planned ahead as a schedule of spells, each lasting min_duration to
+## max_duration game minutes and chosen by weighted chance for the season it falls in.
+## The schedule always covers the next day, which is the forecast. Nothing is rolled
+## per frame: the schedule is only consulted when the clock's minute changes.
+##
+##   Weather.current                      # "clear" "cloudy" "rain" "heavy_rain" "fog" "snow"
+##   Weather.weather_changed.connect(...) # encounters, dialogue, audio
+##   Weather.forecast(24)                 # [{type, from, until}] in absolute minutes
+##   Weather.set_weather("fog", 120)      # manual override for 120 minutes (-1 = until cleared)
+##   Weather.clear_override()
+##   Weather.is_wet()
+## Debug builds: \ cycles through the weather types as an override.
+
+signal weather_changed(type: String, previous: String)
+## Fired at random intervals during heavy rain: hook thunder audio and flashes here.
+signal lightning
+
+const TYPES: PackedStringArray = ["clear", "cloudy", "rain", "heavy_rain", "fog", "snow"]
+
+## What each weather does to the world, 0..1. EnvironmentController blends toward these.
+## rain/snow: precipitation amount; cloud: how much sun is lost; fog: mist thickness.
+var profiles := {
+	"clear": {"rain": 0.0, "snow": 0.0, "cloud": 0.0, "fog": 0.0},
+	"cloudy": {"rain": 0.0, "snow": 0.0, "cloud": 0.6, "fog": 0.05},
+	"rain": {"rain": 0.5, "snow": 0.0, "cloud": 0.75, "fog": 0.15},
+	"heavy_rain": {"rain": 1.0, "snow": 0.0, "cloud": 1.0, "fog": 0.3},
+	"fog": {"rain": 0.0, "snow": 0.0, "cloud": 0.5, "fog": 1.0},
+	"snow": {"rain": 0.0, "snow": 1.0, "cloud": 0.6, "fog": 0.2},
+}
+## Relative chances per season index (0 Spring .. 3 Winter).
+var season_weights := {
+	0: {"clear": 35, "cloudy": 20, "rain": 30, "heavy_rain": 8, "fog": 7, "snow": 0},
+	1: {"clear": 60, "cloudy": 18, "rain": 8, "heavy_rain": 12, "fog": 2, "snow": 0},
+	2: {"clear": 15, "cloudy": 30, "rain": 28, "heavy_rain": 7, "fog": 20, "snow": 0},
+	3: {"clear": 14, "cloudy": 30, "rain": 3, "heavy_rain": 0, "fog": 8, "snow": 45},
+}
+## Length of one spell of weather, in game minutes.
+var min_duration := 180
+var max_duration := 540
+## Weather a new game opens with.
+var start_weather := "rain"
+
+var current := "rain"
+## Upcoming spells, soonest first: {type, until}; the first is the one in effect.
+var schedule: Array[Dictionary] = []
+var override := ""
+## Absolute minute the override ends; -1 holds it until clear_override().
+var override_until := -1
+
+var _rng := RandomNumberGenerator.new()
+var _bolt := 8.0
+
+
+func _ready() -> void:
+	WorldTime.minute_changed.connect(func(_h: int, _m: int) -> void: update())
+	WorldTime.time_jumped.connect(update)
+	reset()
+
+
+## Start a fresh schedule. Pass a seed for a repeatable sequence.
+func reset(rng_seed: int = -1) -> void:
+	if rng_seed >= 0:
+		_rng.seed = rng_seed
+	else:
+		_rng.randomize()
+	override = ""
+	override_until = -1
+	schedule.clear()
+	schedule.append({"type": start_weather, "until": WorldTime.total_minutes() + _rng.randi_range(min_duration, max_duration)})
+	_fill()
+	_apply(start_weather)
+
+
+## Bring the weather up to date with the clock. Called on every game minute.
+func update() -> void:
+	var now := WorldTime.total_minutes()
+	while not schedule.is_empty() and int(schedule[0]["until"]) <= now:
+		schedule.pop_front()
+	if schedule.is_empty():
+		schedule.append({"type": _roll(now, current), "until": now + _rng.randi_range(min_duration, max_duration)})
+	_fill()
+	if override != "" and override_until >= 0 and now >= override_until:
+		override = ""
+		override_until = -1
+	_apply(override if override != "" else str(schedule[0]["type"]))
+
+
+## Force a weather type, for `minutes` game minutes or until cleared.
+func set_weather(type: String, minutes: int = -1) -> void:
+	if not profiles.has(type):
+		push_warning("Weather: unknown type '%s'" % type)
+		return
+	override = type
+	override_until = WorldTime.total_minutes() + minutes if minutes >= 0 else -1
+	_apply(type)
+
+
+func clear_override() -> void:
+	override = ""
+	override_until = -1
+	update()
+
+
+## The planned weather for the next `hours`: [{type, from, until}] in absolute minutes.
+func forecast(hours: int = 24) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var from := WorldTime.total_minutes()
+	var end := from + hours * 60
+	for s in schedule:
+		if from >= end:
+			break
+		out.append({"type": s["type"], "from": from, "until": mini(int(s["until"]), end)})
+		from = int(s["until"])
+	return out
+
+
+func profile(type: String = "") -> Dictionary:
+	return profiles.get(type if type != "" else current, profiles["clear"])
+
+
+func is_wet() -> bool:
+	return float(profile()["rain"]) > 0.0
+
+
+func label(type: String = "") -> String:
+	return (type if type != "" else current).replace("_", " ").capitalize()
+
+
+func _apply(type: String) -> void:
+	if type == current:
+		return
+	var prev := current
+	current = type
+	weather_changed.emit(current, prev)
+
+
+func _fill() -> void:
+	var horizon := WorldTime.total_minutes() + WorldTime.DAY_MINUTES
+	while int(schedule[schedule.size() - 1]["until"]) < horizon:
+		var last: Dictionary = schedule[schedule.size() - 1]
+		var at := int(last["until"])
+		schedule.append({"type": _roll(at, str(last["type"])), "until": at + _rng.randi_range(min_duration, max_duration)})
+
+
+## Weighted pick for the season at absolute minute `at`; avoids repeating `previous`.
+func _roll(at: int, previous: String) -> String:
+	var season := WorldTime.calendar.season_of_day(at / WorldTime.DAY_MINUTES)
+	var weights: Dictionary = season_weights.get(season, season_weights[0])
+	var total := 0.0
+	for t: String in weights:
+		if t != previous:
+			total += float(weights[t])
+	if total <= 0.0:
+		return previous
+	var r := _rng.randf() * total
+	for t: String in weights:
+		if t == previous:
+			continue
+		r -= float(weights[t])
+		if r <= 0.0:
+			return t
+	return previous
+
+
+func _process(delta: float) -> void:
+	if current != "heavy_rain" or WorldTime.is_paused():
+		return
+	_bolt -= delta
+	if _bolt <= 0.0:
+		_bolt = randf_range(7.0, 20.0)
+		lightning.emit()
+
+
+# --- persistence ------------------------------------------------------------------
+
+func to_dict() -> Dictionary:
+	return {
+		"current": current,
+		"schedule": schedule.duplicate(true),
+		"override": override,
+		"override_until": override_until,
+		# 64-bit values do not survive JSON numbers
+		"rng_seed": str(_rng.seed),
+		"rng_state": str(_rng.state),
+	}
+
+
+func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		reset()
+		return
+	schedule.clear()
+	for s: Dictionary in d.get("schedule", []):
+		schedule.append({"type": str(s["type"]), "until": int(s["until"])})
+	override = str(d.get("override", ""))
+	override_until = int(d.get("override_until", -1))
+	if d.has("rng_seed"):
+		_rng.seed = str(d["rng_seed"]).to_int()
+		_rng.state = str(d["rng_state"]).to_int()
+	if schedule.is_empty():
+		schedule.append({"type": str(d.get("current", start_weather)), "until": WorldTime.total_minutes() + min_duration})
+	current = str(d.get("current", start_weather))
+	update()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if OS.is_debug_build() and event.is_action_pressed(&"debug_weather"):
+		set_weather(TYPES[(TYPES.find(current) + 1) % TYPES.size()])
+
+
+==============================================================================
+== core/world_calendar.gd
+==============================================================================
+class_name WorldCalendar
+extends RefCounted
+## The in-game date: seven-day week, four seasons of 28 days, years. Pure data with
+## no clock of its own; WorldTime (core/world_time_manager.gd) owns the one instance
+## and advances it at midnight. Everything here is configurable before a game starts.
+##
+## Scheduled events are a hook for holidays, festivals and quests:
+##   WorldTime.calendar.add_event("harvest_fair", 2, 20)        # every Autumn 20
+##   WorldTime.calendar.events_today()                          # -> Array[Dictionary]
+
+var season_names := PackedStringArray(["Spring", "Summer", "Autumn", "Winter"])
+var weekday_names := PackedStringArray(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
+var days_per_season := 28
+## Shifts which weekday day 1 of year 1 falls on.
+var weekday_offset := 0
+
+var year := 1
+## 0-based index into season_names.
+var season := 0
+## 1-based day of the season.
+var day := 1
+
+## {id, season, day, year (-1 = every year), data}
+var events: Array[Dictionary] = []
+
+
+func set_date(y: int, s: int, d: int) -> void:
+	year = maxi(y, 1)
+	season = posmod(s, season_names.size())
+	day = clampi(d, 1, days_per_season)
+
+
+## Moves to the next day. Returns which larger units rolled over.
+func advance_day() -> Dictionary:
+	var rolled := {"season": false, "year": false}
+	day += 1
+	if day > days_per_season:
+		day = 1
+		season += 1
+		rolled["season"] = true
+		if season >= season_names.size():
+			season = 0
+			year += 1
+			rolled["year"] = true
+	return rolled
+
+
+func days_per_year() -> int:
+	return days_per_season * season_names.size()
+
+
+## Days since day 1 of year 1.
+func total_days() -> int:
+	return ((year - 1) * season_names.size() + season) * days_per_season + day - 1
+
+
+## Season index for an absolute day count (used to plan weather ahead).
+func season_of_day(total: int) -> int:
+	return posmod(total / days_per_season, season_names.size())
+
+
+func weekday() -> int:
+	return posmod(total_days() + weekday_offset, weekday_names.size())
+
+
+func weekday_name() -> String:
+	return weekday_names[weekday()]
+
+
+func season_name() -> String:
+	return season_names[season]
+
+
+## "Autumn 12 · Thursday"
+func date_text() -> String:
+	return "%s %d · %s" % [season_name(), day, weekday_name()]
+
+
+func add_event(id: String, on_season: int, on_day: int, on_year: int = -1, data: Dictionary = {}) -> void:
+	events.append({"id": id, "season": on_season, "day": on_day, "year": on_year, "data": data})
+
+
+func events_on(on_season: int, on_day: int, on_year: int) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for e in events:
+		if int(e["season"]) == on_season and int(e["day"]) == on_day and (int(e["year"]) < 0 or int(e["year"]) == on_year):
+			out.append(e)
+	return out
+
+
+func events_today() -> Array[Dictionary]:
+	return events_on(season, day, year)
+
+
+func to_dict() -> Dictionary:
+	return {"year": year, "season": season, "day": day}
+
+
+func from_dict(d: Dictionary) -> void:
+	set_date(int(d.get("year", 1)), int(d.get("season", 0)), int(d.get("day", 1)))
+
+
+==============================================================================
+== core/world_time_manager.gd
+==============================================================================
+extends Node
+## Autoload "WorldTime": the one authoritative world clock and calendar.
+##
+## A 24-hour clock that runs while the game runs (1 real second = 1 game minute by
+## default), stops with the scene tree (menus, journal), during dialogue, and for any
+## reason a system registers with pause(). Midnight advances the WorldCalendar.
+##
+## Other systems listen to signals or ask; nothing else keeps its own timer:
+##   WorldTime.hour_changed.connect(...)          # shops, NPC routines
+##   WorldTime.period_changed.connect(...)        # "dawn" "morning" "midday" ...
+##   WorldTime.is_between(9, 17)                  # opening hours (wraps past midnight)
+##   WorldTime.sleep_until(6)                     # bed
+##   WorldTime.advance_minutes(90)                # waiting
+##   WorldTime.pause("cutscene") / resume("cutscene")
+##   WorldTime.set_time(12, 0)                    # testing
+## Debug builds: ] advances an hour, [ advances a day.
+
+signal minute_changed(hour: int, minute: int)
+signal hour_changed(hour: int)
+signal day_changed(calendar: WorldCalendar)
+signal season_changed(season: int)
+signal year_changed(year: int)
+signal period_changed(period: String, previous: String)
+## The clock was set, loaded or skipped ahead: listeners should snap to the new state
+## instead of blending toward it.
+signal time_jumped
+## A calendar event (WorldCalendar.add_event) falls on the day that just began.
+signal event_due(event: Dictionary)
+
+const DAY_MINUTES := 1440
+
+## Game minutes per real second. 0 stops the clock.
+var minutes_per_second := 1.0
+## Day periods, each from its start (minutes after midnight) to the next one's start.
+## The last wraps past midnight to the first.
+var periods: Array[Dictionary] = [
+	{"name": "dawn", "start": 5 * 60},
+	{"name": "morning", "start": 7 * 60},
+	{"name": "midday", "start": 11 * 60},
+	{"name": "afternoon", "start": 15 * 60},
+	{"name": "evening", "start": 18 * 60},
+	{"name": "night", "start": 20 * 60},
+]
+## Where a new game begins. season is a 0-based index (2 = Autumn).
+var start := {"year": 1, "season": 2, "day": 12, "hour": 18, "minute": 40}
+var pause_in_dialogue := true
+## Lets cinematics hide the clock HUD without stopping time.
+var hud_hidden := false
+
+var calendar := WorldCalendar.new()
+var hour := 0
+var minute := 0
+
+var _frac := 0.0
+var _pauses := {}
+var _period := ""
+
+
+func _ready() -> void:
+	# so that Autumn 12 of year 1 is a Thursday
+	calendar.weekday_offset = 6
+	reset()
+
+
+func reset() -> void:
+	calendar.set_date(int(start["year"]), int(start["season"]), int(start["day"]))
+	hour = int(start["hour"])
+	minute = int(start["minute"])
+	_frac = 0.0
+	_pauses.clear()
+	_period = period()
+	time_jumped.emit()
+
+
+# --- running ----------------------------------------------------------------------
+
+func _process(delta: float) -> void:
+	if is_paused():
+		return
+	_frac += delta * minutes_per_second
+	while _frac >= 1.0:
+		_frac -= 1.0
+		_tick()
+
+
+## Stop the clock for a named reason; it runs again when every reason is resumed.
+func pause(reason: String) -> void:
+	_pauses[reason] = true
+
+
+func resume(reason: String) -> void:
+	_pauses.erase(reason)
+
+
+func is_paused() -> bool:
+	return minutes_per_second <= 0.0 or not _pauses.is_empty() or (pause_in_dialogue and Dialogue.active)
+
+
+func _tick() -> void:
+	minute += 1
+	if minute >= 60:
+		minute = 0
+		hour += 1
+		if hour >= 24:
+			hour = 0
+			_next_day()
+		hour_changed.emit(hour)
+	minute_changed.emit(hour, minute)
+	_check_period()
+
+
+func _next_day() -> void:
+	var rolled := calendar.advance_day()
+	day_changed.emit(calendar)
+	if rolled["season"]:
+		season_changed.emit(calendar.season)
+	if rolled["year"]:
+		year_changed.emit(calendar.year)
+	for e in calendar.events_today():
+		event_due.emit(e)
+
+
+func _check_period() -> void:
+	var p := period()
+	if p != _period:
+		var prev := _period
+		_period = p
+		period_changed.emit(p, prev)
+
+
+# --- moving the clock -------------------------------------------------------------
+
+## Advance by a number of game minutes. Short waits tick minute by minute so every
+## signal fires; long ones jump (one signal per day crossed, then time_jumped).
+func advance_minutes(n: int) -> void:
+	if n <= 0:
+		return
+	if n <= 180:
+		for i in n:
+			_tick()
+		return
+	var total := minute_of_day() + n
+	for i in total / DAY_MINUTES:
+		_next_day()
+	var rem := total % DAY_MINUTES
+	hour = rem / 60
+	minute = rem % 60
+	_frac = 0.0
+	hour_changed.emit(hour)
+	minute_changed.emit(hour, minute)
+	_check_period()
+	time_jumped.emit()
+
+
+## Minutes from now until the next time the clock reads h:m.
+func minutes_until(h: int, m: int = 0) -> int:
+	var d := posmod(h * 60 + m - minute_of_day(), DAY_MINUTES)
+	return d if d > 0 else DAY_MINUTES
+
+
+## Skip ahead to the next h:m (sleeping, resting until morning).
+func sleep_until(h: int, m: int = 0) -> void:
+	var n := minutes_until(h, m)
+	advance_minutes(n)
+	if n <= 180:
+		time_jumped.emit()
+
+
+## Set the clock directly without advancing the calendar. For testing and scripted scenes.
+func set_time(h: int, m: int = 0) -> void:
+	hour = posmod(h, 24)
+	minute = clampi(m, 0, 59)
+	_frac = 0.0
+	hour_changed.emit(hour)
+	minute_changed.emit(hour, minute)
+	_check_period()
+	time_jumped.emit()
+
+
+func set_date(year: int, season: int, day: int) -> void:
+	calendar.set_date(year, season, day)
+	day_changed.emit(calendar)
+	time_jumped.emit()
+
+
+# --- asking -----------------------------------------------------------------------
+
+func minute_of_day() -> int:
+	return hour * 60 + minute
+
+
+## Minutes since midnight of day 1, year 1. Use for durations and schedules.
+func total_minutes() -> int:
+	return calendar.total_days() * DAY_MINUTES + minute_of_day()
+
+
+## 0..1 through the day, continuous between minutes (drives the lighting).
+func day_fraction() -> float:
+	return (float(minute_of_day()) + _frac) / float(DAY_MINUTES)
+
+
+func period() -> String:
+	var now := minute_of_day()
+	var name := str(periods[periods.size() - 1]["name"])
+	for p in periods:
+		if now >= int(p["start"]):
+			name = str(p["name"])
+	return name
+
+
+func is_night() -> bool:
+	return period() == "night"
+
+
+## True from hour a up to hour b; wraps past midnight (is_between(22, 6)).
+func is_between(a: float, b: float) -> bool:
+	var h := float(minute_of_day()) / 60.0
+	return (h >= a and h < b) if a <= b else (h >= a or h < b)
+
+
+## "6:42 PM"
+func time_text() -> String:
+	var h := hour % 12
+	return "%d:%02d %s" % [12 if h == 0 else h, minute, "AM" if hour < 12 else "PM"]
+
+
+func date_text() -> String:
+	return calendar.date_text()
+
+
+# --- persistence ------------------------------------------------------------------
+
+func to_dict() -> Dictionary:
+	var d := calendar.to_dict()
+	d["hour"] = hour
+	d["minute"] = minute
+	d["frac"] = _frac
+	d["rate"] = minutes_per_second
+	return d
+
+
+func from_dict(d: Dictionary) -> void:
+	if d.is_empty():
+		reset()
+		return
+	calendar.from_dict(d)
+	hour = clampi(int(d.get("hour", 0)), 0, 23)
+	minute = clampi(int(d.get("minute", 0)), 0, 59)
+	_frac = clampf(float(d.get("frac", 0.0)), 0.0, 0.999)
+	minutes_per_second = float(d.get("rate", 1.0))
+	_pauses.clear()
+	_period = period()
+	time_jumped.emit()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not OS.is_debug_build():
+		return
+	if event.is_action_pressed(&"debug_hour"):
+		advance_minutes(60)
+		time_jumped.emit()
+	elif event.is_action_pressed(&"debug_day"):
+		advance_minutes(DAY_MINUTES)
 
 
 ==============================================================================
@@ -1671,7 +2944,7 @@ func _notification(what: int) -> void:
 ==============================================================================
 {
 	"quiet_mine": {
-		"title": "The Quiet Mine",
+		"title": "The Closed Mine",
 		"summary": "The No. 2 Working at Anjabi is closed. Nobody down here tells it the same way twice.",
 		"objectives": [
 			{"id": "notice", "text": "Read the closure notice at the mine gate"},
@@ -1681,6 +2954,251 @@ func _notification(what: int) -> void:
 		]
 	}
 }
+
+
+==============================================================================
+== game/environment_controller.gd
+==============================================================================
+class_name EnvironmentController
+extends Node
+## Lights a 3D map from WorldTime and Weather. MapBuilder3D._environment() creates one
+## per map and hands it the Environment, the sun/moon light and the low warm fill light.
+##
+## Time of day is read as a fraction (0 = midnight, 0.5 = noon) and sampled from the
+## Gradients and Curves below, so the look is data: replace or edit any of them
+## (controller.sky, controller.sun_energy, ...) to restyle a map. The sample is taken
+## every frame from the continuous clock, so lighting drifts instead of stepping.
+## Weather is blended on top over `weather_blend` seconds. snap() applies the current
+## state at once (used on load, on entering a map and when the clock jumps).
+##
+## One shadowed DirectionalLight3D serves as sun by day and moon by night; its energy
+## passes through zero at dawn and dusk, where it changes sides unseen.
+##
+## Indoors: set `indoor = true` (GameMap3D.indoor does it) to ignore sky, sun and
+## weather and use `indoor_look` instead.
+
+## Fractions of the day where the light changes sides (sun <-> moon).
+const SUNRISE := 0.235
+const SUNSET := 0.815
+
+var env: Environment
+var sun: DirectionalLight3D
+var fill: DirectionalLight3D
+
+var sky := Gradient.new()
+var ambient := Gradient.new()
+var sun_color := Gradient.new()
+var fill_color := Gradient.new()
+var fog_color := Gradient.new()
+var ambient_energy := Curve.new()
+var sun_energy := Curve.new()
+var fill_energy := Curve.new()
+var exposure := Curve.new()
+## 0 at night, 1 in full day: scales how much clouds dim and grey the scene.
+var daylight := Curve.new()
+## 1 when street lamps are lit.
+var lamps := Curve.new()
+
+## Seconds for weather to blend in or out.
+var weather_blend := 10.0
+var indoor := false
+var indoor_look := {
+	"ambient": Color(0.62, 0.56, 0.5), "ambient_energy": 0.9, "background": Color(0.02, 0.02, 0.03),
+	"fog": 0.0, "exposure": 1.2, "lamps": 1.0,
+}
+
+## Smoothed weather: rain, snow, cloud, fog, plus ground wetness and snow cover.
+var w := {"rain": 0.0, "snow": 0.0, "cloud": 0.0, "fog": 0.0, "wet": 0.0, "cover": 0.0}
+var _flash := 0.0
+var _lamp_lights: Array[Light3D] = []
+var _lamp_level := -1.0
+var _lamp_scan := 0.0
+
+
+func _init() -> void:
+	_defaults()
+
+
+func setup(e: Environment, sun_light: DirectionalLight3D, fill_light: DirectionalLight3D) -> void:
+	env = e
+	sun = sun_light
+	fill = fill_light
+
+
+func _ready() -> void:
+	add_to_group(&"environment_controller")
+	WorldTime.time_jumped.connect(snap)
+	Weather.lightning.connect(func() -> void: _flash = 1.0)
+	snap.call_deferred()
+
+
+## Apply the present time and weather immediately, with no blending.
+func snap() -> void:
+	var p := Weather.profile()
+	for k: String in ["rain", "snow", "cloud", "fog"]:
+		w[k] = float(p[k])
+	w["wet"] = 1.0 if float(p["rain"]) > 0.0 else 0.0
+	w["cover"] = 1.0 if float(p["snow"]) > 0.0 else 0.0
+	_flash = 0.0
+	_lamp_level = -1.0
+	if is_inside_tree():
+		for n in get_tree().get_nodes_in_group(&"precipitation"):
+			n.call(&"clear_particles")
+	_collect_lamps()
+	_apply()
+
+
+func _process(delta: float) -> void:
+	var p := Weather.profile()
+	var k := 1.0 - exp(-delta * 3.0 / maxf(weather_blend, 0.01))
+	for key: String in ["rain", "snow", "cloud", "fog"]:
+		w[key] = lerpf(w[key], float(p[key]), k)
+	# ground soaks quickly and dries slowly; snow settles and melts slowly
+	var raining := float(p["rain"]) > 0.0
+	w["wet"] = move_toward(w["wet"], 1.0 if raining else 0.0, delta / (8.0 if raining else 60.0))
+	var snowing := float(p["snow"]) > 0.0
+	w["cover"] = move_toward(w["cover"], 1.0 if snowing else 0.0, delta / (45.0 if snowing else 60.0))
+	_flash = move_toward(_flash, 0.0, delta * 4.0)
+	_lamp_scan -= delta
+	if _lamp_scan <= 0.0:
+		_lamp_scan = 2.0
+		_collect_lamps()
+	_apply()
+
+
+func _apply() -> void:
+	if env == null:
+		return
+	if indoor:
+		_apply_indoor()
+		return
+	var t := WorldTime.day_fraction()
+	var day := daylight.sample(t)
+	var cloud: float = w["cloud"]
+	# clouds take most of the sun by day, less of the moon by night
+	var dim := 1.0 - cloud * lerpf(0.25, 0.65, day)
+	var flash := _flash * _flash
+
+	var bg := sky.sample(t)
+	var grey := bg.get_luminance() * lerpf(1.0, 0.8, day)
+	bg = bg.lerp(Color(grey, grey * 1.02, grey * 1.06), cloud * 0.8)
+	env.background_color = bg.lightened(flash * 0.5)
+	var amb := ambient.sample(t).lerp(Color(0.7, 0.8, 1.0), float(w["snow"]) * 0.3)
+	env.ambient_light_color = amb
+	env.ambient_light_energy = ambient_energy.sample(t) * (1.0 - cloud * 0.25 * day) + flash * 1.2
+	env.tonemap_exposure = exposure.sample(t)
+	env.adjustment_saturation = 1.18 - cloud * 0.3 * day
+	var fog_grey := fog_color.sample(t).get_luminance() * (1.0 - cloud * 0.35)
+	env.fog_light_color = fog_color.sample(t).lerp(Color(fog_grey, fog_grey * 1.03, fog_grey * 1.08), cloud * 0.85)
+	env.fog_density = 0.002 + float(w["rain"]) * 0.007 * (1.0 - 0.4 * float(w["fog"])) + float(w["fog"]) * 0.0065 + float(w["snow"]) * 0.003
+
+	var is_day := t > SUNRISE and t < SUNSET
+	if is_day:
+		var u := (t - SUNRISE) / (SUNSET - SUNRISE)
+		# rises in the east, crosses the south, sets in the west; never lower than 20 degrees
+		sun.rotation_degrees = Vector3(-(20.0 + 46.0 * sin(u * PI)), lerpf(100.0, -100.0, u), 0)
+	else:
+		sun.rotation_degrees = Vector3(-52, -30, 0)
+	sun.light_color = sun_color.sample(t).lerp(Color.WHITE, flash)
+	sun.light_energy = sun_energy.sample(t) * dim + flash * 2.5
+	# the low warm light comes from wherever the sun is near the horizon
+	fill.rotation_degrees = Vector3(-12, 100.0 if t < 0.5 else -100.0, 0)
+	fill.light_color = fill_color.sample(t)
+	fill.light_energy = fill_energy.sample(t) * dim
+
+	_set_lamps(maxf(lamps.sample(t), cloud * 0.6 * day))
+	RenderingServer.global_shader_parameter_set(&"weather_wet", float(w["wet"]))
+	RenderingServer.global_shader_parameter_set(&"weather_snow", float(w["cover"]))
+	for n in get_tree().get_nodes_in_group(&"precipitation"):
+		n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
+
+
+func _apply_indoor() -> void:
+	env.background_color = indoor_look["background"]
+	env.ambient_light_color = indoor_look["ambient"]
+	env.ambient_light_energy = indoor_look["ambient_energy"]
+	env.tonemap_exposure = indoor_look["exposure"]
+	env.adjustment_saturation = 1.18
+	env.fog_density = indoor_look["fog"]
+	sun.light_energy = 0.0
+	fill.light_energy = 0.0
+	_set_lamps(float(indoor_look["lamps"]))
+	RenderingServer.global_shader_parameter_set(&"weather_wet", 0.0)
+	RenderingServer.global_shader_parameter_set(&"weather_snow", 0.0)
+	for n in get_tree().get_nodes_in_group(&"precipitation"):
+		n.call(&"set_precipitation", 0.0, 0.0)
+
+
+## Lamps register themselves in the "lamp_lights" group with their lit energy in meta.
+func _collect_lamps() -> void:
+	if not is_inside_tree():
+		return
+	var found: Array[Light3D] = []
+	for n in get_tree().get_nodes_in_group(&"lamp_lights"):
+		found.append(n as Light3D)
+	if found.size() != _lamp_lights.size():
+		_lamp_level = -1.0
+	_lamp_lights = found
+
+
+func _set_lamps(level: float) -> void:
+	if absf(level - _lamp_level) < 0.01:
+		return
+	_lamp_level = level
+	for l in _lamp_lights:
+		if is_instance_valid(l):
+			l.light_energy = float(l.get_meta(&"lit_energy", 1.0)) * level
+			l.visible = level > 0.02
+
+
+# --- the default look ---------------------------------------------------------------
+
+func _defaults() -> void:
+	var n_sky := Color(0.045, 0.06, 0.1)
+	_grad(sky, [[0.0, n_sky], [0.2, Color(0.06, 0.08, 0.15)], [0.25, Color(0.5, 0.4, 0.45)], [0.31, Color(0.5, 0.64, 0.8)],
+		[0.5, Color(0.44, 0.63, 0.86)], [0.7, Color(0.47, 0.62, 0.8)], [0.775, Color(0.8, 0.54, 0.36)],
+		[0.83, Color(0.25, 0.2, 0.32)], [0.875, n_sky], [1.0, n_sky]])
+	var n_amb := Color(0.36, 0.42, 0.55)
+	_grad(ambient, [[0.0, n_amb], [0.2, Color(0.36, 0.42, 0.58)], [0.25, Color(0.52, 0.54, 0.74)], [0.33, Color(0.74, 0.78, 0.84)],
+		[0.5, Color(0.8, 0.83, 0.86)], [0.7, Color(0.82, 0.8, 0.76)], [0.775, Color(0.72, 0.66, 0.7)],
+		[0.83, Color(0.52, 0.46, 0.68)], [0.875, n_amb], [1.0, n_amb]])
+	var moon := Color(0.52, 0.62, 0.86)
+	_grad(sun_color, [[0.0, moon], [SUNRISE - 0.005, moon], [SUNRISE + 0.005, Color(1.0, 0.76, 0.74)], [0.3, Color(1.0, 0.84, 0.72)],
+		[0.4, Color(1.0, 0.96, 0.9)], [0.66, Color(1.0, 0.95, 0.86)], [0.76, Color(1.0, 0.8, 0.56)],
+		[SUNSET - 0.005, Color(1.0, 0.64, 0.46)], [SUNSET + 0.005, moon], [1.0, moon]])
+	var glow := Color(1.0, 0.55, 0.35)
+	_grad(fill_color, [[0.0, glow], [0.2, Color(1.0, 0.6, 0.62)], [0.27, Color(1.0, 0.68, 0.6)], [0.5, Color(1.0, 0.9, 0.8)],
+		[0.72, Color(1.0, 0.7, 0.42)], [0.8, Color(1.0, 0.55, 0.32)], [1.0, glow]])
+	var n_fog := Color(0.2, 0.25, 0.33)
+	_grad(fog_color, [[0.0, n_fog], [0.2, n_fog], [0.26, Color(0.56, 0.5, 0.6)], [0.33, Color(0.64, 0.72, 0.8)],
+		[0.5, Color(0.66, 0.74, 0.82)], [0.7, Color(0.68, 0.72, 0.76)], [0.775, Color(0.68, 0.5, 0.4)],
+		[0.83, Color(0.3, 0.27, 0.38)], [0.875, n_fog], [1.0, n_fog]])
+	_curve(ambient_energy, [[0.0, 0.75], [0.2, 0.75], [SUNRISE, 1.3], [0.28, 1.0], [0.5, 1.0], [0.7, 0.95], [0.78, 1.0], [SUNSET, 1.3], [0.85, 0.95], [0.875, 0.75], [1.0, 0.75]])
+	_curve(sun_energy, [[0.0, 0.86], [SUNRISE - 0.012, 0.7], [SUNRISE, 0.0], [SUNRISE + 0.012, 0.45], [0.27, 0.7], [0.36, 1.05], [0.5, 1.2], [0.68, 1.1],
+		[0.77, 0.95], [SUNSET - 0.012, 0.55], [SUNSET, 0.0], [SUNSET + 0.012, 0.6], [0.86, 0.8], [1.0, 0.86]])
+	_curve(fill_energy, [[0.0, 0.35], [0.17, 0.2], [0.2, 0.0], [0.25, 0.32], [0.31, 0.2], [0.4, 0.0], [0.62, 0.0],
+		[0.72, 0.25], [0.785, 0.5], [0.83, 0.45], [0.875, 0.4], [1.0, 0.35]])
+	_curve(exposure, [[0.0, 1.45], [0.2, 1.45], [0.27, 1.25], [0.36, 1.05], [0.5, 1.0], [0.7, 1.02], [0.78, 1.25], [0.84, 1.4], [0.875, 1.45], [1.0, 1.45]])
+	_curve(daylight, [[0.0, 0.0], [0.2, 0.0], [0.3, 1.0], [0.74, 1.0], [0.85, 0.0], [1.0, 0.0]])
+	_curve(lamps, [[0.0, 1.0], [0.225, 1.0], [0.255, 0.0], [0.74, 0.0], [0.79, 1.0], [1.0, 1.0]])
+
+
+static func _grad(g: Gradient, keys: Array) -> void:
+	var offsets := PackedFloat32Array()
+	var colors := PackedColorArray()
+	for k: Array in keys:
+		offsets.append(k[0])
+		colors.append(k[1])
+	g.offsets = offsets
+	g.colors = colors
+
+
+static func _curve(c: Curve, keys: Array) -> void:
+	c.clear_points()
+	c.min_value = 0.0
+	c.max_value = 4.0
+	for k: Array in keys:
+		c.add_point(Vector2(k[0], k[1]), 0, 0, Curve.TANGENT_LINEAR, Curve.TANGENT_LINEAR)
 
 
 ==============================================================================
@@ -1720,6 +3238,8 @@ func _ready() -> void:
 func new_game() -> void:
 	GameState.reset()
 	Journal.reset()
+	WorldTime.reset()
+	Weather.reset()
 	load_map(START_MAP, "default")
 	Journal.start_quest(START_QUEST)
 
@@ -1788,6 +3308,7 @@ func _enter_map(id: String) -> void:
 	ui.bind_player(player)
 	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
 	$Weather/Fog.visible = not (map is GameMap3D)
+	$Weather/Rain.visible = not (map is GameMap3D)
 	ui.hud.show_location(map.display_name)
 
 
@@ -1928,6 +3449,8 @@ extends StaticBody3D
 @export var hood := false
 ## Facing in degrees around Y; 0 faces north, 180 faces south (toward the camera).
 @export var yaw_deg := 180.0
+## Figure3D look options (hair, hat, long_coat, apron, satchel, hair_color).
+@export var look: Dictionary = {}
 
 var figure: Figure3D
 var interactable: Interactable3D
@@ -1948,6 +3471,7 @@ func _ready() -> void:
 	figure.accent = accent
 	figure.skin = skin
 	figure.hood = hood
+	figure.configure(look)
 	figure.rotation.y = deg_to_rad(yaw_deg)
 	add_child(figure)
 	interactable = Interactable3D.new()
@@ -1968,29 +3492,102 @@ func _on_interacted(by: Node3D) -> void:
 
 
 ==============================================================================
+== game/actors/townsfolk.gd
+==============================================================================
+class_name Townsfolk
+extends Node3D
+## Background inhabitant: walks a loop of points, pausing at each, or stands idle if
+## given one point. Not interactive and not solid, so it never blocks the player.
+## Lives in the map's Entities; built entirely from data set before entering the tree.
+
+var points := PackedVector3Array()
+var speed := 1.1
+var coat := Color(0.3, 0.32, 0.35)
+var accent := Color(0.6, 0.45, 0.25)
+var skin := Color(0.7, 0.53, 0.42)
+var hood := false
+## Facing in degrees when standing still with a single point.
+var yaw_deg := 180.0
+var look := {}
+
+var _fig: Figure3D
+var _i := 0
+var _wait := 0.0
+
+
+func _ready() -> void:
+	_fig = Figure3D.new()
+	_fig.coat = coat
+	_fig.accent = accent
+	_fig.skin = skin
+	_fig.hood = hood
+	_fig.configure(look)
+	_fig.rotation.y = deg_to_rad(yaw_deg)
+	add_child(_fig)
+	if not points.is_empty():
+		global_position = points[0]
+	_wait = randf_range(0.0, 3.0)
+
+
+func _process(delta: float) -> void:
+	if points.size() < 2:
+		return
+	if _wait > 0.0:
+		_wait -= delta
+		_fig.set_motion(false)
+		return
+	var target := points[(_i + 1) % points.size()]
+	var to := target - global_position
+	var flat := Vector3(to.x, 0, to.z)
+	if flat.length() < 0.08:
+		_i = (_i + 1) % points.size()
+		_wait = randf_range(1.5, 5.0)
+		return
+	var step := minf(speed * delta, flat.length())
+	global_position += flat.normalized() * step
+	global_position.y = lerpf(global_position.y, target.y, clampf(step / maxf(flat.length(), 0.01), 0.0, 1.0))
+	_fig.rotation.y = lerp_angle(_fig.rotation.y, atan2(-flat.x, -flat.z), 1.0 - exp(-10.0 * delta))
+	_fig.set_motion(true, speed / 4.2)
+
+
+==============================================================================
 == game/camera/follow_camera.gd
 ==============================================================================
 class_name FollowCamera
 extends Camera3D
 ## Fixed-orientation elevated RPG camera. Never rotates: north is always up the
-## screen. Orthographic by default; `size` is the visible height in metres.
+## screen. Narrow-lens perspective by default (orthographic optional).
 
-@export var pitch_deg := 50.0
-@export var distance := 40.0
+@export var pitch_deg := 40.0
+@export var distance := 30.0
 @export var ortho_size := 14.0
+## Perspective with a narrow lens reads like the handheld reference (facades visible,
+## gentle depth); set false for the old orthographic view.
+@export var perspective := true
+@export var fov_deg := 32.0
 @export var follow_speed := 6.0
 ## Aim slightly ahead of the feet so the player sits a little below centre.
 @export var look_height := 1.0
 
+## Set by the player: widens the lens a touch and leads the view while running.
+var sprint := false
+@export var sprint_fov_add := 2.5
+@export var sprint_lead := 1.6
+
 var target: Node3D
+var _lead := Vector3.ZERO
 
 
 func _ready() -> void:
 	top_level = true
-	projection = PROJECTION_ORTHOGONAL
-	size = ortho_size
+	if perspective:
+		projection = PROJECTION_PERSPECTIVE
+		fov = fov_deg
+	else:
+		projection = PROJECTION_ORTHOGONAL
+		size = ortho_size
 	near = 0.5
-	far = 160.0
+	far = 220.0
 	rotation_degrees = Vector3(-pitch_deg, 0, 0)
 	current = true
 	reset_smoothing()
@@ -2002,6 +3599,7 @@ func _offset() -> Vector3:
 
 
 func reset_smoothing() -> void:
+	_lead = Vector3.ZERO
 	if target != null and target.is_inside_tree():
 		global_position = target.global_position + _offset()
 
@@ -2009,8 +3607,15 @@ func reset_smoothing() -> void:
 func _physics_process(delta: float) -> void:
 	if target == null:
 		return
-	var want := target.global_position + _offset()
+	var ahead := Vector3.ZERO
+	if sprint and target is CharacterBody3D:
+		var v := (target as CharacterBody3D).velocity
+		ahead = Vector3(v.x, 0, v.z).limit_length(1.0) * sprint_lead
+	_lead = _lead.lerp(ahead, 1.0 - exp(-3.0 * delta))
+	var want := target.global_position + _offset() + _lead
 	global_position = global_position.lerp(want, 1.0 - exp(-follow_speed * delta))
+	if perspective:
+		fov = lerpf(fov, fov_deg + (sprint_fov_add if sprint else 0.0), 1.0 - exp(-4.0 * delta))
 
 
 ==============================================================================
@@ -2279,6 +3884,8 @@ extends CharacterBody3D
 signal target_changed(target: Interactable3D)
 
 @export var walk_speed := 4.2
+## Held sprint (Shift, pad B/X, or the HUD's RUN toggle on touch).
+@export var run_speed := 7.4
 @export var accel := 28.0
 @export var decel := 36.0
 @export var gravity := 22.0
@@ -2292,6 +3899,9 @@ var figure: Figure3D
 var reach: Area3D
 var camera: FollowCamera
 ## Last place the player stood; used if they ever fall out of the world.
+## True while the sprint input is held and the player is moving.
+var sprinting := false
+var _dust: GPUParticles3D
 var _safe := Vector3.ZERO
 var _has_safe := false
 
@@ -2310,9 +3920,10 @@ func _init() -> void:
 	cs.position.y = 0.8
 	add_child(cs)
 	figure = Figure3D.new()
-	figure.coat = Color(0.86, 0.62, 0.2)
-	figure.accent = Color(0.2, 0.24, 0.28)
-	figure.hood = true
+	figure.coat = Color(0.5, 0.13, 0.11)
+	figure.accent = Color(0.62, 0.42, 0.2)
+	figure.hood = false
+	figure.configure({"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05), "long_coat": true})
 	figure.xray = true
 	add_child(figure)
 	reach = Area3D.new()
@@ -2326,6 +3937,26 @@ func _init() -> void:
 	rs.position = Vector3(0, 0.8, 0)
 	reach.add_child(rs)
 	add_child(reach)
+	add_child(Rain3D.new())
+	# soft ring under the feet, as in the key art
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.42
+	tm.outer_radius = 0.47
+	tm.rings = 32
+	tm.ring_segments = 4
+	ring.mesh = tm
+	ring.scale = Vector3(1, 0.05, 1)
+	ring.position.y = 0.04
+	var rm := StandardMaterial3D.new()
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rm.albedo_color = Color(0.95, 0.92, 0.85, 0.55)
+	ring.material_override = rm
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ring)
+	_dust = _make_dust()
+	add_child(_dust)
 	camera = FollowCamera.new()
 	camera.target = self
 	add_child(camera)
@@ -2343,7 +3974,9 @@ func _physics_process(delta: float) -> void:
 		if dir == Vector2.ZERO and touch != null:
 			dir = touch.vector
 	var moving := dir.length() > 0.1
-	var want := Vector3(dir.x, 0, dir.y).limit_length(1.0) * walk_speed if moving else Vector3.ZERO
+	sprinting = moving and (Input.is_action_pressed(&"sprint") or (touch != null and touch.sprint))
+	var top := run_speed if sprinting else walk_speed
+	var want := Vector3(dir.x, 0, dir.y).limit_length(1.0) * top if moving else Vector3.ZERO
 	var h := Vector3(velocity.x, 0, velocity.z).move_toward(want, (accel if moving else decel) * delta)
 	velocity.x = h.x
 	velocity.z = h.z
@@ -2363,7 +3996,41 @@ func _physics_process(delta: float) -> void:
 	var yaw := atan2(-facing.x, -facing.z)
 	figure.rotation.y = lerp_angle(figure.rotation.y, yaw, 1.0 - exp(-14.0 * delta))
 	figure.set_motion(h.length() > 0.3, h.length() / walk_speed)
+	_dust.emitting = is_on_floor() and h.length() > walk_speed * 1.25
+	camera.sprint = sprinting
 	_update_target()
+
+
+## Small kicks of spray at the heels while running.
+func _make_dust() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.amount = 14
+	p.lifetime = 0.45
+	p.local_coords = false
+	p.emitting = false
+	p.position = Vector3(0, 0.06, 0)
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	pm.emission_sphere_radius = 0.15
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 50.0
+	pm.initial_velocity_min = 0.5
+	pm.initial_velocity_max = 1.2
+	pm.gravity = Vector3(0, -3.5, 0)
+	pm.scale_min = 0.5
+	pm.scale_max = 1.3
+	p.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.07, 0.07)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.8, 0.86, 0.95, 0.3)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	q.material = m
+	p.draw_pass_1 = q
+	return p
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -2612,6 +4279,8 @@ func _ready() -> void:
 			cm.top_radius = 0.2
 			cm.bottom_radius = 0.2
 			cm.height = 0.1
+			cm.radial_segments = 12
+			cm.rings = 0
 			w.mesh = cm
 			w.material_override = dark
 			w.position = Vector3(x, 0.2, z)
@@ -2847,6 +4516,8 @@ func _ready() -> void:
 	am.top_radius = 0.035
 	am.bottom_radius = 0.045
 	am.height = 1.0
+	am.radial_segments = 8
+	am.rings = 0
 	arm.mesh = am
 	arm.material_override = arm_m
 	arm.position.y = 0.5
@@ -2855,6 +4526,8 @@ func _ready() -> void:
 	var km := SphereMesh.new()
 	km.radius = 0.08
 	km.height = 0.16
+	km.radial_segments = 10
+	km.rings = 6
 	_knob.mesh = km
 	_knob.position.y = 1.02
 	_lever.add_child(_knob)
@@ -2925,6 +4598,8 @@ extends Node3D
 
 @export var map_id := ""
 @export var display_name := ""
+## Interiors ignore the sky, sun and weather (EnvironmentController.indoor_look).
+@export var indoor := false
 
 ## Set by Main once the player has been placed.
 var player: Node3D
@@ -2950,6 +4625,8 @@ extends GameMap3D
 ## the footprints and colliders stay.
 
 var M := {}
+## Drives this map's light, sky, fog and precipitation from WorldTime and Weather.
+var environment: EnvironmentController
 
 static var _detail: NoiseTexture2D
 static var _detail_n: NoiseTexture2D
@@ -2996,13 +4673,29 @@ static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
 
 # --- materials ------------------------------------------------------------------
 
+const WET_GROUND := preload("res://art/shaders/wet_ground.gdshader")
+
+
+## Wet ground material (art/shaders/wet_ground.gdshader).
+static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, vertex_color := false) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = WET_GROUND
+	m.set_shader_parameter("base_color", c)
+	m.set_shader_parameter("cobble", cobble)
+	m.set_shader_parameter("wetness", wet)
+	m.set_shader_parameter("puddles", puddles)
+	m.set_shader_parameter("use_vertex_color", vertex_color)
+	m.set_shader_parameter("noise_tex", detail_textures()[0])
+	return m
+
+
 func _materials() -> void:
-	M.paving = _mat(Color(0.3, 0.32, 0.35), 0.38)
-	M.paving_light = _mat(Color(0.42, 0.42, 0.42), 0.45)
+	M.paving = ground_mat(Color(0.42, 0.4, 0.38))
+	M.paving_light = ground_mat(Color(0.5, 0.48, 0.45), 1.0, 0.7, 0.3)
 	M.stone = _mat(Color(0.36, 0.35, 0.33), 0.8)
 	M.rock = _mat(Color(0.2, 0.23, 0.25), 0.95)
 	M.rock_dark = _mat(Color(0.13, 0.15, 0.17), 0.95)
-	M.moss = _mat(Color(0.14, 0.24, 0.18), 0.95)
+	M.moss = ground_mat(Color(0.16, 0.26, 0.17), 0.0, 0.5, 0.15)
 	M.concrete = _mat(Color(0.47, 0.47, 0.44), 0.85)
 	M.steel = _mat(Color(0.33, 0.35, 0.37), 0.45, 0.6)
 	M.steel_dark = _mat(Color(0.17, 0.18, 0.2), 0.5, 0.6)
@@ -3017,14 +4710,16 @@ func _materials() -> void:
 	M.lamp = _mat(Color(1.0, 0.8, 0.5), 0.3, 0.0, Color(1.0, 0.7, 0.35), 4.0)
 	M.warning = _mat(Color(0.8, 0.6, 0.12), 0.6)
 	M.sand = _mat(Color(0.55, 0.5, 0.42), 0.9)
-	M.sea = _mat(Color(0.05, 0.16, 0.2), 0.12, 0.3)
+	M.sea = ShaderMaterial.new()
+	M.sea.shader = preload("res://art/shaders/sea.gdshader")
+	M.sea.set_shader_parameter("noise_tex", detail_textures()[0])
 	M.foliage = _mat(Color(0.08, 0.2, 0.15), 0.9)
 	M.foliage_b = _mat(Color(0.11, 0.24, 0.16), 0.9)
 	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
 	M.mesh_fence = _mat(Color(0.25, 0.27, 0.3, 0.45), 0.6, 0.4)
 	M.mesh_fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	M.mud = _mat(Color(0.27, 0.24, 0.21), 0.45)
-	M.gravel = _mat(Color(0.33, 0.34, 0.35), 0.9)
+	M.mud = ground_mat(Color(0.3, 0.26, 0.22), 0.0, 0.95, 0.75)
+	M.gravel = ground_mat(Color(0.4, 0.39, 0.37), 0.0, 0.75, 0.45)
 	M.rust = _mat(Color(0.48, 0.27, 0.17), 0.7, 0.5)
 	M.blue_light = _mat(Color(0.4, 0.6, 1.0), 0.3, 0.0, Color(0.35, 0.55, 1.0), 3.0)
 
@@ -3054,13 +4749,128 @@ func _body() -> StaticBody3D:
 
 ## An authored model from res://art/models (exported from art/source/*.blend).
 ## Models face +Z (south, toward the camera). Visual only; add colliders separately.
+## Repeated small models in BATCHED are not instanced: they are gathered and drawn as
+## one MultiMesh per model part per 24 m cell (see _flush_batches), and model() returns null.
 func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
+	if model_name in BATCHED:
+		var sv: Vector3 = s if s is Vector3 else Vector3(s, s, s)
+		batch(model_name, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(sv), at))
+		return null
 	var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
 	n.position = at
 	n.rotation.y = yaw
 	n.scale = s if s is Vector3 else Vector3(s, s, s)
+	weather_model(n)
 	add_child(n)
 	return n
+
+
+const BATCHED := ["pine", "lantern_post", "barrel", "planter", "crate_stack"]
+## Models whose batches cast shadows (the rest are too small to matter).
+const BATCH_SHADOWS := ["pine", "lantern_post"]
+const BATCH_CELL := 24.0
+var _batches := {}
+
+
+## Queue one copy of a model; all queued copies are built at the end of the frame.
+func batch(model_name: String, x: Transform3D) -> void:
+	if _batches.is_empty():
+		_flush_batches.call_deferred()
+	var key := "%s|%d|%d" % [model_name, floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL)]
+	if not _batches.has(key):
+		_batches[key] = [] as Array[Transform3D]
+	(_batches[key] as Array[Transform3D]).append(x)
+
+
+func _flush_batches() -> void:
+	for key: String in _batches:
+		var model_name := key.get_slice("|", 0)
+		var xs: Array[Transform3D] = _batches[key]
+		for part: Array in model_parts(model_name):
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = part[0]
+			mm.instance_count = xs.size()
+			for i in xs.size():
+				mm.set_instance_transform(i, xs[i] * (part[1] as Transform3D))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.name = "Batch_" + model_name
+			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if model_name in BATCH_SHADOWS else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mmi.visibility_range_end = 90.0
+			add_child(mmi)
+	_batches.clear()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_READY:
+		merge_static.call_deferred()
+
+
+## Static batching: once the map is built, every primitive mesh (box, slab, beam, cyl,
+## dome) that belongs to plain scenery is merged into one mesh per material per 24 m
+## cell, so hundreds of walls, beams and steps cost a few draws. Anything under a
+## scripted node (NPCs, doors, puzzle pieces, sub-maps) or an imported model is left alone.
+func merge_static() -> void:
+	if not is_inside_tree():
+		return
+	var inv := global_transform.affine_inverse()
+	var groups := {}
+	var stack: Array[Node] = []
+	for c in get_children():
+		stack.append(c)
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n.get_script() != null or n.scene_file_path != "" or n.name == "Entities":
+			continue
+		for c in n.get_children():
+			stack.append(c)
+		var mi := n as MeshInstance3D
+		if mi == null or not (mi.mesh is PrimitiveMesh) or mi.material_override == null or not mi.visible:
+			continue
+		var x := inv * mi.global_transform
+		var key := [mi.material_override, mi.cast_shadow, floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL)]
+		if not groups.has(key):
+			groups[key] = []
+		(groups[key] as Array).append([mi, x])
+	for key: Array in groups:
+		var items: Array = groups[key]
+		if items.size() < 2:
+			continue
+		var st := SurfaceTool.new()
+		for it: Array in items:
+			st.append_from((it[0] as MeshInstance3D).mesh, 0, it[1])
+		var merged := MeshInstance3D.new()
+		merged.name = "Static"
+		merged.mesh = st.commit()
+		merged.material_override = key[0]
+		merged.cast_shadow = key[1]
+		add_child(merged)
+		for it: Array in items:
+			(it[0] as Node).queue_free()
+
+
+static var _parts_cache := {}
+
+
+## Every mesh in a model with its transform relative to the model root: [[Mesh, Transform3D]].
+static func model_parts(model_name: String) -> Array:
+	if not _parts_cache.has(model_name):
+		var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
+		weather_model(n)
+		var out := []
+		for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh == null:
+				continue
+			var x := mi.transform
+			var p := mi.get_parent() as Node3D
+			while p != null and p != n:
+				x = p.transform * x
+				p = p.get_parent() as Node3D
+			out.append([mi.mesh, x])
+		_parts_cache[model_name] = out
+		n.free()
+	return _parts_cache[model_name]
 
 
 ## The shed model (native 4 m wide, 3 m tall, 3 m deep) stretched to `size`
@@ -3070,6 +4880,120 @@ func shed(base: Vector3, size: Vector3, yaw := 0.0, solid := true) -> Node3D:
 	if solid:
 		box(base + Vector3(0, size.y * 0.5, 0), size, null, true, yaw)
 	return n
+
+
+static var _weathered := {}
+
+
+## Gives imported model materials the shared surface detail (once per material) and
+## makes foliage double-sided. Emissive glass and smooth metal are left alone.
+static func weather_model(root: Node) -> void:
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if m == null or _weathered.has(m):
+				continue
+			_weathered[m] = true
+			var nm := m.resource_name.to_lower()
+			if "leaf" in nm or "pine" in nm or "petal" in nm:
+				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if m.emission_enabled or m.roughness < 0.55:
+				continue
+			add_detail(m, 0.6)
+
+
+static var _mesh_cache := {}
+
+
+## The first mesh of a model, for batching with scatter().
+static func model_mesh(model_name: String) -> Mesh:
+	if not _mesh_cache.has(model_name):
+		var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate()
+		weather_model(n)
+		var mi := n.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		_mesh_cache[model_name] = mi.mesh
+		n.free()
+	return _mesh_cache[model_name]
+
+
+## Many copies of one model as MultiMesh draws, one per 24 m cell so off-screen
+## cells are culled (ferns, rocks, clutter, flowers).
+func scatter(model_name: String, xforms: Array[Transform3D], shadows := false) -> void:
+	multimesh_cells(model_mesh(model_name), xforms, shadows, model_name)
+
+
+func multimesh_cells(mesh: Mesh, xforms: Array[Transform3D], shadows: bool, label: String) -> void:
+	var cells := {}
+	for x in xforms:
+		var k := Vector2i(floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL))
+		if not cells.has(k):
+			cells[k] = [] as Array[Transform3D]
+		(cells[k] as Array[Transform3D]).append(x)
+	for k: Vector2i in cells:
+		var xs: Array[Transform3D] = cells[k]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, xs[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Cells_" + label
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = 90.0
+		add_child(mmi)
+
+
+static var _rail_mesh: ArrayMesh
+
+
+## One metre of iron railing (post at the start, top and mid rails) along +X.
+static func railing_mesh() -> ArrayMesh:
+	if _rail_mesh == null:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var parts := [
+			[Vector3(0.05, 1.0, 0.05), Vector3(0.0, 0.5, 0)],
+			[Vector3(1.0, 0.05, 0.05), Vector3(0.5, 0.97, 0)],
+			[Vector3(1.0, 0.035, 0.035), Vector3(0.5, 0.5, 0)],
+		]
+		for p: Array in parts:
+			var b := BoxMesh.new()
+			b.size = p[0]
+			st.append_from(b, 0, Transform3D(Basis(), p[1]))
+		st.generate_normals()
+		_rail_mesh = st.commit()
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.05, 0.05, 0.055)
+		m.metallic = 0.8
+		m.roughness = 0.4
+		_rail_mesh.surface_set_material(0, m)
+	return _rail_mesh
+
+
+## Batched railings, one transform per metre segment.
+func railings(xforms: Array[Transform3D]) -> void:
+	multimesh_cells(railing_mesh(), xforms, false, "railing")
+
+
+static func xform(at: Vector3, yaw: float, s: float) -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), at)
+
+
+## A background inhabitant walking `points` (one point = standing).
+func townsfolk(points: Array, coat: Color, accent: Color, skin: Color, hood := false, yaw := 180.0, look := {}) -> void:
+	var t := Townsfolk.new()
+	t.points = PackedVector3Array(points)
+	t.coat = coat
+	t.accent = accent
+	t.skin = skin
+	t.hood = hood
+	t.yaw_deg = yaw
+	t.look = look
+	entities.add_child(t)
 
 
 ## Invisible cylinder collider standing on `base`.
@@ -3207,31 +5131,46 @@ func railing(a: Vector3, b: Vector3, m: Material = null) -> void:
 
 
 func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
-	model("lamp", at)
-	collider_cyl(at, 0.12, 2.6)
+	model("lantern_post", at)
+	collider_cyl(at, 0.15, 3.0)
 	if with_light:
 		var l := OmniLight3D.new()
-		l.position = at + Vector3(0, 2.3, 0.55)
-		l.light_color = Color(1.0, 0.68, 0.38)
-		l.light_energy = 1.6
-		l.omni_range = 7.0
-		l.omni_attenuation = 1.3
+		l.position = at + Vector3(0, 3.0, 0)
+		l.light_color = Color(1.0, 0.6, 0.28)
+		l.light_energy = 2.4
+		l.omni_range = 8.5
+		l.omni_attenuation = 1.6
+		_street(l)
+		_fade(l)
 		add_child(l)
 
 
 func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
 	var l := OmniLight3D.new()
 	l.position = at
-	l.light_color = Color(1.0, 0.64, 0.34)
-	l.light_energy = energy
+	l.light_color = Color(1.0, 0.6, 0.3)
+	l.light_energy = energy * 1.3
 	l.omni_range = rng
+	_street(l)
+	_fade(l)
 	add_child(l)
 
 
+## Street lighting: lit from dusk to dawn and under heavy cloud (EnvironmentController).
+static func _street(l: Light3D) -> void:
+	l.set_meta(&"lit_energy", l.light_energy)
+	l.add_to_group(&"lamp_lights")
+
+
+## Lights far from the camera are switched off (the follow camera sits ~30 m back).
+static func _fade(l: Light3D) -> void:
+	l.distance_fade_enabled = true
+	l.distance_fade_begin = 42.0
+	l.distance_fade_length = 8.0
+
+
 func tree(at: Vector3, s := 1.0) -> void:
-	cyl(at, 0.12 * s, 0.18 * s, 1.4 * s, M.trunk, false, 6)
-	for i in 3:
-		cyl(at + Vector3(0, (1.0 + i * 1.1) * s, 0), 0.05, (1.5 - i * 0.35) * s, 2.0 * s, M.foliage if i % 2 == 0 else M.foliage_b, false, 7)
+	model("pine", at, fmod(at.x * 1.7 + at.z * 0.9, TAU), s * 0.9)
 
 
 func sign_text(at: Vector3, text: String, yaw := 0.0, px := 48, col := Color(0.95, 0.8, 0.55)) -> Label3D:
@@ -3253,30 +5192,66 @@ func sign_text(at: Vector3, text: String, yaw := 0.0, px := 48, col := Color(0.9
 func _environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.1, 0.13, 0.17)
+	env.background_color = Color(0.06, 0.08, 0.11)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.42, 0.5, 0.62)
-	env.ambient_light_energy = 0.55
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.05
+	env.ambient_light_color = Color(0.36, 0.42, 0.55)
+	env.ambient_light_energy = 0.75
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.45
+	env.tonemap_white = 6.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.5
-	env.glow_bloom = 0.05
-	env.glow_hdr_threshold = 1.2
+	env.glow_intensity = 0.85
+	env.glow_strength = 1.1
+	env.glow_bloom = 0.08
+	env.glow_hdr_threshold = 0.85
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.3, 0.37, 0.45)
-	env.fog_density = 0.0025
+	env.fog_light_color = Color(0.2, 0.25, 0.33)
+	env.fog_light_energy = 1.0
+	env.fog_density = 0.0055
 	env.fog_sky_affect = 0.0
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 1.18
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -35, 0)
-	sun.light_color = Color(0.62, 0.72, 0.9)
-	sun.light_energy = 0.75
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 60.0
-	add_child(sun)
+	# one shadowed light is the sun by day and the moon by night (EnvironmentController)
+	var moon := DirectionalLight3D.new()
+	moon.rotation_degrees = Vector3(-52, -30, 0)
+	moon.light_color = Color(0.52, 0.62, 0.86)
+	moon.light_energy = 0.7
+	moon.shadow_enabled = true
+	# two splits instead of four halves the shadow passes; the camera never sees past ~45 m
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	moon.directional_shadow_max_distance = 45.0
+	moon.directional_shadow_fade_start = 0.85
+	add_child(moon)
+	# low warm light from the horizon, no shadows: dawn and golden-hour rims
+	var glow := DirectionalLight3D.new()
+	glow.rotation_degrees = Vector3(-12, -100, 0)
+	glow.light_color = Color(1.0, 0.55, 0.35)
+	glow.light_energy = 0.4
+	glow.light_specular = 0.6
+	add_child(glow)
+	environment = EnvironmentController.new()
+	environment.name = "EnvironmentController"
+	environment.setup(env, moon, glow)
+	environment.indoor = indoor
+	add_child(environment)
+
+
+## A once-baked reflection probe so wet ground and glass catch the lamps.
+func reflection_probe(center: Vector3, size: Vector3) -> void:
+	var p := ReflectionProbe.new()
+	p.position = center
+	p.size = size
+	p.box_projection = true
+	p.update_mode = ReflectionProbe.UPDATE_ONCE
+	p.intensity = 0.8
+	p.max_distance = 60.0
+	add_child(p)
 
 
 ## Chain-link fence from a to b: posts, rails, a dark mesh panel, a 2 m invisible wall.
@@ -3372,6 +5347,7 @@ func _ready() -> void:
 		_shop()
 		_props(true)
 		_people()
+		_insert_dressing()
 		return
 	_materials()
 	_environment()
@@ -3414,6 +5390,7 @@ func _plaza_feature() -> void:
 	ring.bottom_radius = 4.5
 	ring.height = 0.04
 	ring.radial_segments = 32
+	ring.rings = 0
 	var rm := MeshInstance3D.new()
 	rm.mesh = ring
 	rm.material_override = M.paving_light
@@ -3470,19 +5447,26 @@ func _railings() -> void:
 
 
 func _tavern() -> void:
-	var c := Vector3(-10, TERRACE, -19)
-	model("tavern", c)
+	var c := Vector3(-10, TERRACE, -20.5)
+	model("tavern_v2", c)
 	collider_cyl(c, 6.2, 5.0)
-	blocker(c + Vector3(5.25, 0, -2.0), c + Vector3(9.75, 3.6, 4.0))  # annex
-	var door := c + Vector3(0, 0, 6.1)
-	sign_text(door + Vector3(0, 4.3, 0.75), "TAVERN", 0.0, 64)
-	warm_light(door + Vector3(0, 2.2, 1.6), 2.2, 8.0)
-	lamp(door + Vector3(-3.6, 0, 2.0))
-	lamp(door + Vector3(3.6, 0, 2.0), false)
-	# outside seating
-	for p: Vector3 in [Vector3(-4.6, 0, 7.4), Vector3(4.8, 0, 7.2)]:
-		cyl(c + p, 0.6, 0.6, 0.75, M.timber, true, 10)
-		box(c + p + Vector3(0, 0.25, 0.9), Vector3(1.4, 0.5, 0.35), M.timber, true)
+	collider_cyl(c + Vector3(4.6, 0, -3.6), 1.95, 9.5)  # silo
+	box(c + Vector3(0, 1.8, 6.1), Vector3(3.4, 3.6, 1.4), null, true)  # entrance bay
+	sign_text(c + Vector3(0, 4.45, 7.08), "MAIN TAVERN", 0.0, 52, Color(0.98, 0.82, 0.5))
+	warm_light(c + Vector3(0, 2.4, 7.6), 2.4, 9.0)
+	warm_light(c + Vector3(2.6, 2.2, 8.4), 1.4, 6.0)
+	lamp(c + Vector3(-3.4, 0, 8.6))
+	lamp(c + Vector3(6.4, 0, 8.6), false)
+	for p: Vector3 in [Vector3(1.6, 0, 8.4), Vector3(3.8, 0, 8.2)]:
+		model("cafe_table", c + p, 0.4)
+		collider_cyl(c + p, 0.5, 0.8)
+	for p: Vector3 in [Vector3(-2.8, 0, 7.8), Vector3(-2.2, 0, 8.5)]:
+		model("barrel", c + p)
+		collider_cyl(c + p, 0.38, 1.0)
+	model("planter", c + Vector3(-4.8, 0, 7.6))
+	box(c + Vector3(-4.8, 0.3, 7.6), Vector3(1.2, 0.6, 0.6), null, true)
+	for x: float in [-2.4, 2.4]:
+		model("banner", c + Vector3(x, 0, 7.2), PI if x < 0 else 0.0)
 
 
 func _shop() -> void:
@@ -3670,7 +5654,34 @@ func _people() -> void:
 	keeper.skin = Color(0.6, 0.43, 0.33)
 	keeper.position = Vector3(-7.2, TERRACE, -12.2)
 	keeper.yaw_deg = 180.0
+	keeper.look = {"apron": true, "satchel": false, "hair": "short", "hair_color": Color(0.35, 0.3, 0.27)}
 	entities.add_child(keeper)
+
+
+func _insert_dressing() -> void:
+	# ferns and flowers along the terrace wall foot and plaza edges; clutter by the shop
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12
+	var ferns: Array[Transform3D] = []
+	for i in 26:
+		ferns.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.4 + rng.randf() * 0.6), rng.randf() * TAU, rng.randf_range(0.8, 1.3)))
+	for i in 18:
+		ferns.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.4 + rng.randf() * 0.8), rng.randf() * TAU, rng.randf_range(0.9, 1.4)))
+	scatter("fern", ferns)
+	var fl: Array[Transform3D] = []
+	for i in 30:
+		fl.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.3 + rng.randf() * 0.7), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
+	for i in 14:
+		fl.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.6 + rng.randf() * 0.4), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
+	scatter("flowers", fl)
+	for p: Vector3 in [Vector3(-6, PLAZA, -9.2), Vector3(6.5, PLAZA, -9.2), Vector3(-11, PLAZA, 9.2), Vector3(18.5, PLAZA, 9.2)]:
+		model("planter", p)
+	model("crate_stack", Vector3(19, PLAZA, -1.6), 0.3)
+	model("barrel", Vector3(18.6, PLAZA, -3.4))
+	model("barrel", Vector3(19.3, PLAZA, -4.1))
+	for p: Vector3 in [Vector3(-11, PLAZA, -9.0), Vector3(19, PLAZA, -9.0)]:
+		model("banner", p)
+
 
 
 ==============================================================================
@@ -4200,6 +6211,22 @@ func _ready() -> void:
 	_props()
 	_people()
 	_interactables()
+	reflection_probe(Vector3(25, 5, 18), Vector3(44, 16, 36))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	var ferns: Array[Transform3D] = []
+	for i in 60:
+		var side := rng.randi() % 3
+		var p := Vector3(rng.randf_range(10.5, 44.5), 0, 34.0 + rng.randf() * 0.4)
+		if side == 1:
+			p = Vector3(rng.randf_range(10.5, 21.0), 0, 5.6 + rng.randf() * 0.6)
+		elif side == 2:
+			p = Vector3(5.9 + rng.randf() * 0.4, 0, rng.randf_range(13, 33))
+		ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.4)))
+	scatter("fern", ferns)
+	for p: Vector3 in [Vector3(14.6, 0, 29.6), Vector3(31.0, 0, 20.4), Vector3(9.0, 0, 24.0)]:
+		model("barrel", p)
+	model("crate_stack", Vector3(16.5, 0, 25.6), 0.4)
 
 
 func _ground() -> void:
@@ -4272,9 +6299,13 @@ func _mine_door() -> void:
 	# timber frame set into the cliff face, steel door welded shut
 	var z := 5.3
 	slab(Vector3(21.5, 0, z - 0.3), Vector3(26.5, 4.4, z), M.rock_dark, false)
-	for x: float in [21.8, 26.2]:
-		box(Vector3(x, 2.0, z + 0.2), Vector3(0.45, 4.0, 0.45), M.timber, true)
-	box(Vector3(24, 4.2, z + 0.2), Vector3(5.2, 0.45, 0.5), M.timber, false)
+	# timber portal, barred gate and sign (director's key art) in front of the welded door
+	model("mine_portal", Vector3(24, 0, z + 0.55))
+	warm_light(Vector3(22.05, 3.5, z + 1.3), 1.0, 5.0)
+	warm_light(Vector3(25.95, 3.5, z + 1.3), 1.0, 5.0)
+	sign_text(Vector3(24, 5.75, z + 1.5), "ANJABI MINE", 0.0, 46, Color(0.9, 0.78, 0.55))
+	sign_text(Vector3(24, 5.25, z + 1.5), "LEVELS I–IV", 0.0, 28, Color(0.85, 0.72, 0.5))
+	sign_text(Vector3(24.75, 4.75, z + 1.62), "CLOSED", 0.0, 36, Color(1.0, 0.85, 0.75))
 	box(Vector3(24, 1.8, z + 0.05), Vector3(4.0, 3.6, 0.12), M.steel, true)
 	box(Vector3(24, 1.8, z + 0.12), Vector3(0.05, 3.6, 0.04), M.steel_dark, false)
 	# the bright weld bead round the frame
@@ -4283,7 +6314,6 @@ func _mine_door() -> void:
 	box(Vector3(24, 0.05, z + 0.13), Vector3(4.0, 0.05, 0.03), weld, false)
 	for x: float in [22.02, 25.98]:
 		box(Vector3(x, 1.8, z + 0.13), Vector3(0.05, 3.6, 0.03), weld, false)
-	sign_text(Vector3(24, 4.75, z + 0.5), "NO. 2 WORKING", 0.0, 44)
 	# stacked rescue stretchers, still wrapped
 	var wrap := _mat(Color(0.82, 0.8, 0.72), 0.7)
 	for i in 3:
@@ -4372,6 +6402,8 @@ func _props() -> void:
 		cm.top_radius = 0.6
 		cm.bottom_radius = 0.6
 		cm.height = 0.02
+		cm.radial_segments = 16
+		cm.rings = 0
 		mi.mesh = cm
 		mi.material_override = water
 		mi.position = p + Vector3(0, 0.03, 0)
@@ -4386,7 +6418,7 @@ func _props() -> void:
 			blocker(p + Vector3(-0.2, 0, -0.2), p + Vector3(0.2, 1.5, 0.2))
 
 
-func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: Color, hood := false) -> void:
+func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: Color, hood := false, look := {}) -> void:
 	var npc := Npc3D.new()
 	npc.name = n.replace(" ", "")
 	npc.display_name = n
@@ -4397,12 +6429,20 @@ func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: C
 	npc.hood = hood
 	npc.position = at
 	npc.yaw_deg = 180.0
+	npc.look = look
 	entities.add_child(npc)
 
 
 func _people() -> void:
-	_npc("Driller", "anjabi/driller", Vector3(16.8, 0, 30.0), Color(0.42, 0.33, 0.27), Color(0.8, 0.5, 0.18), Color(0.62, 0.45, 0.36))
-	_npc("Gate guard", "anjabi/guard", Vector3(26.4, 0, 13.3), Color(0.24, 0.3, 0.36), Color(0.75, 0.75, 0.7), Color(0.8, 0.64, 0.52), true)
+	_npc("Driller", "anjabi/driller", Vector3(16.8, 0, 30.0), Color(0.42, 0.33, 0.27), Color(0.8, 0.5, 0.18), Color(0.62, 0.45, 0.36), false,
+			{"hat": "hardhat", "satchel": false, "hair_color": Color(0.2, 0.18, 0.16)})
+	_npc("Gate guard", "anjabi/guard", Vector3(26.4, 0, 13.3), Color(0.24, 0.3, 0.36), Color(0.75, 0.75, 0.7), Color(0.8, 0.64, 0.52), true,
+			{"satchel": false, "long_coat": true})
+	# two miners at the portal, as in the key art
+	townsfolk([Vector3(21.6, 0, 7.4)], Color(0.4, 0.36, 0.28), Color(0.7, 0.55, 0.2), Color(0.66, 0.5, 0.4), false, 120.0,
+			{"hat": "hardhat", "satchel": false})
+	townsfolk([Vector3(23.0, 0, 8.1)], Color(0.3, 0.33, 0.36), Color(0.6, 0.6, 0.55), Color(0.5, 0.36, 0.27), false, 250.0,
+			{"hat": "hardhat", "satchel": false})
 
 
 func _look(n: String, prompt: String, label: String, dialogue: String, at: Vector3, enabled_if := {}) -> Interactable3D:
@@ -4695,6 +6735,8 @@ const DISTRICTS := [
 	["RAINFOREST APPROACH", Rect2(1255, 220, 165, 150)],
 	["FOREST", Rect2(40, 40, 330, 215)],
 ]
+## Greybox-pixel rectangle drawn as timber boardwalk.
+const DOCKS := Rect2(1040, 360, 360, 215)
 ## Spawn points and exits, in greybox pixels (the 2D town's positions / 2).
 const SPAWNS := {"default": Vector2(880, 415), "mine": Vector2(212, 676), "airpad": Vector2(336, 746)}
 
@@ -4717,6 +6759,8 @@ func _ready() -> void:
 	_landmarks()
 	_vegetation_and_lamps()
 	_spawns_and_exits()
+	reflection_probe(INSERT_AT + Vector3(-2, 6, -8), Vector3(70, 24, 60))
+	_dressing()
 
 
 # --- grid ------------------------------------------------------------------------
@@ -4804,11 +6848,14 @@ func _vertex(x: int, z: int, collide: bool) -> float:
 			elif cls[i] != WATER:
 				os += hv[i]
 				on += 1
+			else:
+				os += SEA - 2.5
+				on += 1
 	if wn > 0:
 		return ws / wn
 	if collide:
 		return top if top > -INF else 0.0
-	return os / on if on > 0 else SEA
+	return os / on if on > 0 else SEA - 2.5
 
 
 func _terrain() -> void:
@@ -4817,44 +6864,33 @@ func _terrain() -> void:
 	for z in h + 1:
 		for x in w + 1:
 			vh[z * (w + 1) + x] = _vertex(x, z, false)
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.vertex_color_is_srgb = true
-	add_detail(mat, 0.3)
-	mat.roughness = 0.72
+	var mat := ground_mat(Color.WHITE, 1.0, 0.8, 0.5, true)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 21
 	for cz0 in range(0, h, CHUNK):
 		for cx0 in range(0, w, CHUNK):
 			var st := SurfaceTool.new()
 			st.begin(Mesh.PRIMITIVE_TRIANGLES)
-			st.set_smooth_group(-1)
+			st.set_smooth_group(0)
 			var any := false
 			for z in range(cz0, mini(cz0 + CHUNK, h)):
 				for x in range(cx0, mini(cx0 + CHUNK, w)):
 					var i := z * w + x
 					var t := cls[i]
-					if t == WATER or t == INSERT:
+					if t == INSERT:
 						continue
 					any = true
 					var col := _colour(t, rng.randf())
+					if t == PATH and hv[i] < -0.3 and DOCKS.has_point(Vector2(x + 0.5, z + 0.5) / PX + ORIGIN):
+						col = Color(0.5, 0.36, 0.24, 0.5)
 					var a := Vector3(x, vh[z * (w + 1) + x], z)
 					var b := Vector3(x + 1, vh[z * (w + 1) + x + 1], z)
 					var c := Vector3(x + 1, vh[(z + 1) * (w + 1) + x + 1], z + 1)
 					var d := Vector3(x, vh[(z + 1) * (w + 1) + x], z + 1)
 					_quad(st, a, b, c, d, col)
-					# skirts down to the sea where this cell borders water
-					var dark := col.darkened(0.35)
-					if z > 0 and cls[i - w] == WATER:
-						_quad(st, Vector3(b.x, SEA, b.z), b, a, Vector3(a.x, SEA, a.z), dark)
-					if z < h - 1 and cls[i + w] == WATER:
-						_quad(st, Vector3(d.x, SEA, d.z), d, c, Vector3(c.x, SEA, c.z), dark)
-					if x > 0 and cls[i - 1] == WATER:
-						_quad(st, Vector3(a.x, SEA, a.z), a, d, Vector3(d.x, SEA, d.z), dark)
-					if x < w - 1 and cls[i + 1] == WATER:
-						_quad(st, Vector3(c.x, SEA, c.z), c, b, Vector3(b.x, SEA, b.z), dark)
 			if not any:
 				continue
+			st.index()
 			st.generate_normals()
 			var mi := MeshInstance3D.new()
 			mi.mesh = st.commit()
@@ -4873,17 +6909,20 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, col:
 
 
 func _colour(t: int, n: float) -> Color:
-	var j := (n - 0.5) * 0.05
+	# rgb: sRGB colour; a: cobble amount for the wet-ground shader
+	var j := (n - 0.5) * (0.04 if t == PATH or t == SLAB else 0.012)
 	match t:
 		PATH:
-			return Color(0.4 + j, 0.39 + j, 0.37 + j)
+			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
 		GRASS:
-			return Color(0.15 + j, 0.25 + j * 1.5, 0.18 + j)
+			return Color(0.25 + j, 0.36 + j * 1.5, 0.24 + j, 0.0)
+		WATER:
+			return Color(0.3, 0.29, 0.26, 0.0)
 		SAND:
-			return Color(0.56 + j, 0.5 + j, 0.41 + j)
+			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
 		SLAB:
-			return Color(0.44 + j, 0.44 + j, 0.42 + j)
-	return Color(0.21 + j, 0.24 + j, 0.26 + j)
+			return Color(0.6 + j, 0.59 + j, 0.56 + j, 1.0)
+	return Color(0.36 + j, 0.35 + j, 0.33 + j, 0.0)
 
 
 func _collision() -> void:
@@ -4923,12 +6962,11 @@ func _sea() -> void:
 
 func _pod(p: Vector2, tag := "", _lit := true) -> void:
 	var at := at_px(p)
-	model("pod", at, 0.0, 1.1)
+	model("quonset", at)
 	if tag != "":
-		sign_text(at + Vector3(0, 3.3, 2.55), tag, 0.0, 40)
+		sign_text(at + Vector3(1.35, 2.15, 3.68), tag, 0.0, 40)
 
 
-## Shed model filling a greybox footprint (visual only; the grid already blocks it).
 func _shed_px(a: Vector2, b: Vector2, h_m: float) -> void:
 	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
 	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
@@ -4998,9 +7036,17 @@ func _landmarks() -> void:
 	deck.y = 9.0
 	beam(north, deck, 0.15, 0.15, M.steel_dark)
 	beam(north + Vector3(0.6, -0.4, 0), deck + Vector3(0.6, -0.4, 0), 0.1, 0.1, M.steel_dark)
+	var along := deck - north
+	for f: float in [0.18, 0.47, 0.76]:
+		var g := north.lerp(deck, f) + Vector3(0.3, -2.7, 0)
+		model("gondola", g, atan2(along.x, along.z) + PI * 0.5)
 	for f in 7:
 		var p := north.lerp(deck, (f + 0.5) / 7.0)
-		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(1.0, p.y - SEA, 1.0), M.steel_dark, false)
+		for o: Vector3 in [Vector3(-0.45, 0, -0.45), Vector3(0.45, 0, 0.45), Vector3(-0.45, 0, 0.45), Vector3(0.45, 0, -0.45)]:
+			box(Vector3(p.x, (p.y + SEA) * 0.5, p.z) + o, Vector3(0.14, p.y - SEA, 0.14), M.steel_dark, false)
+		for k in 6:
+			var yk := SEA + (p.y - SEA) * (k + 0.5) / 6.0
+			box(Vector3(p.x, yk, p.z), Vector3(1.0, 0.08, 1.0), M.steel_dark, false, PI * 0.25 * (k % 2))
 		box(p + Vector3(0, 0.8, 0), Vector3(0.4, 0.3, 0.4), M.blue_light, false)
 	var it := Vector3(tower.x, SEA, tower.z)
 	model("imperial_tower", it)
@@ -5018,9 +7064,10 @@ func _vegetation_and_lamps() -> void:
 			var i := z * w + x
 			var t := cls[i]
 			var r := rng.randf()
-			if t == CLIFF and r < 0.03 and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
-					and cls[i - w] == CLIFF and cls[i + w] == CLIFF and cls[i - 2 * w] == CLIFF:
-				tree(Vector3(x + 0.5, hv[i], z + 0.5), rng.randf_range(0.7, 1.1))
+			var forest := Rect2(40, 40, 330, 560).has_point(Vector2(x + 0.5, z + 0.5) / PX + ORIGIN) or z < 8
+			if t == CLIFF and r < (0.16 if forest else 0.05) and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
+					and cls[i - w] == CLIFF and cls[i + w] == CLIFF and _clear_of_paths(x, z, 2):
+				tree(Vector3(x + rng.randf(), hv[i], z + rng.randf()), rng.randf_range(0.8, 1.4))
 			elif t == GRASS and r < 0.012:
 				var clear := true
 				for n: int in [i - 1, i + 1, i - w, i + w, i - 2, i + 2, i - 2 * w, i + 2 * w]:
@@ -5030,15 +7077,41 @@ func _vegetation_and_lamps() -> void:
 					var p := Vector3(x + 0.5, hv[i], z + 0.5)
 					tree(p, rng.randf_range(0.9, 1.4))
 					blocker(p + Vector3(-0.25, 0, -0.25), p + Vector3(0.25, 1.6, 0.25))
-			elif t == PATH and r < 0.03 and lamps < 48:
-				# lamps stand at path edges, against a wall
-				var edge := false
-				for n: int in [i - 1, i + 1, i - w, i + w]:
-					if cls[n] == CLIFF or cls[n] == SLAB:
-						edge = true
-				if edge:
-					lamps += 1
-					lamp(Vector3(x + 0.5, hv[i], z + 0.5), lamps % 2 == 0)
+
+	# lamps: evenly spaced along path edges (against a wall), every other one lit
+	var placed: Array[Vector3] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != PATH or placed.size() >= 90:
+				continue
+			var edge := false
+			for n: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[n] == CLIFF or cls[n] == SLAB:
+					edge = true
+			if not edge:
+				continue
+			var p := Vector3(x + 0.5, hv[i], z + 0.5)
+			var near := false
+			for q in placed:
+				if q.distance_squared_to(p) < 100.0:
+					near = true
+					break
+			if not near:
+				placed.append(p)
+				lamp(p, placed.size() % 2 == 0)
+
+
+## True when no walkable cell lies within r cells (keeps trees off paths and boardwalks).
+func _clear_of_paths(x: int, z: int, r: int) -> bool:
+	for dz in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var cx := clampi(x + dx, 0, w - 1)
+			var cz := clampi(z + dz, 0, h - 1)
+			var t := cls[cz * w + cx]
+			if t == PATH or t == SAND or t == INSERT:
+				return false
+	return true
 
 
 func _spawns_and_exits() -> void:
@@ -5058,7 +7131,7 @@ func _spawns_and_exits() -> void:
 	door.label = "Pod B-17"
 	door.dialogue_id = "anjabi/pod_b17"
 	door.radius = 1.4
-	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 3.4)
+	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 4.2)
 	add_child(door)
 	var sign := Interactable3D.new()
 	sign.name = "MineSign"
@@ -5101,6 +7174,94 @@ func _process(delta: float) -> void:
 			GameState.location_entered.emit("ANJABI  ·  " + found)
 
 
+## Pass 3 set dressing: ferns on grass by paths and cliff feet, clutter at porches,
+## shop and docks, and townsfolk going about the Steps, docks and pods.
+func _dressing() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var ferns: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != GRASS:
+				continue
+			var edge := false
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] == PATH or cls[nb] == CLIFF or cls[nb] == SLAB:
+					edge = true
+			if rng.randf() < (0.55 if edge else 0.12):
+				for k in 2:
+					var p := Vector3(x + rng.randf(), hv[i], z + rng.randf())
+					ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.5)))
+	scatter("fern", ferns)
+	# iron railings where a walkway or boardwalk drops to the water
+	var rails: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if not (cls[i] == PATH or cls[i] == SAND) or hv[i] < SEA + 1.5:
+				continue
+			var y := hv[i]
+			if cls[i - w] == WATER:
+				rails.append(Transform3D(Basis(), Vector3(x, y, z + 0.05)))
+			if cls[i + w] == WATER:
+				rails.append(Transform3D(Basis(), Vector3(x, y, z + 0.95)))
+			if cls[i - 1] == WATER:
+				rails.append(Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(x + 0.05, y, z)))
+			if cls[i + 1] == WATER:
+				rails.append(Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(x + 0.95, y, z)))
+	railings(rails)
+	# flowers along the grass edges of paths
+	var flowers: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != GRASS:
+				continue
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] == PATH and rng.randf() < 0.35:
+					flowers.append(xform(Vector3(x + rng.randf(), hv[i], z + rng.randf()), rng.randf() * TAU, rng.randf_range(0.8, 1.4)))
+					break
+	scatter("flowers", flowers)
+	# lone water cells on the beach and shore are the map's rocks: boulders
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != WATER:
+				continue
+			var land := 0
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] != WATER:
+					land += 1
+			if land >= 3 or (land == 0 and rng.randf() < 0.004):
+				var s := rng.randf_range(0.9, 2.2)
+				var b := box(Vector3(x + 0.5, SEA + s * 0.3, z + 0.5), Vector3(s, s * 1.4, s * 0.9), M.rock, false, rng.randf() * TAU)
+				b.rotation.x = rng.randf_range(-0.3, 0.3)
+	# clutter by the Quonset porches, the shop and the docks
+	for p: Vector2 in [Vector2(530, 68), Vector2(622, 72), Vector2(508, 128), Vector2(660, 132), Vector2(546, 182)]:
+		var at := at_px(p)
+		model("planter", at + Vector3(-1.9, 0, 4.1))
+		model("barrel", at + Vector3(2.0, 0, 3.8))
+	for p: Vector2 in [Vector2(1080, 380), Vector2(1150, 380), Vector2(1240, 400), Vector2(1300, 470), Vector2(1250, 520)]:
+		var d := at_px(p)
+		model("crate_stack", d + Vector3(1.2, 0, 0.6), rng.randf() * TAU)
+		model("barrel", d + Vector3(-0.8, 0, 0.9))
+	# townsfolk
+	var O := INSERT_AT
+	var coats := [Color(0.24, 0.3, 0.34), Color(0.38, 0.3, 0.22), Color(0.3, 0.22, 0.28), Color(0.2, 0.27, 0.22)]
+	var skins := [Color(0.78, 0.6, 0.48), Color(0.55, 0.38, 0.28), Color(0.68, 0.5, 0.38)]
+	var hc := [Color(0.1, 0.07, 0.05), Color(0.35, 0.22, 0.12), Color(0.55, 0.5, 0.45), Color(0.18, 0.12, 0.1)]
+	townsfolk([O + Vector3(-6, 0, 6), O + Vector3(10, 0, 6), O + Vector3(10, 0, -3)], coats[0], Color(0.7, 0.6, 0.4), skins[0], true, 180.0, {"long_coat": true})
+	townsfolk([O + Vector3(14, 0, 2), O + Vector3(-4, 0, 1)], coats[1], Color(0.5, 0.15, 0.12), skins[1], false, 180.0, {"hat": "brim", "hair_color": hc[0]})
+	townsfolk([O + Vector3(1.5, 0, -2.5), O + Vector3(4, 0, 4)], coats[2], Color(0.75, 0.65, 0.45), skins[2], false, 180.0, {"hair": "long", "hair_color": hc[1], "satchel": false})
+	townsfolk([O + Vector3(-8.4, 3, -11.0)], coats[3], Color(0.6, 0.4, 0.2), skins[0], false, 160.0, {"hat": "cap", "hair_color": hc[3]})
+	townsfolk([O + Vector3(-6.6, 3, -10.6)], coats[1], Color(0.3, 0.3, 0.3), skins[2], false, 210.0, {"hair": "bun", "hair_color": hc[2], "long_coat": true})
+	townsfolk([nearest_walk(Vector2(1120, 430)), nearest_walk(Vector2(1260, 430)), nearest_walk(Vector2(1230, 480))], coats[0], Color(0.8, 0.7, 0.3), skins[1], false, 180.0, {"hat": "cap", "satchel": false})
+	townsfolk([nearest_walk(Vector2(600, 110)), nearest_walk(Vector2(640, 200))], coats[2], Color(0.5, 0.2, 0.15), skins[0], false, 180.0, {"hair": "long", "hair_color": hc[0]})
+	townsfolk([nearest_walk(Vector2(230, 690))], coats[1], Color(0.7, 0.55, 0.2), skins[2], false, 200.0, {"hat": "hardhat", "satchel": false})
+
+
+
 ==============================================================================
 == maps/anjabi/town_3d.tscn
 ==============================================================================
@@ -5114,6 +7275,49 @@ map_id = "anjabi_town"
 display_name = "ANJABI"
 
 [node name="Entities" type="Node3D" parent="."]
+
+
+==============================================================================
+== tests/overview.gd
+==============================================================================
+extends Node
+## Renders a top-down overview of the whole town for comparing with the concept map.
+##   Godot --path . res://tests/overview.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await get_tree().create_timer(1.0).timeout
+	main.get_node("UI").visible = false
+	var cam := Camera3D.new()
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.size = 112.0
+	cam.far = 400.0
+	cam.position = Vector3(83, 150, 56)
+	cam.rotation_degrees = Vector3(-90, 0, 0)
+	add_child(cam)
+	cam.current = true
+	await get_tree().create_timer(1.5).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("overview_town.png"))
+	get_tree().quit()
+
+
+==============================================================================
+== tests/overview.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/overview.gd" id="1"]
+
+[node name="Overview" type="Node"]
+script = ExtResource("1")
 
 
 ==============================================================================
@@ -5132,6 +7336,10 @@ func _ready() -> void:
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	# fixed night rain so runs are comparable; pass "day" after -- to measure a low evening sun
+	WorldTime.minutes_per_second = 0.0
+	WorldTime.set_time(18 if "day" in OS.get_cmdline_user_args() else 21, 30)
+	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
 	print("spot                 draws   prims(k)  objects  frame ms")
 	var town_spots := {"steps": O + Vector3(2, 0.05, 5), "tavern terrace": O + Vector3(-6, 3.05, -11.5),
@@ -5271,6 +7479,10 @@ func _ready() -> void:
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	# these shots are the fixed night-rain reference; time-of-day shots are in screenshot_time
+	WorldTime.minutes_per_second = 0.0
+	WorldTime.set_time(21, 30)
+	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
 	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
 	var shots := {
@@ -5332,7 +7544,7 @@ func _ready() -> void:
 		"3d_20_town_steps": Vector2(880, 415), "3d_21_town_tavern": Vector2(760, 350),
 		"3d_22_town_pods": Vector2(600, 150), "3d_23_town_tion": Vector2(515, 465),
 		"3d_24_town_beach": Vector2(650, 600), "3d_25_town_docks": Vector2(1170, 460),
-		"3d_26_town_estate": Vector2(240, 590), "3d_27_town_guard": Vector2(945, 160),
+		"3d_26_town_estate": Vector2(240, 590), "3d_27_town_guard": Vector2(945, 160), "3d_28_town_stairs_beach": Vector2(600, 545), "3d_29_town_stairs_pods": Vector2(650, 245),
 	}
 	for k: String in town:
 		var tp: Player3D = main.get("player")
@@ -5351,6 +7563,84 @@ func _ready() -> void:
 [gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://tests/screenshot_3d.gd" id="1"]
+
+[node name="Screenshot3D" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tests/screenshot_time.gd
+==============================================================================
+extends Node
+## Windowed shots of the same spots through the day and in each weather, plus the
+## run pose. Usage:  Godot --path . res://tests/screenshot_time.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	WorldTime.minutes_per_second = 0.0
+	await get_tree().create_timer(1.0).timeout
+	var o := Vector3(101.52, 0, 45.72)
+	var p: Player3D = main.get("player")
+	var looks := [
+		["t_01_dawn_clear", 5, 50, "clear"], ["t_02_morning_clear", 9, 0, "clear"], ["t_03_midday_clear", 13, 0, "clear"],
+		["t_04_golden_clear", 18, 40, "clear"], ["t_05_dusk_clear", 19, 45, "clear"], ["t_06_night_clear", 23, 0, "clear"],
+		["t_07_midday_cloudy", 13, 0, "cloudy"], ["t_08_midday_rain", 13, 0, "rain"], ["t_09_evening_heavy", 18, 40, "heavy_rain"],
+		["t_10_morning_fog", 8, 0, "fog"], ["t_11_midday_snow", 13, 0, "snow"], ["t_12_night_snow", 22, 0, "snow"],
+	]
+	for l: Array in looks:
+		WorldTime.set_time(l[1], l[2])
+		Weather.set_weather(l[3])
+		for n in get_tree().get_nodes_in_group(&"environment_controller"):
+			n.call(&"snap")
+		p.global_position = o + Vector3(2, 0.05, 5)
+		p.velocity = Vector3.ZERO
+		p.camera.reset_smoothing()
+		await get_tree().create_timer(0.9).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(str(l[0]) + ".png"))
+	# other places at midday and golden hour
+	for l: Array in [["t_20_docks_midday", Vector2(1170, 460), 13, 0], ["t_21_pods_golden", Vector2(600, 150), 18, 30], ["t_22_beach_dawn", Vector2(650, 600), 6, 10]]:
+		WorldTime.set_time(l[2], l[3])
+		Weather.set_weather("clear")
+		for n in get_tree().get_nodes_in_group(&"environment_controller"):
+			n.call(&"snap")
+		p.global_position = main.get("map").call("nearest_walk", l[1]) + Vector3(0, 0.1, 0)
+		p.velocity = Vector3.ZERO
+		p.camera.reset_smoothing()
+		await get_tree().create_timer(0.9).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(str(l[0]) + ".png"))
+	# walk and run poses
+	WorldTime.set_time(16, 30)
+	Weather.set_weather("clear")
+	for l: Array in [["t_30_walk", false], ["t_31_run", true]]:
+		p.global_position = o + Vector3(-8, 0.05, 6)
+		p.camera.reset_smoothing()
+		Input.action_press(&"move_right")
+		if l[1]:
+			Input.action_press(&"sprint")
+		await get_tree().create_timer(0.62).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(str(l[0]) + ".png"))
+		Input.action_release(&"move_right")
+		Input.action_release(&"sprint")
+		await get_tree().create_timer(0.4).timeout
+	get_tree().quit()
+
+
+==============================================================================
+== tests/screenshot_time.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_time.gd" id="1"]
 
 [node name="Screenshot3D" type="Node"]
 script = ExtResource("1")
@@ -5419,6 +7709,7 @@ func _ready() -> void:
 	await _frames(3)
 	await _run()
 	await _town()
+	await _world()
 	SaveManager.delete_save("test")
 	print("\n%d checks, %d failed" % [_checks, _fails])
 	get_tree().quit(1 if _fails > 0 else 0)
@@ -5592,7 +7883,7 @@ func _town() -> void:
 	player = main.get("player")
 	var town = main.get("map")
 	check(town is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
-	var meshes: int = town.find_children("*", "MeshInstance3D", true, false).size()
+	var meshes: int = town.find_children("*", "GeometryInstance3D", true, false).size()
 	check(meshes > 300, "the town is built from real meshes (%d)" % meshes)
 	await _frames(20)
 	check(player.is_on_floor(), "player arrives standing on the town ground (y=%.2f)" % player.global_position.y)
@@ -5679,12 +7970,12 @@ func _district() -> void:
 	check(str(main.get("map_id")) == "anjabi_town", "new game starts in the town")
 	check(map is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
 	check(player.global_position.distance_to(O + Vector3(2, 0.05, 5)) < 0.5, "new game starts on the Steps plaza")
-	var meshes: int = map.find_children("*", "MeshInstance3D", true, false).size()
+	var meshes: int = map.find_children("*", "GeometryInstance3D", true, false).size()
 	var bodies: int = map.find_children("*", "StaticBody3D", true, false).size()
 	check(meshes > 300 and bodies > 50, "the town is built from real meshes and colliders (%d meshes, %d bodies)" % [meshes, bodies])
 	check(map.find_children("*", "Npc3D", true, false).size() >= 1, "the Steps insert is part of the town")
 	var cam: Camera3D = player.camera
-	check(cam.current and cam.projection == Camera3D.PROJECTION_ORTHOGONAL, "orthographic follow camera is current")
+	check(cam.current and cam.projection == Camera3D.PROJECTION_PERSPECTIVE and absf(cam.rotation_degrees.y) < 0.01, "fixed-orientation follow camera is current")
 	await _frames(20)
 	check(player.is_on_floor() and absf(player.global_position.y) < 0.2, "player stands on the plaza (y=%.2f)" % player.global_position.y)
 	# walk east, camera follows
@@ -5861,6 +8152,213 @@ func _talk(prefer: Array) -> void:
 			Dialogue.choose(pick)
 		await get_tree().process_frame
 	await _frames(2)
+
+
+## World clock, calendar, weather, lighting, persistence and sprint.
+func _world() -> void:
+	main.call("new_game")
+	await _frames(5)
+	player = main.get("player")
+	var hud: Hud = main.get("ui").hud
+	WorldTime.minutes_per_second = 0.0
+	check(WorldTime.date_text() == "Autumn 12 · Thursday" and WorldTime.time_text() == "6:40 PM", "new game starts on Autumn 12, Thursday, 6:40 PM (%s, %s)" % [WorldTime.date_text(), WorldTime.time_text()])
+	check(hud.clock_text().contains("Autumn 12") and hud.clock_text().contains("6:40 PM"), "the clock HUD shows date and 12-hour time")
+	check(WorldTime.period() == "evening" and Weather.current == "rain", "it is a rainy evening")
+
+	# midnight rollover
+	var got := {"days": 0, "periods": [], "seasons": 0, "years": 0, "jumps": 0}
+	var on_day := func(_c: WorldCalendar) -> void: got["days"] += 1
+	var on_period := func(p: String, _prev: String) -> void: (got["periods"] as Array).append(p)
+	var on_season := func(_s: int) -> void: got["seasons"] += 1
+	var on_year := func(_y: int) -> void: got["years"] += 1
+	WorldTime.day_changed.connect(on_day)
+	WorldTime.period_changed.connect(on_period)
+	WorldTime.season_changed.connect(on_season)
+	WorldTime.year_changed.connect(on_year)
+	WorldTime.set_time(23, 58)
+	WorldTime.advance_minutes(3)
+	check(WorldTime.hour == 0 and WorldTime.minute == 1 and WorldTime.calendar.day == 13 and got["days"] == 1, "midnight rolls the clock over and advances one day")
+	check(WorldTime.calendar.weekday_name() == "Friday" and WorldTime.time_text() == "12:01 AM", "the weekday follows and midnight reads 12:01 AM")
+	(got["periods"] as Array).clear()
+	WorldTime.set_time(4, 59)
+	WorldTime.advance_minutes(1)
+	check(got["periods"] == ["dawn"] and WorldTime.period() == "dawn", "dawn begins at 05:00 and announces itself once")
+	WorldTime.set_time(12, 0)
+	check(WorldTime.time_text() == "12:00 PM" and WorldTime.period() == "midday" and WorldTime.is_between(9, 17) and not WorldTime.is_between(22, 6), "noon reads 12:00 PM; opening-hours query works")
+	# season and year rollover
+	WorldTime.set_date(1, 2, 28)
+	WorldTime.set_time(23, 59)
+	WorldTime.advance_minutes(1)
+	check(WorldTime.calendar.season_name() == "Winter" and WorldTime.calendar.day == 1 and got["seasons"] == 1, "day 28 of Autumn rolls into Winter 1")
+	WorldTime.set_date(1, 3, 28)
+	WorldTime.set_time(23, 59)
+	WorldTime.advance_minutes(1)
+	check(WorldTime.calendar.year == 2 and WorldTime.calendar.season_name() == "Spring" and got["years"] == 1, "the end of Winter starts year 2 in Spring")
+	# long skips and sleeping
+	var d0 := WorldTime.calendar.total_days()
+	WorldTime.advance_minutes(3 * 1440 + 30)
+	check(WorldTime.calendar.total_days() == d0 + 3 and WorldTime.minute == 30, "skipping three days and thirty minutes lands exactly")
+	WorldTime.set_time(22, 15)
+	d0 = WorldTime.calendar.total_days()
+	WorldTime.sleep_until(6)
+	check(WorldTime.hour == 6 and WorldTime.minute == 0 and WorldTime.calendar.total_days() == d0 + 1, "sleeping until 6 wakes the next morning")
+	WorldTime.calendar.add_event("test_event", WorldTime.calendar.season, WorldTime.calendar.day + 1)
+	var due: Array = []
+	var on_event := func(e: Dictionary) -> void: due.append(e["id"])
+	WorldTime.event_due.connect(on_event)
+	WorldTime.sleep_until(0, 5)
+	check(due == ["test_event"], "a scheduled calendar event fires on its day")
+	WorldTime.event_due.disconnect(on_event)
+	WorldTime.calendar.events.clear()
+	for pair: Array in [[WorldTime.day_changed, on_day], [WorldTime.period_changed, on_period], [WorldTime.season_changed, on_season], [WorldTime.year_changed, on_year]]:
+		(pair[0] as Signal).disconnect(pair[1])
+
+	# running and pausing
+	WorldTime.set_time(10, 0)
+	WorldTime.minutes_per_second = 120.0
+	await _frames(30)
+	var ran := WorldTime.minute_of_day() - 600
+	check(ran > 10, "time passes during play (%d minutes in 30 frames at test speed)" % ran)
+	WorldTime.pause("test")
+	var m0 := WorldTime.total_minutes()
+	await _frames(20)
+	check(WorldTime.total_minutes() == m0 and WorldTime.is_paused(), "a registered pause stops the clock")
+	WorldTime.resume("test")
+	get_tree().paused = true
+	m0 = WorldTime.total_minutes()
+	await _frames(20)
+	get_tree().paused = false
+	check(WorldTime.total_minutes() == m0, "menus (paused tree) stop the clock")
+	await _frames(10)
+	check(WorldTime.total_minutes() > m0, "and it runs again afterwards")
+	WorldTime.minutes_per_second = 0.0
+
+	# weather
+	WorldTime.set_date(1, 2, 12)
+	WorldTime.set_time(8, 0)
+	Weather.reset(42)
+	var f1 := str(Weather.forecast(24))
+	Weather.reset(42)
+	check(str(Weather.forecast(24)) == f1 and Weather.forecast(24).size() >= 2, "the same seed plans the same forecast")
+	var fc := Weather.forecast(24)
+	check(int(fc[fc.size() - 1]["until"]) - WorldTime.total_minutes() == 24 * 60, "the forecast covers the next 24 hours")
+	var changes := {"n": 0}
+	var on_weather := func(_t: String, _p: String) -> void: changes["n"] += 1
+	Weather.weather_changed.connect(on_weather)
+	for i in 24:
+		WorldTime.advance_minutes(60)
+	check(changes["n"] >= 2 and changes["n"] <= 9, "weather changes a few times a day, not every minute (%d in 24 h)" % changes["n"])
+	Weather.set_weather("fog", 60)
+	check(Weather.current == "fog", "weather can be overridden")
+	WorldTime.advance_minutes(61)
+	check(Weather.override == "" and Weather.current == str(Weather.schedule[0]["type"]), "a timed override hands back to the forecast")
+	WorldTime.set_date(1, 3, 2)
+	Weather.reset(7)
+	var seen := {}
+	for i in 24 * 20:
+		WorldTime.advance_minutes(60)
+		seen[Weather.current] = true
+	check(seen.has("snow") and not seen.has("heavy_rain"), "winter brings snow and no storms (%s)" % str(seen.keys()))
+	WorldTime.set_date(1, 1, 2)
+	Weather.reset(7)
+	seen.clear()
+	for i in 24 * 20:
+		WorldTime.advance_minutes(60)
+		seen[Weather.current] = true
+	check(seen.has("clear") and not seen.has("snow"), "summer is mostly clear and never snows (%s)" % str(seen.keys()))
+	Weather.weather_changed.disconnect(on_weather)
+
+	# lighting follows the clock
+	var ctl: EnvironmentController = main.get("map").environment
+	check(ctl != null and ctl.env != null, "the map has an environment controller")
+	Weather.set_weather("clear")
+	WorldTime.set_time(13, 0)
+	await _frames(3)
+	var day_sun := ctl.sun.light_energy
+	var day_bg := ctl.env.background_color.get_luminance()
+	var lamp: Light3D = get_tree().get_nodes_in_group(&"lamp_lights")[0]
+	check(not lamp.visible, "street lamps are off at midday")
+	var e0 := ctl.env.ambient_light_energy
+	WorldTime.advance_minutes(1)
+	await _frames(2)
+	check(absf(ctl.env.ambient_light_energy - e0) < 0.02, "light changes smoothly from minute to minute")
+	WorldTime.set_time(23, 0)
+	await _frames(3)
+	check(ctl.env.background_color.get_luminance() < day_bg * 0.4 and lamp.visible and lamp.light_energy > 1.0, "night is dark and the lamps are lit")
+	check(ctl.sun.light_energy < day_sun and ctl.sun.light_color.b > ctl.sun.light_color.r, "the moon is dimmer and bluer than the sun")
+	WorldTime.set_time(18, 40)
+	await _frames(3)
+	check(ctl.sun.light_color.r > ctl.sun.light_color.b * 1.3, "golden hour is warm")
+	# weather presentation: blends, then indoor override
+	WorldTime.set_time(13, 0)
+	await _frames(3)
+	var clear_sun := ctl.sun.light_energy
+	Weather.set_weather("heavy_rain")
+	await _frames(5)
+	check(float(ctl.w["rain"]) > 0.0 and float(ctl.w["rain"]) < 0.5, "weather blends in gradually (rain %.2f after 5 frames)" % float(ctl.w["rain"]))
+	ctl.snap()
+	check(is_equal_approx(float(ctl.w["rain"]), 1.0) and ctl.sun.light_energy < clear_sun * 0.6, "heavy rain darkens the day")
+	var rain: Rain3D = get_tree().get_nodes_in_group(&"precipitation")[0]
+	check(rain.emitting, "rain falls")
+	Weather.set_weather("snow")
+	ctl.snap()
+	check(not rain.emitting and (rain.get_child(1) as GPUParticles3D).emitting, "snow replaces rain")
+	ctl.indoor = true
+	ctl.snap()
+	check(ctl.sun.light_energy == 0.0 and not (rain.get_child(1) as GPUParticles3D).emitting and lamp.visible, "indoors ignores sun and weather")
+	ctl.indoor = false
+	ctl.snap()
+	check(ctl.sun.light_energy > 0.0, "back outdoors the sun returns")
+
+	# persistence
+	WorldTime.set_date(3, 3, 17)
+	WorldTime.set_time(21, 7)
+	Weather.reset(99)
+	Weather.set_weather("snow", 300)
+	var sched := str(Weather.schedule)
+	check(SaveManager.save_game("test"), "save with clock and weather")
+	main.call("new_game")
+	await _frames(3)
+	check(WorldTime.calendar.year == 1 and Weather.current == "rain", "a new game resets the clock and weather")
+	check(SaveManager.load_game("test"), "load with clock and weather")
+	check(WorldTime.calendar.year == 3 and WorldTime.calendar.season_name() == "Winter" and WorldTime.calendar.day == 17 and WorldTime.hour == 21 and WorldTime.minute == 7, "load restores year, season, day, hour and minute")
+	check(Weather.current == "snow" and Weather.override == "snow" and str(Weather.schedule) == sched, "load restores the weather, its override and the forecast")
+	await _frames(3)
+	ctl = main.get("map").environment
+	check(is_equal_approx(float(ctl.w["snow"]), 1.0) and is_equal_approx(float(ctl.w["cover"]), 1.0), "the loaded world is lit for its time and weather at once")
+	WorldTime.advance_minutes(301)
+	check(Weather.override == "", "the restored override still expires on time")
+
+	# sprint
+	main.call("new_game")
+	await _frames(10)
+	WorldTime.minutes_per_second = 0.0
+	player = main.get("player")
+	await _place3(O + Vector3(-8, 0.05, 6))
+	Input.action_press(&"move_right")
+	await _frames(40)
+	var x0: float = player.global_position.x
+	await _frames(40)
+	var walked: float = player.global_position.x - x0
+	check(not player.sprinting, "walking is not sprinting")
+	Input.action_press(&"sprint")
+	await _frames(25)
+	x0 = player.global_position.x
+	await _frames(40)
+	var ran_d: float = player.global_position.x - x0
+	check(player.sprinting and ran_d > walked * 1.5, "holding sprint runs faster (%.2f m vs %.2f m)" % [ran_d, walked])
+	Input.action_release(&"sprint")
+	await _frames(25)
+	check(not player.sprinting and absf(Vector3(player.velocity.x, 0, player.velocity.z).length() - player.walk_speed) < 0.3, "releasing sprint returns to a walk")
+	Input.action_release(&"move_right")
+	await _frames(20)
+	player.touch.sprint = true
+	Input.action_press(&"move_left")
+	await _frames(30)
+	check(player.sprinting, "the RUN toggle sprints without the key")
+	Input.action_release(&"move_left")
+	player.touch.sprint = false
+	WorldTime.minutes_per_second = 1.0
 
 
 ==============================================================================
@@ -6323,6 +8821,41 @@ echo "$OUT  $(du -h "$OUT" | cut -f1)"
 
 
 ==============================================================================
+== ui/compass.gd
+==============================================================================
+class_name Compass
+extends Control
+## Compass, bottom-left: a hairline ring with tick marks and a north pointer. The
+## camera never rotates, so north is always up.
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	custom_minimum_size = Vector2(40, 40)
+
+
+func _draw() -> void:
+	var c := size * 0.5
+	var r := minf(size.x, size.y) * 0.5 - 3.0
+	var line := Color(UiTheme.ACCENT, 0.55)
+	draw_arc(c, r, 0.0, TAU, 48, Color(UiTheme.ACCENT, 0.3), 1.0, true)
+	# open inner arcs, like an instrument bezel
+	for i in 4:
+		var a0 := TAU * i / 4.0 + 0.3
+		draw_arc(c, r * 0.62, a0, a0 + PI * 0.5 - 0.6, 10, Color(UiTheme.ACCENT, 0.22), 1.0, true)
+	for i in 16:
+		var d := Vector2.from_angle(TAU * i / 16.0)
+		var inner := r - (4.0 if i % 4 == 0 else 2.0)
+		draw_line(c + d * inner, c + d * r, line if i % 4 == 0 else Color(line, 0.3), 1.0, true)
+	# north pointer and centre mark
+	var tip := c + Vector2(0, -r + 5.0)
+	draw_colored_polygon(PackedVector2Array([tip, tip + Vector2(2.5, 5), tip + Vector2(-2.5, 5)]), UiTheme.BONE)
+	draw_line(c + Vector2(-2, 0), c + Vector2(2, 0), line, 1.0)
+	draw_line(c + Vector2(0, -2), c + Vector2(0, 2), line, 1.0)
+	var f := UiTheme.caps_font()
+	draw_string(f, c + Vector2(-2.5, -r - 1.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 6, Color(UiTheme.BONE, 0.85))
+
+
+==============================================================================
 == ui/dialogue_box.gd
 ==============================================================================
 class_name DialogueBox
@@ -6356,8 +8889,9 @@ func _ready() -> void:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(box)
 	_speaker = Label.new()
-	_speaker.add_theme_color_override("font_color", UiTheme.AMBER)
-	_speaker.add_theme_font_size_override("font_size", 8)
+	_speaker.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_speaker.add_theme_font_override("font", UiTheme.caps_font())
+	_speaker.add_theme_font_size_override("font_size", 7)
 	box.add_child(_speaker)
 	_body = RichTextLabel.new()
 	_body.fit_content = true
@@ -6370,7 +8904,7 @@ func _ready() -> void:
 	_more = Label.new()
 	_more.text = "▾"
 	_more.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_more.add_theme_color_override("font_color", UiTheme.AMBER)
+	_more.add_theme_color_override("font_color", UiTheme.ACCENT)
 	_more.add_theme_font_size_override("font_size", 8)
 	box.add_child(_more)
 
@@ -6427,7 +8961,7 @@ func _on_line(speaker: String, text: String) -> void:
 	_clear_choices()
 	_speaker.text = speaker.to_upper()
 	_speaker.visible = speaker != ""
-	_body.add_theme_color_override("default_color", UiTheme.BONE if speaker != "" else Color(0.72, 0.76, 0.78))
+	_body.add_theme_color_override("default_color", UiTheme.BONE if speaker != "" else Color(0.68, 0.78, 0.84))
 	_body.text = text
 	_body.visible_characters = 0
 	_shown = 0.0
@@ -6561,6 +9095,8 @@ var player
 
 var _safe: Control
 var _prompt: Button
+var _run: Button
+var _clock: WorldClockHUD
 var _toast: Label
 var _title: Label
 var _queue: Array[String] = []
@@ -6586,7 +9122,7 @@ func _ready() -> void:
 	_prompt = _chip("", func() -> void:
 		if player != null:
 			player.call("try_interact"))
-	_prompt.add_theme_font_size_override("font_size", 10)
+	_prompt.add_theme_font_size_override("font_size", 8)
 	_safe.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -6595,18 +9131,50 @@ func _ready() -> void:
 	_prompt.offset_top = -12
 	_prompt.visible = false
 
+	_clock = WorldClockHUD.new()
+	_safe.add_child(_clock)
+	_clock.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_clock.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_clock.position += Vector2(-8, 26)
+
+	# run toggle for touch play; Shift (or pad B) does the same while held
+	_run = _chip("RUN", func() -> void: pass)
+	_run.toggle_mode = true
+	_run.toggled.connect(func(on: bool) -> void:
+		if player != null and player.get("touch") != null:
+			player.touch.sprint = on)
+	_safe.add_child(_run)
+	_run.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_run.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_run.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_run.position += Vector2(-8, -10)
+
+	var tracker := QuestTracker.new()
+	_safe.add_child(tracker)
+	tracker.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	tracker.position = Vector2(10, 8)
+	var compass := Compass.new()
+	_safe.add_child(compass)
+	compass.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	compass.size = Vector2(40, 40)
+	compass.position += Vector2(10, -50)
+
 	_toast = Label.new()
-	_toast.add_theme_color_override("font_color", UiTheme.AMBER)
-	_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
-	_toast.add_theme_font_size_override("font_size", 9)
+	_toast.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_toast.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
+	_toast.add_theme_font_override("font", UiTheme.caps_font())
+	_toast.add_theme_font_size_override("font_size", 7)
 	_toast.modulate.a = 0.0
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_safe.add_child(_toast)
-	_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	_toast.position = Vector2(8, 8)
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.offset_top = 70
 
 	_title = Label.new()
-	_title.add_theme_font_size_override("font_size", 16)
-	_title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	_title.add_theme_font_override("font", UiTheme.caps_font())
+	_title.add_theme_font_size_override("font_size", 13)
+	_title.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.modulate.a = 0.0
 	_safe.add_child(_title)
@@ -6623,6 +9191,12 @@ func _ready() -> void:
 
 func bind_player(p: Node) -> void:
 	player = p
+	if p.get("touch") != null:
+		p.touch.sprint = _run.button_pressed
+
+
+func clock_text() -> String:
+	return _clock.text()
 
 
 func show_location(text: String) -> void:
@@ -6650,6 +9224,7 @@ func _process(_delta: float) -> void:
 	var t = player.get("target") if is_instance_valid(player) else null
 	var show := t != null and not Dialogue.active
 	_prompt.visible = show
+	_run.visible = not Dialogue.active
 	if show:
 		var text: String = str(t.prompt).to_upper()
 		if t.label != "":
@@ -6688,7 +9263,7 @@ func _on_journal_updated(kind: String, text: String) -> void:
 func _chip(text: String, on_press: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_size_override("font_size", 8)
+	b.add_theme_font_size_override("font_size", 7)
 	UiTheme.chip(b)
 	b.pressed.connect(on_press)
 	return b
@@ -6726,7 +9301,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.45)
+	shade.color = Color(0.0, 0.04, 0.08, 0.55)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -6751,7 +9326,7 @@ func _ready() -> void:
 
 
 func refresh() -> void:
-	var amber := UiTheme.AMBER.to_html(false)
+	var amber := UiTheme.ACCENT.to_html(false)
 	var dim := UiTheme.DIM.to_html(false)
 	var q := ""
 	for id: String in Journal.quests:
@@ -6812,7 +9387,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.45)
+	shade.color = Color(0.0, 0.04, 0.08, 0.55)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -6826,8 +9401,9 @@ func _ready() -> void:
 	panel.add_child(box)
 	var title := Label.new()
 	title.text = "COMETO"
-	title.add_theme_color_override("font_color", UiTheme.AMBER)
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_color_override("font_color", UiTheme.ACCENT)
+	title.add_theme_font_override("font", UiTheme.caps_font())
+	title.add_theme_font_size_override("font_size", 10)
 	box.add_child(title)
 	_first = _button(box, "Resume", func() -> void: closed.emit())
 	_button(box, "Save", _on_save)
@@ -6879,6 +9455,121 @@ func _button(parent: Control, text: String, on_press: Callable) -> Button:
 
 
 ==============================================================================
+== ui/quest_tracker.gd
+==============================================================================
+class_name QuestTracker
+extends VBoxContainer
+## Top-left tracker in the style of the director's key art: the game's name, then the
+## open investigation with its active objectives as checkboxes. Reads Journal; draws
+## nothing of its own state.
+
+var _name: Label
+var _rule: ColorRect
+var _quest: Label
+var _list: VBoxContainer
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_theme_constant_override("separation", 2)
+	_name = _label("COMETOGRAPHIA", 6, UiTheme.DIM)
+	_name.add_theme_font_override("font", UiTheme.caps_font())
+	_rule = ColorRect.new()
+	_rule.color = Color(UiTheme.ACCENT, 0.6)
+	_rule.custom_minimum_size = Vector2(110, 1)
+	_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_rule)
+	_quest = _label("", 8, UiTheme.ACCENT)
+	_quest.add_theme_font_override("font", UiTheme.caps_font())
+	_list = VBoxContainer.new()
+	_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_list.add_theme_constant_override("separation", 0)
+	add_child(_list)
+	Journal.updated.connect(func(_k: String, _t: String) -> void: refresh())
+	refresh()
+
+
+func refresh() -> void:
+	for c in _list.get_children():
+		c.queue_free()
+	var qid := ""
+	for id: String in Journal.quests:
+		if not Journal.is_complete(id):
+			qid = id
+			break
+	if qid == "":
+		_quest.text = ""
+		return
+	_quest.text = Journal.quest_title(qid).to_upper()
+	for o: Dictionary in Journal.quest_defs.get(qid, {}).get("objectives", []):
+		var st := Journal.objective_state(qid, str(o["id"]))
+		if st == Journal.ACTIVE:
+			_list.add_child(_label_node("–  " + str(o["text"]), 7, UiTheme.BONE))
+		elif st == Journal.DONE:
+			_list.add_child(_label_node("✓  " + str(o["text"]), 7, Color(UiTheme.DIM, 0.8)))
+
+
+func _label(text: String, size: int, col: Color) -> Label:
+	var l := _label_node(text, size, col)
+	add_child(l)
+	return l
+
+
+func _label_node(text: String, size: int, col: Color) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", col)
+	l.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
+	l.add_theme_constant_override("shadow_offset_x", 1)
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return l
+
+
+==============================================================================
+== ui/tech_panel_style.gd
+==============================================================================
+class_name TechPanelStyle
+extends StyleBox
+## Panel look for the interface: a dark blue translucent field, a hairline outline,
+## brighter corner brackets and a short header tick. Drawn, not textured, so it is
+## crisp at any size.
+
+var bg := Color(0.02, 0.06, 0.1, 0.86)
+var line := Color(0.56, 0.82, 0.94, 0.22)
+var bracket := Color(0.56, 0.82, 0.94, 0.9)
+var bracket_len := 6.0
+var tick := true
+
+
+func _init(pad: float = 8.0) -> void:
+	set_content_margin_all(pad)
+
+
+func _draw(to_canvas_item: RID, rect: Rect2) -> void:
+	var rs := RenderingServer
+	rs.canvas_item_add_rect(to_canvas_item, rect, bg)
+	var a := rect.position
+	var b := rect.end
+	# hairline outline
+	for r: Rect2 in [Rect2(a.x, a.y, rect.size.x, 1), Rect2(a.x, b.y - 1, rect.size.x, 1),
+			Rect2(a.x, a.y, 1, rect.size.y), Rect2(b.x - 1, a.y, 1, rect.size.y)]:
+		rs.canvas_item_add_rect(to_canvas_item, r, line)
+	# corner brackets
+	var n := minf(bracket_len, minf(rect.size.x, rect.size.y) * 0.4)
+	for c: Array in [[a.x, a.y, 1, 1], [b.x, a.y, -1, 1], [a.x, b.y, 1, -1], [b.x, b.y, -1, -1]]:
+		var x: float = c[0]
+		var y: float = c[1]
+		var sx: float = c[2]
+		var sy: float = c[3]
+		rs.canvas_item_add_rect(to_canvas_item, Rect2(minf(x, x + sx * n), y if sy > 0 else y - 1, n, 1), bracket)
+		rs.canvas_item_add_rect(to_canvas_item, Rect2(x if sx > 0 else x - 1, minf(y, y + sy * n), 1, n), bracket)
+	if tick and rect.size.x > 40.0:
+		rs.canvas_item_add_rect(to_canvas_item, Rect2(a.x + n + 4, a.y, 14, 1), Color(bracket, 0.5))
+
+
+==============================================================================
 == ui/touch_controls.gd
 ==============================================================================
 class_name TouchControls
@@ -6894,6 +9585,8 @@ signal tapped
 @export var tap_ms := 350
 
 var vector := Vector2.ZERO
+## Run toggle for touch play (the HUD's RUN chip sets it); Shift does the same on keys.
+var sprint := false
 
 var _down := false
 var _dragged := false
@@ -6961,13 +9654,20 @@ func _draw() -> void:
 ==============================================================================
 class_name UiTheme
 ## Interface look, built in code so nothing falls back to default Godot styling.
+## Direction: calm, minimal, technical. Deep blue translucent fields, hairlines and
+## corner brackets, pale cyan accents, small spaced capitals for labels.
 ## PROVISIONAL: system typeface. A licensed display/body face should replace it.
 
-const INK := Color(0.05, 0.07, 0.09, 0.94)
-const INK_SOFT := Color(0.05, 0.07, 0.09, 0.72)
-const AMBER := Color(0.93, 0.69, 0.36)
-const BONE := Color(0.87, 0.85, 0.79)
-const DIM := Color(0.58, 0.62, 0.64)
+const INK := Color(0.02, 0.06, 0.1, 0.86)
+const INK_SOFT := Color(0.02, 0.06, 0.1, 0.5)
+## Primary accent: pale cyan.
+const ACCENT := Color(0.56, 0.82, 0.94)
+const ACCENT_DEEP := Color(0.24, 0.5, 0.68)
+const BONE := Color(0.9, 0.95, 0.98)
+const DIM := Color(0.5, 0.62, 0.7)
+const SHADOW := Color(0.0, 0.03, 0.06, 0.75)
+
+static var _caps: FontVariation
 
 
 static func box(bg: Color, border: Color, border_w: int = 1, pad: float = 6.0) -> StyleBoxFlat:
@@ -6980,44 +9680,196 @@ static func box(bg: Color, border: Color, border_w: int = 1, pad: float = 6.0) -
 	return s
 
 
+static func base_font() -> SystemFont:
+	var f := SystemFont.new()
+	f.font_names = PackedStringArray(["DIN Alternate", "Avenir Next", "Helvetica Neue", "Roboto", "sans-serif"])
+	f.font_weight = 400
+	return f
+
+
+## Letter-spaced face for labels and headers set in capitals.
+static func caps_font() -> FontVariation:
+	if _caps == null:
+		_caps = FontVariation.new()
+		_caps.base_font = base_font()
+		_caps.spacing_glyph = 1
+	return _caps
+
+
+## Style a label as a small spaced-capitals header.
+static func caps(l: Control, size: int, col: Color) -> void:
+	l.add_theme_font_override("font", caps_font())
+	l.add_theme_font_size_override("font_size", size)
+	l.add_theme_color_override("font_color", col)
+
+
 static func build() -> Theme:
 	var t := Theme.new()
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Avenir Next Condensed", "Avenir Next", "Helvetica Neue", "sans-serif"])
-	f.font_weight = 500
-	t.default_font = f
+	t.default_font = base_font()
 	t.default_font_size = 10
 
-	t.set_stylebox("panel", "PanelContainer", box(INK, Color(AMBER, 0.45)))
+	t.set_stylebox("panel", "PanelContainer", TechPanelStyle.new(8.0))
 
+	# buttons: bare text, a left accent bar when focused, a faint wash on hover
 	var flat := box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 3.0)
-	var hover := box(Color(AMBER, 0.14), Color(0, 0, 0, 0), 0, 3.0)
-	var focus := box(Color(AMBER, 0.1), Color(AMBER, 0.8), 0, 3.0)
+	flat.content_margin_left = 7.0
+	var hover := box(Color(ACCENT, 0.1), Color(0, 0, 0, 0), 0, 3.0)
+	hover.content_margin_left = 7.0
+	var focus := box(Color(ACCENT, 0.08), ACCENT, 0, 3.0)
 	focus.border_width_left = 2
+	focus.content_margin_left = 7.0
 	t.set_stylebox("normal", "Button", flat)
 	t.set_stylebox("hover", "Button", hover)
 	t.set_stylebox("pressed", "Button", hover)
 	t.set_stylebox("focus", "Button", focus)
 	t.set_stylebox("disabled", "Button", flat)
 	t.set_color("font_color", "Button", BONE)
-	t.set_color("font_hover_color", "Button", AMBER)
-	t.set_color("font_pressed_color", "Button", AMBER)
-	t.set_color("font_focus_color", "Button", AMBER)
+	t.set_color("font_hover_color", "Button", ACCENT)
+	t.set_color("font_pressed_color", "Button", ACCENT)
+	t.set_color("font_focus_color", "Button", ACCENT)
 	t.set_color("font_disabled_color", "Button", Color(DIM, 0.5))
 
 	t.set_color("font_color", "Label", BONE)
 	t.set_color("default_color", "RichTextLabel", BONE)
 	t.set_font_size("normal_font_size", "RichTextLabel", 10)
-	t.set_constant("line_separation", "RichTextLabel", 1)
+	t.set_constant("line_separation", "RichTextLabel", 2)
 	t.set_constant("separation", "VBoxContainer", 2)
 	t.set_constant("separation", "HBoxContainer", 6)
 	return t
 
 
-## A small bordered button for HUD chips.
+## A small HUD chip: spaced capitals over a faint field with an underline.
 static func chip(button: Button) -> void:
-	button.add_theme_stylebox_override("normal", box(INK_SOFT, Color(AMBER, 0.35), 1, 4.0))
-	button.add_theme_stylebox_override("hover", box(INK, Color(AMBER, 0.8), 1, 4.0))
-	button.add_theme_stylebox_override("pressed", box(INK, AMBER, 1, 4.0))
-	button.add_theme_stylebox_override("focus", box(INK_SOFT, Color(AMBER, 0.35), 1, 4.0))
+	var states := {"normal": [INK_SOFT, Color(ACCENT, 0.45)], "hover": [INK, ACCENT], "pressed": [Color(ACCENT_DEEP, 0.7), ACCENT],
+		"focus": [INK_SOFT, Color(ACCENT, 0.45)]}
+	for k: String in states:
+		var s := box(states[k][0], states[k][1], 0, 4.0)
+		s.border_width_bottom = 1
+		s.content_margin_left = 6.0
+		s.content_margin_right = 6.0
+		button.add_theme_stylebox_override(k, s)
+	button.add_theme_font_override("font", caps_font())
 	button.focus_mode = Control.FOCUS_NONE
+
+
+==============================================================================
+== ui/world_clock_hud.gd
+==============================================================================
+class_name WorldClockHUD
+extends HBoxContainer
+## Compact clock: date and weekday over the 12-hour time with a small drawn weather
+## glyph, right-aligned behind a hairline. Reads WorldTime and Weather through their
+## signals; holds no state of its own. Hidden during dialogue and when
+## WorldTime.hud_hidden is set (cinematics).
+
+var _date: Label
+var _time: Label
+var _icon: WeatherGlyph
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_theme_constant_override("separation", 5)
+	var col := VBoxContainer.new()
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_theme_constant_override("separation", 0)
+	add_child(col)
+	_date = Label.new()
+	UiTheme.caps(_date, 6, UiTheme.DIM)
+	_date.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	col.add_child(_date)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_END
+	row.add_theme_constant_override("separation", 4)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(row)
+	_icon = WeatherGlyph.new()
+	_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(_icon)
+	_time = Label.new()
+	_time.add_theme_font_size_override("font_size", 11)
+	_time.add_theme_color_override("font_color", UiTheme.BONE)
+	row.add_child(_time)
+	for l: Label in [_date, _time]:
+		l.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
+		l.add_theme_constant_override("shadow_offset_x", 1)
+		l.add_theme_constant_override("shadow_offset_y", 1)
+		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bar := ColorRect.new()
+	bar.color = Color(UiTheme.ACCENT, 0.7)
+	bar.custom_minimum_size = Vector2(1, 0)
+	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bar)
+	WorldTime.minute_changed.connect(func(_h: int, _m: int) -> void: refresh())
+	WorldTime.day_changed.connect(func(_c: WorldCalendar) -> void: refresh())
+	WorldTime.time_jumped.connect(refresh)
+	Weather.weather_changed.connect(func(_t: String, _p: String) -> void: refresh())
+	refresh()
+
+
+func refresh() -> void:
+	_date.text = WorldTime.date_text().to_upper()
+	_time.text = WorldTime.time_text()
+	_icon.set_state(Weather.current, WorldTime.is_between(6, 19.5))
+
+
+func text() -> String:
+	return "%s\n%s" % [WorldTime.date_text(), WorldTime.time_text()]
+
+
+func _process(_delta: float) -> void:
+	visible = not Dialogue.active and not WorldTime.hud_hidden
+
+
+## Small line-drawn weather symbol.
+class WeatherGlyph:
+	extends Control
+
+	var weather := "clear"
+	var day := true
+
+	func _init() -> void:
+		custom_minimum_size = Vector2(11, 11)
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_state(w: String, is_day: bool) -> void:
+		if w != weather or is_day != day:
+			weather = w
+			day = is_day
+			queue_redraw()
+
+	func _draw() -> void:
+		var c := UiTheme.ACCENT
+		var o := size * 0.5
+		match weather:
+			"clear":
+				if day:
+					draw_arc(o, 2.4, 0, TAU, 16, c, 1.0, true)
+					for i in 8:
+						var d := Vector2.from_angle(TAU * i / 8.0)
+						draw_line(o + d * 3.9, o + d * 5.2, c, 1.0, true)
+				else:
+					draw_arc(o, 3.6, PI * 0.35, PI * 1.65, 16, c, 1.0, true)
+					draw_arc(o + Vector2(2.2, 0), 3.0, PI * 0.62, PI * 1.38, 12, c, 1.0, true)
+			"cloudy":
+				_cloud(o + Vector2(0, 0.5), c)
+			"rain", "heavy_rain":
+				_cloud(o + Vector2(0, -1.5), c)
+				var n := 4 if weather == "heavy_rain" else 2
+				for i in n:
+					var x := o.x - 3.0 + 6.0 * (float(i) + 0.5) / float(n)
+					draw_line(Vector2(x + 0.6, o.y + 2.0), Vector2(x - 0.6, o.y + 4.8), c, 1.0, true)
+			"fog":
+				for i in 3:
+					var y := o.y - 3.0 + i * 3.0
+					draw_line(Vector2(o.x - 4.5 + i, y), Vector2(o.x + 4.5 - (2 - i), y), c, 1.0)
+			"snow":
+				for i in 3:
+					var d := Vector2.from_angle(PI * i / 3.0 + PI * 0.5) * 4.2
+					draw_line(o - d, o + d, c, 1.0, true)
+
+	func _cloud(at: Vector2, c: Color) -> void:
+		draw_arc(at + Vector2(-2.0, 0.6), 2.0, PI * 0.5, PI * 1.5, 10, c, 1.0, true)
+		draw_arc(at + Vector2(0.4, -0.6), 2.6, PI, TAU, 12, c, 1.0, true)
+		draw_arc(at + Vector2(2.6, 0.9), 1.7, -PI * 0.5, PI * 0.5, 10, c, 1.0, true)
+		draw_line(at + Vector2(-2.0, 2.6), at + Vector2(2.6, 2.6), c, 1.0)
