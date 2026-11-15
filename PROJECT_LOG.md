@@ -385,3 +385,24 @@ against a cold storm.
   reflection probes over the Steps and the mine yard so wet ground catches lamps.
 - Player recoloured to the key art's burgundy coat.
 
+### Pass 2 — modular kit (Blender, `art/source/anjabi_props.blend`)
+New models in `art/models/`: `quonset` (B-17 style corrugated arched hut: ribs, end
+walls, framed windows, door, portholes, porch with awning, stovepipe), `tavern_v2`
+(riveted domed hall, arched windows with round transoms, lit clerestory band, cupola,
+silo tower, entrance bay with sign board, café awning), `lantern_post` (iron post with
+glass lantern), `banner` (red banner with the key-art emblem), `barrel`, `crate_stack`,
+`planter` (flowers), `cafe_table` (table and two chairs), `mine_portal` (rock shoulders,
+timber frame, barred gate, sign board with crossed pickaxes and CLOSED plate, lanterns,
+rails), `gondola` (tram cabin), `pine`, `fern`.
+- Every lamp is now the lantern post; town pods are Quonset huts (B-17 labelled); the
+  Steps tavern is `tavern_v2` (moved 1.5 m north so the awning stays on the terrace) with
+  "MAIN TAVERN" sign, banners, café tables, barrels, planter; the mine yard door has the
+  portal ("ANJABI MINE / LEVELS I–IV / CLOSED" as in the director's key art; replaces the
+  prototype's "NO. 2 WORKING" sign) in front of the welded door; trees are the pine model;
+  gondolas hang on the tram line.
+- `MapBuilder3D.weather_model()`: imported materials get the shared triplanar detail
+  once; foliage is double-sided.
+- Fixed model pivots: every model now has its origin at its base centre (several sat
+  0.1–3 m into the ground and the portal was offset 2.6 m).
+- Tests 96/96.
+

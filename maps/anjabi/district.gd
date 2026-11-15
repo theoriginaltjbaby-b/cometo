@@ -134,19 +134,26 @@ func _railings() -> void:
 
 
 func _tavern() -> void:
-	var c := Vector3(-10, TERRACE, -19)
-	model("tavern", c)
+	var c := Vector3(-10, TERRACE, -20.5)
+	model("tavern_v2", c)
 	collider_cyl(c, 6.2, 5.0)
-	blocker(c + Vector3(5.25, 0, -2.0), c + Vector3(9.75, 3.6, 4.0))  # annex
-	var door := c + Vector3(0, 0, 6.1)
-	sign_text(door + Vector3(0, 4.3, 0.75), "TAVERN", 0.0, 64)
-	warm_light(door + Vector3(0, 2.2, 1.6), 2.2, 8.0)
-	lamp(door + Vector3(-3.6, 0, 2.0))
-	lamp(door + Vector3(3.6, 0, 2.0), false)
-	# outside seating
-	for p: Vector3 in [Vector3(-4.6, 0, 7.4), Vector3(4.8, 0, 7.2)]:
-		cyl(c + p, 0.6, 0.6, 0.75, M.timber, true, 10)
-		box(c + p + Vector3(0, 0.25, 0.9), Vector3(1.4, 0.5, 0.35), M.timber, true)
+	collider_cyl(c + Vector3(4.6, 0, -3.6), 1.95, 9.5)  # silo
+	box(c + Vector3(0, 1.8, 6.1), Vector3(3.4, 3.6, 1.4), null, true)  # entrance bay
+	sign_text(c + Vector3(0, 4.45, 7.08), "MAIN TAVERN", 0.0, 52, Color(0.98, 0.82, 0.5))
+	warm_light(c + Vector3(0, 2.4, 7.6), 2.4, 9.0)
+	warm_light(c + Vector3(2.6, 2.2, 8.4), 1.4, 6.0)
+	lamp(c + Vector3(-3.4, 0, 8.6))
+	lamp(c + Vector3(6.4, 0, 8.6), false)
+	for p: Vector3 in [Vector3(1.6, 0, 8.4), Vector3(3.8, 0, 8.2)]:
+		model("cafe_table", c + p, 0.4)
+		collider_cyl(c + p, 0.5, 0.8)
+	for p: Vector3 in [Vector3(-2.8, 0, 7.8), Vector3(-2.2, 0, 8.5)]:
+		model("barrel", c + p)
+		collider_cyl(c + p, 0.38, 1.0)
+	model("planter", c + Vector3(-4.8, 0, 7.6))
+	box(c + Vector3(-4.8, 0.3, 7.6), Vector3(1.2, 0.6, 0.6), null, true)
+	for x: float in [-2.4, 2.4]:
+		model("banner", c + Vector3(x, 0, 7.2), PI if x < 0 else 0.0)
 
 
 func _shop() -> void:

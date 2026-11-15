@@ -131,6 +131,7 @@ func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Nod
 	n.position = at
 	n.rotation.y = yaw
 	n.scale = s if s is Vector3 else Vector3(s, s, s)
+	weather_model(n)
 	add_child(n)
 	return n
 
@@ -142,6 +143,28 @@ func shed(base: Vector3, size: Vector3, yaw := 0.0, solid := true) -> Node3D:
 	if solid:
 		box(base + Vector3(0, size.y * 0.5, 0), size, null, true, yaw)
 	return n
+
+
+static var _weathered := {}
+
+
+## Gives imported model materials the shared surface detail (once per material) and
+## makes foliage double-sided. Emissive glass and smooth metal are left alone.
+static func weather_model(root: Node) -> void:
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i) as StandardMaterial3D
+			if m == null or _weathered.has(m):
+				continue
+			_weathered[m] = true
+			var nm := m.resource_name.to_lower()
+			if "leaf" in nm or "pine" in nm or "petal" in nm:
+				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if m.emission_enabled or m.roughness < 0.55:
+				continue
+			add_detail(m, 0.6)
 
 
 ## Invisible cylinder collider standing on `base`.
@@ -279,11 +302,11 @@ func railing(a: Vector3, b: Vector3, m: Material = null) -> void:
 
 
 func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
-	model("lamp", at)
-	collider_cyl(at, 0.12, 2.6)
+	model("lantern_post", at)
+	collider_cyl(at, 0.15, 3.0)
 	if with_light:
 		var l := OmniLight3D.new()
-		l.position = at + Vector3(0, 2.3, 0.55)
+		l.position = at + Vector3(0, 3.0, 0)
 		l.light_color = Color(1.0, 0.6, 0.28)
 		l.light_energy = 2.4
 		l.omni_range = 8.5
@@ -301,9 +324,7 @@ func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
 
 
 func tree(at: Vector3, s := 1.0) -> void:
-	cyl(at, 0.12 * s, 0.18 * s, 1.4 * s, M.trunk, false, 6)
-	for i in 3:
-		cyl(at + Vector3(0, (1.0 + i * 1.1) * s, 0), 0.05, (1.5 - i * 0.35) * s, 2.0 * s, M.foliage if i % 2 == 0 else M.foliage_b, false, 7)
+	model("pine", at, fmod(at.x * 1.7 + at.z * 0.9, TAU), s * 0.9)
 
 
 func sign_text(at: Vector3, text: String, yaw := 0.0, px := 48, col := Color(0.95, 0.8, 0.55)) -> Label3D:

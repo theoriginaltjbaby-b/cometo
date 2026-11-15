@@ -99,9 +99,11 @@ func _mine_door() -> void:
 	# timber frame set into the cliff face, steel door welded shut
 	var z := 5.3
 	slab(Vector3(21.5, 0, z - 0.3), Vector3(26.5, 4.4, z), M.rock_dark, false)
-	for x: float in [21.8, 26.2]:
-		box(Vector3(x, 2.0, z + 0.2), Vector3(0.45, 4.0, 0.45), M.timber, true)
-	box(Vector3(24, 4.2, z + 0.2), Vector3(5.2, 0.45, 0.5), M.timber, false)
+	# timber portal, barred gate and sign (director's key art) in front of the welded door
+	model("mine_portal", Vector3(24, 0, z + 0.55))
+	sign_text(Vector3(24, 5.75, z + 1.5), "ANJABI MINE", 0.0, 46, Color(0.9, 0.78, 0.55))
+	sign_text(Vector3(24, 5.25, z + 1.5), "LEVELS I–IV", 0.0, 28, Color(0.85, 0.72, 0.5))
+	sign_text(Vector3(24.75, 4.75, z + 1.62), "CLOSED", 0.0, 36, Color(1.0, 0.85, 0.75))
 	box(Vector3(24, 1.8, z + 0.05), Vector3(4.0, 3.6, 0.12), M.steel, true)
 	box(Vector3(24, 1.8, z + 0.12), Vector3(0.05, 3.6, 0.04), M.steel_dark, false)
 	# the bright weld bead round the frame
@@ -110,7 +112,6 @@ func _mine_door() -> void:
 	box(Vector3(24, 0.05, z + 0.13), Vector3(4.0, 0.05, 0.03), weld, false)
 	for x: float in [22.02, 25.98]:
 		box(Vector3(x, 1.8, z + 0.13), Vector3(0.05, 3.6, 0.03), weld, false)
-	sign_text(Vector3(24, 4.75, z + 0.5), "NO. 2 WORKING", 0.0, 44)
 	# stacked rescue stretchers, still wrapped
 	var wrap := _mat(Color(0.82, 0.8, 0.72), 0.7)
 	for i in 3:

@@ -266,12 +266,11 @@ func _sea() -> void:
 
 func _pod(p: Vector2, tag := "", _lit := true) -> void:
 	var at := at_px(p)
-	model("pod", at, 0.0, 1.1)
+	model("quonset", at)
 	if tag != "":
-		sign_text(at + Vector3(0, 3.3, 2.55), tag, 0.0, 40)
+		sign_text(at + Vector3(1.35, 2.15, 3.68), tag, 0.0, 40)
 
 
-## Shed model filling a greybox footprint (visual only; the grid already blocks it).
 func _shed_px(a: Vector2, b: Vector2, h_m: float) -> void:
 	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
 	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
@@ -341,6 +340,10 @@ func _landmarks() -> void:
 	deck.y = 9.0
 	beam(north, deck, 0.15, 0.15, M.steel_dark)
 	beam(north + Vector3(0.6, -0.4, 0), deck + Vector3(0.6, -0.4, 0), 0.1, 0.1, M.steel_dark)
+	var along := deck - north
+	for f: float in [0.18, 0.47, 0.76]:
+		var g := north.lerp(deck, f) + Vector3(0.3, -2.7, 0)
+		model("gondola", g, atan2(along.x, along.z) + PI * 0.5)
 	for f in 7:
 		var p := north.lerp(deck, (f + 0.5) / 7.0)
 		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(1.0, p.y - SEA, 1.0), M.steel_dark, false)
@@ -401,7 +404,7 @@ func _spawns_and_exits() -> void:
 	door.label = "Pod B-17"
 	door.dialogue_id = "anjabi/pod_b17"
 	door.radius = 1.4
-	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 3.4)
+	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 4.2)
 	add_child(door)
 	var sign := Interactable3D.new()
 	sign.name = "MineSign"
