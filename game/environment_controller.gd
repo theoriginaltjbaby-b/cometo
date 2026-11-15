@@ -71,6 +71,12 @@ func _ready() -> void:
 	snap.call_deferred()
 
 
+func _enter_tree() -> void:
+	# the game is taken out of the tree behind the title screen; relight on return
+	if env != null:
+		snap.call_deferred()
+
+
 ## Apply the present time and weather immediately, with no blending.
 func snap() -> void:
 	var p := Weather.profile()
@@ -106,7 +112,7 @@ func _process(delta: float) -> void:
 
 
 func _apply() -> void:
-	if env == null:
+	if env == null or not is_inside_tree():
 		return
 	if indoor:
 		_apply_indoor()

@@ -3,6 +3,11 @@ extends Control
 
 signal closed
 signal new_game_requested
+signal title_requested
+
+## Set by game/app.gd when a title screen exists to return to.
+var title_enabled := false
+var _title: Button
 
 var _status: Label
 var _load: Button
@@ -37,6 +42,7 @@ func _ready() -> void:
 	_button(box, "Save", _on_save)
 	_load = _button(box, "Load", _on_load)
 	_new = _button(box, "New game", _on_new)
+	_title = _button(box, "Title screen", func() -> void: title_requested.emit())
 	_status = Label.new()
 	_status.add_theme_color_override("font_color", UiTheme.DIM)
 	_status.add_theme_font_size_override("font_size", 8)
@@ -45,6 +51,7 @@ func _ready() -> void:
 
 func open() -> void:
 	_confirm_new = false
+	_title.visible = title_enabled
 	_new.text = "New game"
 	_status.text = "The game also saves itself when you leave."
 	_load.disabled = not SaveManager.has_save("manual")

@@ -19,6 +19,9 @@ static func ensure() -> void:
 	_add_button(&"interact", JOY_BUTTON_A)
 	_add_button(&"journal", JOY_BUTTON_Y)
 	_add_button(&"menu", JOY_BUTTON_START)
+	# menus: make sure a gamepad can confirm and cancel in the built-in ui actions
+	_ensure_button(&"ui_accept", JOY_BUTTON_A)
+	_ensure_button(&"ui_cancel", JOY_BUTTON_B)
 
 
 static func _add(action: StringName, keys: Array, axis: int = -1, axis_value: float = 0.0) -> void:
@@ -40,3 +43,11 @@ static func _add_button(action: StringName, button: JoyButton) -> void:
 	var jb := InputEventJoypadButton.new()
 	jb.button_index = button
 	InputMap.action_add_event(action, jb)
+
+
+static func _ensure_button(action: StringName, button: JoyButton) -> void:
+	for e in InputMap.action_get_events(action):
+		var jb := e as InputEventJoypadButton
+		if jb != null and jb.button_index == button:
+			return
+	_add_button(action, button)

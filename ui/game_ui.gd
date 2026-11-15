@@ -3,6 +3,8 @@ extends CanvasLayer
 ## Builds and owns every screen-space control. Panels pause the world.
 
 signal new_game_requested
+## The player chose "Title screen" in the pause menu.
+signal title_requested
 
 var touch: TouchControls
 var hud: Hud
@@ -33,6 +35,7 @@ func _ready() -> void:
 	hud.menu_pressed.connect(toggle_menu)
 	journal.closed.connect(close_panels)
 	menu.closed.connect(close_panels)
+	menu.title_requested.connect(func() -> void: title_requested.emit())
 	menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
 
 

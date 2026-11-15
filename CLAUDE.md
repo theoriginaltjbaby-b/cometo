@@ -1,7 +1,7 @@
 # COMETO
 
 Handheld sci-fi CRPG, converting from 2D to fixed-camera 3D. Godot 4.7, GDScript only, Mobile renderer, iPhone first (landscape).
-The game boots into the 3D town (`anjabi_town`, `maps/anjabi/town_3d.tscn`) on the Steps. The Steps and tavern terrace are a detailed insert inside the town (`maps/anjabi/district.tscn` with `insert = true`, placed at `INSERT_AT`); the mine yard is `anjabi_mine` (`maps/anjabi/mine_3d.tscn`). Every map is 3D. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
+The game boots into the title screen (`game/app.tscn`); a new game starts in the 3D town (`anjabi_town`, `maps/anjabi/town_3d.tscn`) on the Steps. The Steps and tavern terrace are a detailed insert inside the town (`maps/anjabi/district.tscn` with `insert = true`, placed at `INSERT_AT`); the mine yard is `anjabi_mine` (`maps/anjabi/mine_3d.tscn`). Every map is 3D. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
 Separate from the older 3D project in `~/cometographia-2`; nothing is shared.
 
 ## Run and test
@@ -11,6 +11,7 @@ GODOT=/Applications/Godot_mono-1.app/Contents/MacOS/Godot   # NOTE 2026-11-14: t
 $GODOT --path .                                              # play
 $GODOT --headless --path . --import                          # after adding scripts or assets
 $GODOT --headless --path . res://tests/slice_test.tscn       # end-to-end test, exit code 0 = pass
+$GODOT --headless --path . res://tests/menu_test.tscn        # title, options, creation and title/game flow
 $GODOT --path . res://tests/screenshot.tscn -- /some/folder  # windowed visual check, writes PNGs
 $GODOT --path . res://tests/screenshot_3d.tscn -- /some/folder  # windowed shots of the 3D district
 $GODOT --headless --path . -s tools/build_town_mask.gd       # rebuild the town walkable mask from the greybox
@@ -23,7 +24,7 @@ $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs i
 
 ## Layout
 
-- `core/` autoloads: `GameState` (flags, conditions, effects), `Journal`, `Dialogue`, `SaveManager`, `WorldTime` (the only clock and calendar), `Weather`. No drawing here.
+- `core/` autoloads: `GameState` (flags, conditions, effects), `Journal`, `Dialogue`, `SaveManager`, `WorldTime` (the only clock and calendar), `Weather`, `Settings`, `Audio` (all sound goes through it; see `audio/README.md` for placeholders). No drawing here.
 - `game/` main scene, player, NPCs, `Interactable` component, puzzle pieces.
 - `maps/<region>/` one scene per location, root script `GameMap` (2D) or `GameMap3D` (3D), with `Entities` and `Spawns`. 3D maps use `Player3D`, `Npc3D`, `Interactable3D`, `MapExit3D`, which keep the 2D classes' interfaces.
 - `ui/` all screen-space controls, built in code from `UiTheme`.

@@ -47,6 +47,7 @@ func _init() -> void:
 	figure.accent = Color(0.62, 0.42, 0.2)
 	figure.hood = false
 	figure.configure({"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05), "long_coat": true})
+	apply_look(figure, GameState.get_flag("player_look", {}))
 	figure.xray = true
 	add_child(figure)
 	reach = Area3D.new()
@@ -83,6 +84,20 @@ func _init() -> void:
 	camera = FollowCamera.new()
 	camera.target = self
 	add_child(camera)
+
+
+## Applies a created character's look (ui/title/character_creation.gd) to a figure.
+## Colours are stored as HTML strings so they survive the JSON save.
+static func apply_look(f: Figure3D, look: Variant) -> void:
+	if not look is Dictionary:
+		return
+	var d: Dictionary = look
+	for k: String in ["hair", "long_coat"]:
+		if d.has(k):
+			f.set(k, d[k])
+	for k: String in ["hair_color", "skin", "coat"]:
+		if d.has(k):
+			f.set(k, Color.html(str(d[k])))
 
 
 func setup(touch_controls: TouchControls, _bounds: Variant = null) -> void:

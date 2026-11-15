@@ -75,6 +75,30 @@ static func build() -> Theme:
 	t.set_color("font_focus_color", "Button", ACCENT)
 	t.set_color("font_disabled_color", "Button", Color(DIM, 0.5))
 
+	# sliders: a hairline track, accent fill, a small bar for the grabber
+	var track := StyleBoxLine.new()
+	track.color = Color(DIM, 0.5)
+	track.thickness = 1
+	var fill := StyleBoxLine.new()
+	fill.color = ACCENT
+	fill.thickness = 1
+	t.set_stylebox("slider", "HSlider", track)
+	t.set_stylebox("grabber_area", "HSlider", fill)
+	t.set_stylebox("grabber_area_highlight", "HSlider", fill)
+	t.set_icon("grabber", "HSlider", _bar(BONE))
+	t.set_icon("grabber_highlight", "HSlider", _bar(ACCENT))
+	t.set_icon("grabber_disabled", "HSlider", _bar(DIM))
+	# text entry: an underline, nothing else
+	var edit := box(Color(ACCENT, 0.05), Color(ACCENT, 0.45), 0, 3.0)
+	edit.border_width_bottom = 1
+	var edit_focus := box(Color(ACCENT, 0.1), ACCENT, 0, 3.0)
+	edit_focus.border_width_bottom = 1
+	t.set_stylebox("normal", "LineEdit", edit)
+	t.set_stylebox("focus", "LineEdit", edit_focus)
+	t.set_color("font_color", "LineEdit", BONE)
+	t.set_color("font_placeholder_color", "LineEdit", Color(DIM, 0.7))
+	t.set_color("caret_color", "LineEdit", ACCENT)
+
 	t.set_color("font_color", "Label", BONE)
 	t.set_color("default_color", "RichTextLabel", BONE)
 	t.set_font_size("normal_font_size", "RichTextLabel", 10)
@@ -82,6 +106,25 @@ static func build() -> Theme:
 	t.set_constant("separation", "VBoxContainer", 2)
 	t.set_constant("separation", "HBoxContainer", 6)
 	return t
+
+
+static func _bar(c: Color) -> ImageTexture:
+	var img := Image.create(3, 9, false, Image.FORMAT_RGBA8)
+	img.fill(c)
+	return ImageTexture.create_from_image(img)
+
+
+## Insets (left, top, right, bottom) in the control's own units that keep content clear
+## of the notch and home indicator. Zero off mobile. Untested on device.
+static func safe_insets(c: Control) -> Vector4:
+	if not OS.has_feature("mobile"):
+		return Vector4.ZERO
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0:
+		return Vector4.ZERO
+	var safe := Rect2(DisplayServer.get_display_safe_area())
+	var k := c.get_viewport_rect().size / win
+	return Vector4(safe.position.x * k.x, safe.position.y * k.y, (win.x - safe.end.x) * k.x, (win.y - safe.end.y) * k.y)
 
 
 ## A small HUD chip: spaced capitals over a faint field with an underline.

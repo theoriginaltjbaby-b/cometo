@@ -126,6 +126,17 @@ All files were created 2026-11-14 unless noted.
 | `ui/world_clock_hud.gd` | `WorldClockHUD`: date, weekday, 12-hour time and a drawn weather glyph. |
 | `ui/tech_panel_style.gd` | `TechPanelStyle`: drawn panel StyleBox (dark blue field, hairline, corner brackets). |
 | `tests/screenshot_time.gd` / `.tscn` | Windowed shots through the day and in each weather, plus walk and run poses. |
+| `game/app.gd` / `app.tscn` | Project main scene. Title screen, character creation and the game (`main.tscn`) underneath; fades; return-to-title without restarting. |
+| `ui/title/title_screen.gd` | `TitleScreen`: title lettering, main menu, Load and Options panels. |
+| `ui/title/title_backdrop.gd` | `TitleBackdrop`: the planet shader layer and near-cloud layer. |
+| `ui/title/title_ship.gd` | `TitleShip`: provisional drawn ship with drift. |
+| `ui/title/character_creation.gd` | `CharacterCreation`: name and appearance with a 3D preview; emits the new game's starting flags. |
+| `art/shaders/title_planet.gdshader`, `title_wisps.gdshader` | Planet limb, ground lights, two cloud decks, atmosphere; near cloud. Canvas shaders. |
+| `core/settings.gd` | Autoload `Settings`: volumes, fullscreen, vsync in `user://settings.cfg`; creates the Music and SFX buses. |
+| `core/audio_manager.gd` | Autoload `Audio`: `play_music(id)`, `ui(id)`; placeholder lookup by file name, synthesised stand-in UI tones. |
+| `audio/README.md` | The audio placeholders and the file names that replace them. |
+| `tests/menu_test.gd` / `.tscn` | Headless test of title, options, creation and the title/game flow (42 checks). |
+| `tests/screenshot_title.gd` / `.tscn` | Windowed shots of the title screens. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -612,3 +623,58 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
 - No interiors exist yet; the indoor override is tested by toggling it on the town.
 - Sunset and sunrise times are fixed (they do not vary by season).
 - Not run on an iPhone; the web and Mac builds in `export/` predate this entry.
+
+## 14. Title screen and main menu, Phase 1 (2026-11-15)
+
+### What starts now
+- The project's main scene is `game/app.tscn`. It shows the title; the game
+  (`game/main.tscn`) is created underneath only when a game starts. Running `main.tscn`
+  directly (tests, tools) behaves as before.
+- Flow: NEW GAME -> character creation -> intro hook (`App._play_intro`, empty placeholder)
+  -> game. LOAD GAME and CONTINUE go straight to the game. The pause menu has a new
+  "Title screen" entry: the game is autosaved and taken out of the scene tree, kept whole,
+  and CONTINUE puts it back. NEW GAME over a game in progress asks for a second press.
+- CONTINUE is an addition to the requested list; it appears only when a game is in
+  progress or an autosave exists. QUIT appears only on desktop.
+- The world clock is paused (`WorldTime.pause("title")`) whenever the title or character
+  creation is showing.
+
+### The scene
+- One canvas shader draws the planet: a large circular limb from upper left to mid
+  right, amber-to-violet atmosphere, stars, light shafts, dark ground with flickering
+  orange settlements, a low and a high cloud deck. Ground, low cloud, high cloud and a
+  separate near-cloud layer scroll along the limb at different speeds (the parallax);
+  the noise tiles, so it never ends. The glow breathes slowly.
+- The ship is drawn in code (provisional), drifts and turns slightly, and its core
+  pulses. It and the near cloud are in front of the title lettering.
+- Cost: three or four texture samples per pixel, no 3D, no screen reads. On web a `lite`
+  switch drops the high cloud deck and the shafts and halves the noise texture.
+
+### Menu, options, saves
+- Title in thin spaced capitals; entries in spaced capitals with a pale-blue underline on
+  the focused one. Mouse hover moves the focus; keyboard and gamepad use the `ui_*`
+  actions (gamepad A and B are now mapped to `ui_accept` and `ui_cancel`).
+- LOAD GAME lists every readable save of the current version (`SaveManager.list_saves()`,
+  `slot_info()`), with place and in-game date; damaged or old files are left out.
+- OPTIONS: master, music and effects volume; fullscreen and vsync on desktop.
+- Character creation: name, hair, hair colour, skin, coat colour, coat length, with a
+  turning preview. Stored as flags `player_name` and `player_look`, so they save and load
+  with everything else; `Player3D.apply_look()` applies them.
+
+### Audio
+- No assets yet. `Audio.play_music("title")` and `("game")` are requested and stay silent
+  until `audio/music/title.ogg` and `game.ogg` exist. Interface sounds use soft
+  synthesised tones until `audio/ui/*.wav` exist. See `audio/README.md`.
+
+### Tests
+- `tests/menu_test.tscn` 42/42; `tests/slice_test.tscn` 142/142. Tests use
+  `SaveManager.dir` and `Settings.path` to stay out of the player's files.
+
+### Limits
+- The thin title face is a system font (Helvetica Neue); on web, where there are no
+  system fonts, the title falls back to the default face.
+- Safe-area insets, touch and a physical gamepad are untested on a device. Not run on an
+  iPhone or in a browser; the builds in `export/` predate this entry.
+- Character creation covers appearance only; the name is stored but not yet shown in
+  dialogue. A gamepad cannot type the name.
+- One manual save slot exists; the load list is ready for more.

@@ -14,6 +14,12 @@ const PLAYER_SCENE := preload("res://game/player/player.tscn")
 var map
 var player
 var map_id := ""
+## How to start, set by game/app.gd before this enters the tree:
+## "" = resume the autosave or start new (running this scene directly, tests),
+## "new" = new game with `profile`, "load:<slot>" = load that save.
+var boot := ""
+## Flags a new game starts with (the created character: player_name, player_look).
+var profile := {}
 
 @onready var world: Node2D = $World
 @onready var ui: GameUi = $UI
@@ -24,7 +30,10 @@ func _ready() -> void:
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
 	GameState.travel_requested.connect(_on_travel_requested)
-	if SaveManager.boot_from_autosave and SaveManager.has_save("auto") and SaveManager.load_game("auto"):
+	if boot.begins_with("load:"):
+		if SaveManager.load_game(boot.trim_prefix("load:")):
+			return
+	elif boot == "" and SaveManager.boot_from_autosave and SaveManager.has_save("auto") and SaveManager.load_game("auto"):
 		return
 	new_game()
 
@@ -32,6 +41,8 @@ func _ready() -> void:
 func new_game() -> void:
 	GameState.reset()
 	Journal.reset()
+	for k: String in profile:
+		GameState.set_flag(k, profile[k])
 	WorldTime.reset()
 	Weather.reset()
 	load_map(START_MAP, "default")

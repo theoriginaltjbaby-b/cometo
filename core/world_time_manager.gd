@@ -228,6 +228,16 @@ func date_text() -> String:
 	return calendar.date_text()
 
 
+## "Autumn 12 · 6:40 PM" for a saved clock (to_dict()); "" if empty.
+func describe(d: Dictionary) -> String:
+	if d.is_empty():
+		return ""
+	var h := int(d.get("hour", 0))
+	var h12 := h % 12
+	var season := calendar.season_names[posmod(int(d.get("season", 0)), calendar.season_names.size())]
+	return "%s %d · %d:%02d %s" % [season, int(d.get("day", 1)), 12 if h12 == 0 else h12, int(d.get("minute", 0)), "AM" if h < 12 else "PM"]
+
+
 # --- persistence ------------------------------------------------------------------
 
 func to_dict() -> Dictionary:
