@@ -7,6 +7,48 @@ extends GameMap3D
 
 var M := {}
 
+static var _detail: NoiseTexture2D
+static var _detail_n: NoiseTexture2D
+
+
+## Shared surface detail: a seamless noise for albedo variation and a matching
+## normal map, applied world-space triplanar so every box and slab lines up.
+static func detail_textures() -> Array:
+	if _detail == null:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		n.frequency = 0.03
+		n.fractal_octaves = 5
+		n.fractal_gain = 0.55
+		var g := Gradient.new()
+		g.set_color(0, Color(0.6, 0.6, 0.6))
+		g.set_color(1, Color(1.05, 1.05, 1.05))
+		_detail = NoiseTexture2D.new()
+		_detail.width = 256
+		_detail.height = 256
+		_detail.seamless = true
+		_detail.noise = n
+		_detail.color_ramp = g
+		_detail_n = NoiseTexture2D.new()
+		_detail_n.width = 256
+		_detail_n.height = 256
+		_detail_n.seamless = true
+		_detail_n.as_normal_map = true
+		_detail_n.bump_strength = 4.0
+		_detail_n.noise = n
+	return [_detail, _detail_n]
+
+
+static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
+	var t := detail_textures()
+	m.albedo_texture = t[0]
+	m.normal_enabled = true
+	m.normal_texture = t[1]
+	m.normal_scale = 0.8
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3(scale, scale, scale)
+
 
 # --- materials ------------------------------------------------------------------
 
@@ -52,6 +94,8 @@ func _mat(c: Color, rough: float, metal: float = 0.0, emit: Color = Color.BLACK,
 		m.emission_enabled = true
 		m.emission = emit
 		m.emission_energy_multiplier = emit_e
+	elif rough >= 0.6 and c.a >= 0.99:
+		add_detail(m)
 	return m
 
 
@@ -62,6 +106,30 @@ func _body() -> StaticBody3D:
 	b.collision_layer = 1
 	b.collision_mask = 0
 	return b
+
+
+## An authored model from res://art/models (exported from art/source/*.blend).
+## Models face +Z (south, toward the camera). Visual only; add colliders separately.
+func model(model_name: String, at: Vector3, yaw := 0.0, s := 1.0) -> Node3D:
+	var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
+	n.position = at
+	n.rotation.y = yaw
+	n.scale = Vector3(s, s, s)
+	add_child(n)
+	return n
+
+
+## Invisible cylinder collider standing on `base`.
+func collider_cyl(base: Vector3, r: float, h: float) -> void:
+	var b := _body()
+	b.position = base + Vector3(0, h * 0.5, 0)
+	var cs := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = r
+	shape.height = h
+	cs.shape = shape
+	b.add_child(cs)
+	add_child(b)
 
 
 ## Box by centre and size. solid adds a matching collider.
@@ -185,13 +253,12 @@ func railing(a: Vector3, b: Vector3, m: Material = null) -> void:
 	beam(a, b, 1.3, 0.12, null, true)
 
 
-func lamp(at: Vector3, with_light := true, h := 2.6) -> void:
-	cyl(at, 0.05, 0.08, h, M.steel_dark, true, 8)
-	box(at + Vector3(0, h + 0.05, 0), Vector3(0.3, 0.12, 0.3), M.steel_dark, false)
-	box(at + Vector3(0, h - 0.12, 0), Vector3(0.2, 0.22, 0.2), M.lamp, false)
+func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
+	model("lamp", at)
+	collider_cyl(at, 0.12, 2.6)
 	if with_light:
 		var l := OmniLight3D.new()
-		l.position = at + Vector3(0, h - 0.3, 0)
+		l.position = at + Vector3(0, 2.3, 0.55)
 		l.light_color = Color(1.0, 0.68, 0.38)
 		l.light_energy = 1.6
 		l.omni_range = 7.0

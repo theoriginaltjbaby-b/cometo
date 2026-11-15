@@ -155,6 +155,7 @@ func _terrain() -> void:
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.vertex_color_is_srgb = true
+	add_detail(mat, 0.3)
 	mat.roughness = 0.72
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 21
@@ -255,15 +256,11 @@ func _sea() -> void:
 
 # --- buildings ---------------------------------------------------------------------
 
-func _pod(p: Vector2, tag := "", lit := true) -> void:
+func _pod(p: Vector2, tag := "", _lit := true) -> void:
 	var at := at_px(p)
-	cyl(at, 2.4, 2.5, 3.0, M.panel, false, 14)
-	cyl(at + Vector3(0, 3.0, 0), 2.55, 2.55, 0.2, M.steel_dark, false, 14)
-	dome(at + Vector3(0, 3.2, 0), 2.4, M.copper, 0.6)
-	box(at + Vector3(0, 1.05, 2.42), Vector3(1.0, 2.1, 0.12), M.steel_dark, false)
-	box(at + Vector3(1.4, 1.9, 2.0), Vector3(0.8, 0.6, 0.1), M.window if lit else M.steel_dark, false, 0.55)
+	model("pod", at, 0.0, 1.1)
 	if tag != "":
-		sign_text(at + Vector3(0, 2.45, 2.55), tag, 0.0, 40)
+		sign_text(at + Vector3(0, 3.3, 2.55), tag, 0.0, 40)
 
 
 func _block(a: Vector2, b: Vector2, h_m: float, m: Material, roof: Material = null, lit := true) -> void:
@@ -282,16 +279,8 @@ func _block(a: Vector2, b: Vector2, h_m: float, m: Material, roof: Material = nu
 func _landmarks() -> void:
 	# 08 Main Tavern: domed drum on its terrace, with annex
 	var tav := at_px(Vector2(780, 268))
-	cyl(tav, 7.0, 7.2, 5.0, M.panel, false, 24)
-	cyl(tav + Vector3(0, 5.0, 0), 7.3, 7.3, 0.35, M.copper_raw, false, 24)
-	dome(tav + Vector3(0, 5.35, 0), 7.0, M.copper, 0.75)
-	cyl(tav + Vector3(0, 10.4, 0), 1.0, 1.2, 1.0, M.steel, false, 10)
-	box(tav + Vector3(0, 11.5, 0), Vector3(0.8, 0.3, 0.8), M.lamp, false)
-	for i in 10:
-		var a := TAU * (i + 0.5) / 10.0
-		box(tav + Vector3(cos(a) * 7.08, 2.6, sin(a) * 7.08), Vector3(1.2, 1.4, 0.1), M.window, false, -a + PI * 0.5)
-	box(tav + Vector3(0, 3.2, 8.4), Vector3(5.0, 0.12, 2.6), M.canvas, false)
-	sign_text(tav + Vector3(0, 3.9, 8.0), "TAVERN", 0.0, 64)
+	model("tavern", tav, 0.0, 1.17)
+	sign_text(tav + Vector3(0, 5.0, 7.9), "TAVERN", 0.0, 64)
 	warm_light(tav + Vector3(0, 2.4, 8.5), 2.2, 9.0)
 	_block(Vector2(700, 205), Vector2(735, 300), 4.0, M.panel_violet, M.canvas)
 	# 12 Shop

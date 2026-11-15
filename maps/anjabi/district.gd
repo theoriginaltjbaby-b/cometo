@@ -52,10 +52,10 @@ func _ground() -> void:
 	warm_light(Vector3(2, 3.2, 1), 1.8, 9.0)
 	# tavern terrace, retaining wall faces the plaza
 	slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
-	slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE, -10), M.paving, false)
+	slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
 	# pod level beyond the ravine
 	slab(Vector3(-20, -12, -50), Vector3(16, PODS, -34), M.stone)
-	slab(Vector3(-20, PODS - 0.02, -50), Vector3(16, PODS, -34), M.moss, false)
+	slab(Vector3(-20, PODS - 0.02, -50), Vector3(16, PODS + 0.01, -34), M.moss, false)
 	# ravine floor
 	slab(Vector3(-24, -12, -34), Vector3(16, -4, -28), M.rock_dark)
 	# mine approach, a shelf below the plaza
@@ -112,32 +112,14 @@ func _railings() -> void:
 
 func _tavern() -> void:
 	var c := Vector3(-10, TERRACE, -19)
-	cyl(c, 6.0, 6.2, 4.6, M.panel, true, 24)
-	cyl(c + Vector3(0, 4.6, 0), 6.3, 6.3, 0.35, M.copper_raw, false, 24)
-	dome(c + Vector3(0, 4.95, 0), 6.0, M.copper, 0.75)
-	cyl(c + Vector3(0, 9.2, 0), 0.9, 1.1, 1.0, M.steel, false, 10)
-	box(c + Vector3(0, 10.35, 0), Vector3(0.7, 0.3, 0.7), M.lamp, false)
-	# windows around the drum
-	for i in 10:
-		var a := TAU * (i + 0.5) / 10.0
-		var p := c + Vector3(cos(a) * 6.08, 2.4, sin(a) * 6.08)
-		box(p, Vector3(1.1, 1.3, 0.1), M.window, false, -a + PI * 0.5)
-	# entrance on the south side
+	model("tavern", c)
+	collider_cyl(c, 6.2, 5.0)
+	blocker(c + Vector3(5.25, 0, -2.0), c + Vector3(9.75, 3.6, 4.0))  # annex
 	var door := c + Vector3(0, 0, 6.1)
-	box(door + Vector3(0, 1.3, 0.25), Vector3(2.2, 2.6, 0.5), M.timber, false)
-	box(door + Vector3(0, 1.15, 0.52), Vector3(1.5, 2.3, 0.06), M.window, false)
-	box(door + Vector3(0, 3.0, 1.3), Vector3(5.0, 0.12, 2.6), M.canvas, false)
-	for x: float in [-2.4, 2.4]:
-		box(door + Vector3(x, 1.45, 2.5), Vector3(0.1, 2.9, 0.1), M.timber, false)
-	sign_text(door + Vector3(0, 3.6, 0.8), "TAVERN", 0.0, 64)
+	sign_text(door + Vector3(0, 4.3, 0.75), "TAVERN", 0.0, 64)
 	warm_light(door + Vector3(0, 2.2, 1.6), 2.2, 8.0)
 	lamp(door + Vector3(-3.6, 0, 2.0))
 	lamp(door + Vector3(3.6, 0, 2.0), false)
-	# annex and chimney
-	box(c + Vector3(7.5, 1.8, -1), Vector3(4.5, 3.6, 6), M.panel_violet)
-	box(c + Vector3(7.5, 3.7, -1), Vector3(4.9, 0.2, 6.4), M.steel_dark, false)
-	box(c + Vector3(9.8, 1.8, -2), Vector3(0.08, 1.0, 1.6), M.window, false)
-	cyl(c + Vector3(8.5, 3.6, -2.5), 0.3, 0.35, 3.0, M.steel_dark, false, 8)
 	# outside seating
 	for p: Vector3 in [Vector3(-4.6, 0, 7.4), Vector3(4.8, 0, 7.2)]:
 		cyl(c + p, 0.6, 0.6, 0.75, M.timber, true, 10)
@@ -156,15 +138,11 @@ func _shop() -> void:
 		box(c + Vector3(-2.8 + i * 0.7, 0.35, 4.4), Vector3(0.6, 0.7, 0.6), M.timber, true)
 
 
-func _pod(at: Vector3, tag := "", lit := true) -> void:
-	cyl(at, 2.1, 2.2, 3.0, M.panel, true, 14)
-	cyl(at + Vector3(0, 3.0, 0), 2.25, 2.25, 0.2, M.steel_dark, false, 14)
-	dome(at + Vector3(0, 3.2, 0), 2.1, M.copper, 0.6)
-	box(at + Vector3(0, 1.05, 2.12), Vector3(1.0, 2.1, 0.12), M.steel_dark, false)
-	box(at + Vector3(1.3, 1.9, 1.75), Vector3(0.8, 0.6, 0.1), M.window if lit else M.steel_dark, false, 0.55)
-	cyl(at + Vector3(-1.2, 3.1, -0.8), 0.15, 0.15, 1.6, M.steel, false, 6)
+func _pod(at: Vector3, tag := "", _lit := true) -> void:
+	model("pod", at, PI if tag == "" and int(at.x) % 2 == 0 else 0.0)
+	collider_cyl(at, 2.25, 3.4)
 	if tag != "":
-		sign_text(at + Vector3(0, 2.45, 2.25), tag, 0.0, 40)
+		sign_text(at + Vector3(0, 3.0, 2.3), tag, 0.0, 40)
 
 
 func _pods() -> void:

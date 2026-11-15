@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 6: whole town in 3D; every map is now 3D).
+Last updated: 2026-11-14 (entry 7: first art pass with Blender models).
 
 ## 1. What this is
 
@@ -124,6 +124,8 @@ All files were created 2026-11-14 unless noted.
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. |
 | `maps/anjabi/mine_3d.tscn`, `mine_3d.gd` | Map `anjabi_mine` in 3D (entry 5), replacing `mine.tscn` in `main.gd`'s registry: 6 m stairs down from the Estate landing, fenced inner yard with the welded mine door and stretchers, gate, guard hut, wash-house, sheds, spur rails, the washout as a real cut in the ground, cliff fence, path east. Driller and Gate guard as `Npc3D`; all seven interactables and both exits. |
 | `maps/anjabi/town_3d.tscn`, `town_3d.gd` | Map `anjabi_town` in 3D (entry 6): the whole settlement. Terrain in 16 m chunks with vertex colours, one HeightMapShape3D collider, sea, skirts at the shoreline, and landmark buildings on their greybox footprints (tavern dome, shop, Tion Tower, Guard Tower, pods with B-17, estate, mine headframe, airpad and craft, tram station, tram line, Imperial Tower). Trees, lamps, district titles, spawns and both exits to the mine. |
+| `art/source/anjabi_props.blend` | Blender source (entry 7) for the pod, tavern and street lamp. Ignored by Godot (`.gdignore`). |
+| `art/models/pod.glb`, `tavern.glb`, `lamp.glb` | Exported models (entry 7), metres, origin at the base, front facing +Z (south). Placed with `MapBuilder3D.model()`; colliders stay separate. |
 | `maps/anjabi/town_3d_cells.res` | Generated 166x109 grid (1 m cells): visual height, type, collision height. Do not edit; rebuild with `tools/build_town_3d.gd`. |
 | `tools/build_town_3d.gd` | Builds the grid from the greybox and `town_walk.res`: classifies cells by colour, interpolates walkway heights between 16 district anchors (Laplace), raises cliffs and slabs as walls. Prints the steepest walkable step; writes `docs/reference/town_3d_heights_debug.png`. |
 | `game/puzzle/ore_cart_3d.gd`, `track_switch_3d.gd` | 3D versions of the cart and points lever, same flags (`anjabi.cart`, `anjabi.spur_switch`) and dialogue. When bridged, the cart's upturned bed becomes a walkable deck and the washout blocker is removed. |
@@ -203,8 +205,9 @@ Three combat directions were proposed; none is chosen or implemented.
 
 ## 8. Known limitations and untested areas
 
-- 3D (entry 4): geometry and characters are provisional primitives built in code, not
-  authored meshes. No AnimationPlayer; the walk is procedural. No camera occlusion
+- 3D (entry 4, updated entry 7): the pod, tavern and street lamp are authored Blender
+  models; everything else (sheds, towers, terrain, characters) is still primitives built
+  in code. No AnimationPlayer; the walk is procedural. No camera occlusion
   handling yet (nothing tall stands south of a walkable area so far). Only the
   every map is 3D. The town is a 3D greybox: walkways are smooth slopes from the height
   interpolation, not modelled stairs, and its buildings are not enterable. The district
@@ -294,4 +297,18 @@ generated walkway step is 48). Slice test town section rewritten: 93 checks, all
 passing, including standing at all 15 landmarks, walkways climbing from the Steps, the
 sea stopping the player, save/load and travel both ways. Screenshots
 `docs/screens/3d_20..27_*.png`.
+
+### 2026-11-14 — 8. First art pass (entry 7)
+Modelled the living pod (panelled drum, portholes, door, copper dome with ribs, vent),
+the domed tavern (drum with copper pilasters, framed windows, entrance, awning, ribbed
+dome, cupola, annex, chimney) and the street lamp in Blender via MCP; source in
+`art/source/anjabi_props.blend`, exports in `art/models/`. `MapBuilder3D` gained
+`model()` and `collider_cyl()`; `lamp()` now places the lamp model everywhere, and the
+district and town use the pod and tavern models (colliders unchanged). All rough
+materials and the town terrain now carry a shared world-space triplanar noise albedo and
+normal map (`MapBuilder3D.detail_textures()`), so stone, concrete, rock, panels and
+paving read as surfaces rather than flat colour. `Figure3D` gained tapered limbs with
+joints, a knee-length coat with hem, shoulders, scarf, satchel and strap, boot cuffs and
+a hood peak. Fixed z-fighting between the terrace/pod overlays and the ground. Slice test
+93 checks, all passing; screenshots in `docs/screens/` refreshed.
 
