@@ -187,8 +187,7 @@ func _town() -> void:
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_district" and player is Player3D, "the mine stairs lead up into the 3D district")
-	main.call("load_map", "anjabi_town", "mine")
+	check(str(main.get("map_id")) == "anjabi_town" and player is Player3D, "the mine stairs lead up into the town")
 	await _frames(10)
 	player = main.get("player")
 	var town = main.get("map")
@@ -224,14 +223,15 @@ func _town() -> void:
 	var hp: float = town.nearest_walk(Vector2(580, 70)).y
 	var hb: float = town.nearest_walk(Vector2(650, 640)).y
 	check(hp - hb > 10.0, "the pods stand %.1f m above the beach" % (hp - hb))
-	# walk from the Steps up toward the tavern: the ground rises under the player
-	await _place3(town.nearest_walk(Vector2(860, 400)) + Vector3(0, 0.1, 0))
+	# leave the Steps west along the walkway toward Tion Tower: the ground rises
+	var zw: float = _walk_z(town, O.x - 14.5, -9, 9)
+	await _place3(Vector3(O.x - 14.5, town.ground(O.x - 14.5, O.z + zw) + 0.1, O.z + zw))
+	await _frames(10)
 	var y0: float = player.global_position.y
-	Input.action_press(&"move_up")
 	Input.action_press(&"move_left")
-	await _frames(150)
-	Input.action_release(&"move_up")
+	await _frames(240)
 	Input.action_release(&"move_left")
+	await _frames(10)
 	check(player.global_position.y > y0 + 0.5 and player.is_on_floor(), "walkways climb from the Steps (%.2f -> %.2f m)" % [y0, player.global_position.y])
 	# the sea stops the player on the beach
 	await _place3(town.nearest_walk(Vector2(650, 640)) + Vector3(0, 0.1, 0))
@@ -269,14 +269,20 @@ func _town() -> void:
 	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(43.3, 0.05, 32.2)) < 0.3, "and returns to the east side of the mine")
 
 
+## The Steps: the detailed insert (plaza, stairs, tavern terrace) inside the town map.
+const O := Vector3(101.52, 0, 45.72)
+
+
 func _district() -> void:
 	player = main.get("player")
 	var map: Node = main.get("map")
-	check(str(main.get("map_id")) == "anjabi_district", "new game starts in the 3D district")
-	check(map is GameMap3D and player is Player3D, "district is a 3D map with a 3D player")
-	var meshes := map.find_children("*", "MeshInstance3D", true, false).size()
-	var bodies := map.find_children("*", "StaticBody3D", true, false).size()
-	check(meshes > 200 and bodies > 50, "district is built from real meshes and colliders (%d meshes, %d bodies)" % [meshes, bodies])
+	check(str(main.get("map_id")) == "anjabi_town", "new game starts in the town")
+	check(map is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
+	check(player.global_position.distance_to(O + Vector3(2, 0.05, 5)) < 0.5, "new game starts on the Steps plaza")
+	var meshes: int = map.find_children("*", "MeshInstance3D", true, false).size()
+	var bodies: int = map.find_children("*", "StaticBody3D", true, false).size()
+	check(meshes > 300 and bodies > 50, "the town is built from real meshes and colliders (%d meshes, %d bodies)" % [meshes, bodies])
+	check(map.find_children("*", "Npc3D", true, false).size() >= 1, "the Steps insert is part of the town")
 	var cam: Camera3D = player.camera
 	check(cam.current and cam.projection == Camera3D.PROJECTION_ORTHOGONAL, "orthographic follow camera is current")
 	await _frames(20)
@@ -291,7 +297,6 @@ func _district() -> void:
 	check(player.global_position.x > x0 + 1.5, "keyboard moves the 3D player (%.2f m)" % (player.global_position.x - x0))
 	check(cam.global_position.x > c0 + 1.0, "camera follows the player")
 	check(player.facing.x > 0.9, "player faces the way it walked")
-	# diagonal (8-direction)
 	var p0: Vector3 = player.global_position
 	Input.action_press(&"move_right")
 	Input.action_press(&"move_down")
@@ -300,33 +305,26 @@ func _district() -> void:
 	Input.action_release(&"move_down")
 	var d: Vector3 = player.global_position - p0
 	check(d.x > 0.3 and d.z > 0.3, "diagonal movement")
-	# touch stick
 	x0 = player.global_position.x
 	var ui: GameUi = main.get_node("UI")
 	ui.touch.vector = Vector2.LEFT
 	await _frames(30)
 	ui.touch.vector = Vector2.ZERO
 	check(player.global_position.x < x0 - 0.8, "touch stick moves the 3D player")
-	# the railing over the cliff stops the player
-	await _place3(Vector3(4, 0.05, 8))
-	Input.action_press(&"move_down")
-	await _frames(90)
-	Input.action_release(&"move_down")
-	check(player.global_position.z < 9.8 and player.global_position.y > -0.3, "railing keeps the player on the plaza (z=%.2f)" % player.global_position.z)
 	# the terrace wall blocks, the stairs climb
-	await _place3(Vector3(-6, 0.05, -7))
+	await _place3(O + Vector3(-6, 0.05, -7))
 	Input.action_press(&"move_up")
 	await _frames(60)
 	Input.action_release(&"move_up")
-	check(player.global_position.z > -10.2 and player.global_position.y < 0.5, "terrace wall blocks the plaza (z=%.2f)" % player.global_position.z)
-	await _place3(Vector3(0, 0.05, -2))
+	check(player.global_position.z > O.z - 10.2 and player.global_position.y < 0.5, "terrace wall blocks the plaza")
+	await _place3(O + Vector3(0, 0.05, -2))
 	Input.action_press(&"move_up")
 	await _frames(150)
 	Input.action_release(&"move_up")
 	await _frames(10)
 	check(player.global_position.y > 2.8 and player.is_on_floor(), "stairs carry the player up to the tavern terrace (y=%.2f)" % player.global_position.y)
 	# tavern keeper
-	await _place3(Vector3(-7.2, 3.05, -10.9))
+	await _place3(O + Vector3(-7.2, 3.05, -10.9))
 	check(player.target != null and player.target.label == "Tavern keeper", "tavern keeper is targeted")
 	check(ui.hud.prompt_text().contains("Tavern keeper"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
 	check(player.try_interact() and Dialogue.active, "talking opens dialogue")
@@ -337,49 +335,73 @@ func _district() -> void:
 	check(player.global_position.distance_to(at) < 0.05, "player cannot walk during dialogue")
 	await _talk(["Where's the mine"])
 	check(GameState.get_flag("tavern_keeper.met") == true, "dialogue effects apply in 3D")
-	# raised stairs and bridge to B-17
-	await _place3(Vector3(8.5, 3.05, -18))
-	Input.action_press(&"move_up")
-	await _frames(300)
-	Input.action_release(&"move_up")
+	# the insert joins the town seamlessly: walk off the plaza east and west
+	for side: float in [1.0, -1.0]:
+		var edge_x: float = O.x + (20.5 if side > 0 else -12.5)
+		var zl: float = _walk_z(map, edge_x + side * 2.0, -9, 9)
+		check(not is_nan(zl), "a town walkway meets the plaza's %s edge" % ("east" if side > 0 else "west"))
+		if is_nan(zl):
+			continue
+		await _place3(Vector3(edge_x - side * 3.0, 0.05, O.z + zl))
+		Input.action_press(&"move_right" if side > 0 else &"move_left")
+		await _frames(150)
+		Input.action_release(&"move_right" if side > 0 else &"move_left")
+		await _frames(10)
+		var past: float = (player.global_position.x - edge_x) * side
+		check(past > 4.0 and player.is_on_floor(), "the plaza runs into the town's walkway (%s, %.1f m past the edge)" % ["east" if side > 0 else "west", past])
+	# from the terrace west onto the town's paths at the same level
+	await _place3(O + Vector3(-20, 3.05, -20))
+	Input.action_press(&"move_left")
+	await _frames(150)
+	Input.action_release(&"move_left")
 	await _frames(10)
-	check(player.global_position.y > 5.8 and player.global_position.z < -35.0, "walkway and bridge reach the pods (y=%.2f z=%.2f)" % [player.global_position.y, player.global_position.z])
-	await _place3(Vector3(4, 6.05, -36.2))
-	check(player.target != null and player.target.label == "Pod B-17", "B-17 door is targeted")
+	check(player.global_position.x < O.x - 26.0 and player.is_on_floor(), "the terrace runs into the town's paths (x=%.1f)" % (player.global_position.x - O.x))
+	# B-17 among the town's pods, and the sign by the mine
+	var b17: Node3D = map.get_node("PodB17Door")
+	await _place3(Vector3(b17.global_position.x, map.ground(b17.global_position.x, b17.global_position.z + 1.0) + 0.1, b17.global_position.z + 0.6))
+	await _frames(10)
+	check(player.target != null and player.target.label == "Pod B-17", "B-17's door is in the town")
 	player.try_interact()
 	await _talk([])
-	# down the west stairs to the mine approach
-	await _place3(Vector3(-10, 0.05, 2))
-	Input.action_press(&"move_left")
-	await _frames(200)
-	Input.action_release(&"move_left")
-	await _frames(10)
-	check(player.global_position.y < -2.8 and player.global_position.x < -19.0, "west stairs lead down to the mine approach (y=%.2f x=%.2f)" % [player.global_position.y, player.global_position.x])
-	Input.action_press(&"move_left")
-	await _frames(300)
-	Input.action_release(&"move_left")
-	check(player.global_position.x > -38.0, "the mine gate blocks the approach (x=%.2f)" % player.global_position.x)
-	# save / load in 3D
-	await _place3(Vector3(-30, -2.95, 4))
-	check(SaveManager.save_game("test"), "save in the 3D district")
+	# save / load
+	await _place3(O + Vector3(10, 0.05, 6))
+	check(SaveManager.save_game("test"), "save on the Steps")
 	main.call("load_map", "anjabi_mine", "default")
 	await _frames(3)
-	check(SaveManager.load_game("test"), "load in the 3D district")
+	check(SaveManager.load_game("test"), "load on the Steps")
 	await _frames(3)
 	player = main.get("player")
-	check(player is Player3D and player.global_position.distance_to(Vector3(-30, -2.95, 4)) < 0.2, "load restores 3D map and position")
-	# through the gate to the mine yard and back up
-	await _place3(Vector3(-36.0, -2.95, 2))
-	check(player.target is MapExit3D, "the mine gate is an exit")
+	check(player is Player3D and player.global_position.distance_to(O + Vector3(10, 0.05, 6)) < 0.2, "load restores map and position")
+	# a save from the retired district map resumes on the Steps
+	main.call("restore_world", {"map": "anjabi_district", "dim": 3, "x": -30.0, "y": -2.95, "z": 4.0})
+	await _frames(3)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(O + Vector3(2, 0.05, 5)) < 0.5, "old district saves resume on the Steps")
+	# to the mine and back
+	var exit: Node3D = map.get_node("ToMineRoad") if is_instance_valid(map) else null
+	map = main.get("map")
+	exit = map.get_node("ToMineRoad")
+	await _place3(exit.global_position - Vector3(0, 0.7, 0))
+	await _frames(6)
+	check(player.target is MapExit3D, "the mine path is an exit")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_mine" and player is Player3D, "the gate leads into the 3D mine yard")
-	await _place3(Vector3(8, 6.05, 1.0))
-	player.try_interact()
-	await _frames(6)
-	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_district" and player.global_position.distance_to(Vector3(-34, -2.95, 2)) < 0.5, "mine stairs return to the mine approach")
+	check(str(main.get("map_id")) == "anjabi_mine" and player is Player3D, "the path leads into the 3D mine yard")
+
+
+## Local z (relative to O) of the town walk cell at world x nearest the plaza centre line, or NAN.
+func _walk_z(map: Node, x: float, z0: int, z1: int) -> float:
+	var best := NAN
+	for z in range(z0, z1 + 1):
+		var cx := int(x)
+		var cz := int(O.z + z)
+		var t: int = map.cls[cz * map.w + cx]
+		if t == 1 or t == 2 or t == 3:
+			var local := (cz + 0.5) - O.z
+			if is_nan(best) or absf(local) < absf(best):
+				best = local
+	return best
 
 
 func _place3(p: Vector3) -> void:

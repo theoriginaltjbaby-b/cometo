@@ -255,7 +255,7 @@ func _interactables() -> void:
 	up.name = "StairsToSteps"
 	up.prompt = "Climb"
 	up.label = "Stairs up to the Steps"
-	up.target_map = "anjabi_district"
+	up.target_map = "anjabi_town"
 	up.target_spawn = "mine"
 	up.position = Vector3(8, TOP + 0.8, 0.6)
 	add_child(up)

@@ -19,6 +19,9 @@ var walk_mask: Variant = null
 var figure: Figure3D
 var reach: Area3D
 var camera: FollowCamera
+## Last place the player stood; used if they ever fall out of the world.
+var _safe := Vector3.ZERO
+var _has_safe := false
 
 
 func _init() -> void:
@@ -77,6 +80,12 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y -= gravity * delta
 	move_and_slide()
+	if is_on_floor():
+		_safe = global_position
+		_has_safe = true
+	elif global_position.y < -40.0 and _has_safe:
+		global_position = _safe + Vector3(0, 0.3, 0)
+		velocity = Vector3.ZERO
 	if moving:
 		facing = Vector3(dir.x, 0, dir.y).normalized()
 	var yaw := atan2(-facing.x, -facing.z)

@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 8: every building is a Blender model).
+Last updated: 2026-11-14 (entry 9: the district is merged into the town; two maps remain).
 
 ## 1. What this is
 
@@ -114,7 +114,7 @@ All files were created 2026-11-14 unless noted.
 | File | Purpose |
 |---|---|
 | `maps/game_map_3d.gd` | `GameMap3D`: 3D twin of `GameMap` (`map_id`, `display_name`, `Entities`, `Spawns/<Marker3D>`). |
-| `maps/anjabi/district.tscn`, `district.gd` | Map `anjabi_district`, the start map. The Steps plaza (y 0), tavern terrace (y 3), living pods with B-17 over a ravine (y 6, reached by raised stairs and a bridge), shop, mine approach (y -3) with gate and sealed door, beach, sea, docks, distant Imperial Tower and tram cable. All geometry built in code from boxes, cylinders and domes with real colliders. Stairs are visible steps plus an invisible ramp collider. Lighting: cool directional light with shadows, warm omni lights, depth fog. |
+| `maps/anjabi/district.tscn`, `district.gd` | Since entry 9: the detailed Steps insert inside the town (`insert = true`: plaza, stairs, tavern terrace, tavern, shop, props, tavern keeper). No longer a map of its own. Originally map `anjabi_district`, the start map. The Steps plaza (y 0), tavern terrace (y 3), living pods with B-17 over a ravine (y 6, reached by raised stairs and a bridge), shop, mine approach (y -3) with gate and sealed door, beach, sea, docks, distant Imperial Tower and tram cable. All geometry built in code from boxes, cylinders and domes with real colliders. Stairs are visible steps plus an invisible ramp collider. Lighting: cool directional light with shadows, warm omni lights, depth fog. |
 | `game/player/player_3d.gd` | `Player3D` (CharacterBody3D): 8-direction movement with acceleration, gravity, floor snap for stairs, facing, interaction reach, owns the follow camera. Same interface as `Player`. |
 | `game/camera/follow_camera.gd` | `FollowCamera`: fixed-orientation orthographic Camera3D, pitch 50°, size 14 m, smoothed follow. |
 | `game/actors/npc_3d.gd` | `Npc3D`: 3D NPC with a dialogue id; turns to the speaker. |
@@ -324,4 +324,21 @@ Imperial Tower (65 m shaft with blue light strips and a crown). They replace eve
 remaining primitive building in the district, the mine yard and the town; colliders are
 unchanged. The player now shows a warm silhouette wherever scenery hides them
 (`Figure3D.xray`, inverted depth test). Slice test 93 checks, all passing.
+
+### 2026-11-14 — 10. District merged into the town (entry 9)
+The separate `anjabi_district` map is retired; the game starts in `anjabi_town` on the
+Steps. `district.gd` gained `insert` mode, which builds only the plaza (0 m), the stairs,
+the tavern terrace (3 m), the tavern, shop, props and the tavern keeper; `town_3d.gd`
+places it at the Steps (`INSERT_AT`, greybox 880,415) and no longer draws its own tavern
+and shop. `tools/build_town_3d.gd` reserves the insert's cells (new type 6: not drawn, no
+grid collider) and pins a one-cell walkable rim to the insert's heights, so the town's
+walkways are interpolated to meet it exactly (steepest walkable step still 48 degrees).
+The B-17 door and the mine warning sign moved onto the town's pod and mine path. The
+mine's stairs now lead to the town's mine spawn. Saves made on the retired map resume on
+the Steps. `Player3D` returns the player to the last place they stood if they ever fall
+below the world. The player's see-through silhouette now uses Godot's X-Ray stencil mode
+(the previous depth trick also drew over the unobscured player). Tram station model
+scaled to 0.8 to fit its footprint. Slice test reworked: 96 checks, all passing,
+including walking off the plaza east and west onto town walkways and old-save fallback.
+Removed screenshots of geometry that no longer exists; `docs/screens/3d_0*` retaken.
 

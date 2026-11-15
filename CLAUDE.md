@@ -1,7 +1,7 @@
 # COMETO
 
 Handheld sci-fi CRPG, converting from 2D to fixed-camera 3D. Godot 4.7, GDScript only, Mobile renderer, iPhone first (landscape).
-The game boots into the 3D district `maps/anjabi/district.tscn`. The mine yard (`anjabi_mine`, `maps/anjabi/mine_3d.tscn`) and the whole town (`anjabi_town`, `maps/anjabi/town_3d.tscn`) are 3D too; every map is 3D now. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
+The game boots into the 3D town (`anjabi_town`, `maps/anjabi/town_3d.tscn`) on the Steps. The Steps and tavern terrace are a detailed insert inside the town (`maps/anjabi/district.tscn` with `insert = true`, placed at `INSERT_AT`); the mine yard is `anjabi_mine` (`maps/anjabi/mine_3d.tscn`). Every map is 3D. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
 Separate from the older 3D project in `~/cometographia-2`; nothing is shared.
 
 ## Run and test

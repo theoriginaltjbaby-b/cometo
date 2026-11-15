@@ -17,7 +17,26 @@ const SEA := -7.0
 
 
 
+## When true this is the detailed Steps insert inside the town map: only the plaza,
+## the tavern terrace, their stairs, buildings, props and people are built.
+@export var insert := false
+
+
 func _ready() -> void:
+	if insert:
+		_materials()
+		slab(Vector3(-12, -12, -10), Vector3(20, PLAZA, 10), M.paving)
+		_plaza_feature()
+		slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
+		slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
+		stairs(Vector3(0, PLAZA, -4), Vector3(0, 0, -1), TERRACE - PLAZA, 6.0, 4.0, M.stone)
+		railing(Vector3(-11.5, TERRACE, -10.2), Vector3(-2, TERRACE, -10.2))
+		railing(Vector3(2, TERRACE, -10.2), Vector3(12, TERRACE, -10.2))
+		_tavern()
+		_shop()
+		_props(true)
+		_people()
+		return
 	_materials()
 	_environment()
 	_ground()
@@ -36,20 +55,7 @@ func _ready() -> void:
 func _ground() -> void:
 	# the Steps plaza
 	slab(Vector3(-12, -12, -10), Vector3(20, PLAZA, 10), M.paving)
-	var ring := CylinderMesh.new()
-	ring.top_radius = 4.5
-	ring.bottom_radius = 4.5
-	ring.height = 0.04
-	ring.radial_segments = 32
-	var rm := MeshInstance3D.new()
-	rm.mesh = ring
-	rm.material_override = M.paving_light
-	rm.position = Vector3(2, 0.02, 1)
-	add_child(rm)
-	cyl(Vector3(2, 0, 1), 1.2, 1.4, 0.5, M.stone, true, 12)  # plinth
-	cyl(Vector3(2, 0.5, 1), 0.25, 0.3, 2.2, M.copper, true, 10)  # beacon column
-	box(Vector3(2, 2.85, 1), Vector3(0.6, 0.3, 0.6), M.lamp, false)
-	warm_light(Vector3(2, 3.2, 1), 1.8, 9.0)
+	_plaza_feature()
 	# tavern terrace, retaining wall faces the plaza
 	slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
 	slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
@@ -64,6 +70,23 @@ func _ground() -> void:
 	slab(Vector3(-14, -14, 16), Vector3(40, BEACH, 36), M.sand)
 	# cliff face below the plaza
 	slab(Vector3(-12, -14, 10), Vector3(22, -1.5, 16), M.rock)
+
+
+func _plaza_feature() -> void:
+	var ring := CylinderMesh.new()
+	ring.top_radius = 4.5
+	ring.bottom_radius = 4.5
+	ring.height = 0.04
+	ring.radial_segments = 32
+	var rm := MeshInstance3D.new()
+	rm.mesh = ring
+	rm.material_override = M.paving_light
+	rm.position = Vector3(2, 0.02, 1)
+	add_child(rm)
+	cyl(Vector3(2, 0, 1), 1.2, 1.4, 0.5, M.stone, true, 12)  # plinth
+	cyl(Vector3(2, 0.5, 1), 0.25, 0.3, 2.2, M.copper, true, 10)  # beacon column
+	box(Vector3(2, 2.85, 1), Vector3(0.6, 0.3, 0.6), M.lamp, false)
+	warm_light(Vector3(2, 3.2, 1), 1.8, 9.0)
 
 
 func _stairs_and_walkways() -> void:
@@ -278,7 +301,7 @@ func _backdrop() -> void:
 	box(Vector3(30, 13.5, -41.7), Vector3(3, 0.8, 0.2), M.window, false)
 
 
-func _props() -> void:
+func _props(core_only := false) -> void:
 	# plaza lamps, benches, planters, crates
 	for p: Vector3 in [Vector3(-8, 0, 8), Vector3(12, 0, 8), Vector3(-8, 0, -8), Vector3(8, 0, -3)]:
 		lamp(p)
@@ -295,6 +318,8 @@ func _props() -> void:
 	lamp(Vector3(-20, TERRACE, -12.5), false)
 	tree(Vector3(-21, TERRACE, -25), 1.0)
 	tree(Vector3(2, TERRACE, -25.5), 0.9)
+	if core_only:
+		return
 	# coastal vegetation along the plaza's southern lip
 	tree(Vector3(-10.8, -1.5, 13), 1.0)
 	tree(Vector3(18, -1.5, 14), 1.2)

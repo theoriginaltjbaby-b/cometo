@@ -5,9 +5,8 @@ extends Node
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
 	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
-	"anjabi_district": "res://maps/anjabi/district.tscn",
 }
-const START_MAP := "anjabi_district"
+const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
 const PLAYER_SCENE := preload("res://game/player/player.tscn")
 
@@ -60,11 +59,13 @@ func capture_world() -> Dictionary:
 
 func restore_world(d: Dictionary) -> void:
 	var id := str(d.get("map", START_MAP))
-	if not MAPS.has(id):
+	var known := MAPS.has(id)
+	if not known:
+		# e.g. saves from the retired separate district map: resume at the Steps
 		id = START_MAP
 	_enter_map(id)
 	if player is Player3D:
-		if int(d.get("dim", 2)) == 3:
+		if known and int(d.get("dim", 2)) == 3:
 			player.global_position = Vector3(float(d.get("x", 0.0)), float(d.get("y", 0.0)), float(d.get("z", 0.0)))
 			var f := Vector3(float(d.get("fx", 0.0)), 0.0, float(d.get("fz", 1.0)))
 			player.facing = f.normalized() if f.length() > 0.01 else Vector3(0, 0, 1)

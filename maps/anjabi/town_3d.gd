@@ -17,6 +17,10 @@ const GRASS := 2
 const SAND := 3
 const SLAB := 4
 const CLIFF := 5
+const INSERT := 6
+## Where the detailed Steps insert (district.tscn) sits; matches tools/build_town_3d.gd.
+const INSERT_AT := Vector3(101.52, 0, 45.72)
+const INSERT_SCENE := preload("res://maps/anjabi/district.tscn")
 
 ## Greybox-pixel rectangles; first match wins (same as the 2D town).
 const DISTRICTS := [
@@ -79,7 +83,7 @@ func _load_cells() -> void:
 
 
 static func walkable(t: int) -> bool:
-	return t == PATH or t == GRASS or t == SAND
+	return t == PATH or t == GRASS or t == SAND or t == INSERT
 
 
 ## World position of a greybox pixel, on the ground.
@@ -131,7 +135,13 @@ func _vertex(x: int, z: int, collide: bool) -> float:
 			if cx < 0 or cz < 0 or cx >= w or cz >= h:
 				continue
 			var i := cz * w + cx
-			if walkable(cls[i]):
+			if cls[i] == INSERT:
+				if collide:
+					top = maxf(top, -30.0)
+					continue
+				os += hv[i] - 0.5
+				on += 1
+			elif walkable(cls[i]):
 				ws += hv[i]
 				wn += 1
 			elif collide:
@@ -169,7 +179,7 @@ func _terrain() -> void:
 				for x in range(cx0, mini(cx0 + CHUNK, w)):
 					var i := z * w + x
 					var t := cls[i]
-					if t == WATER:
+					if t == WATER or t == INSERT:
 						continue
 					any = true
 					var col := _colour(t, rng.randf())
@@ -285,16 +295,11 @@ func _block(a: Vector2, b: Vector2, h_m: float, m: Material, roof: Material = nu
 
 
 func _landmarks() -> void:
-	# 08 Main Tavern: domed drum on its terrace, with annex
-	var tav := at_px(Vector2(780, 268))
-	model("tavern", tav, 0.0, 1.17)
-	sign_text(tav + Vector3(0, 5.0, 7.9), "TAVERN", 0.0, 64)
-	warm_light(tav + Vector3(0, 2.4, 8.5), 2.2, 9.0)
-	_shed_px(Vector2(700, 215), Vector2(735, 290), 4.0)
-	# 12 Shop
-	model("shop", at_px(Vector2(962, 300)), 0.0, 1.8)
-	sign_text(at_px(Vector2(962, 300)) + Vector3(0, 6.0, 5.8), "SHOP", 0.0, 80)
-	warm_light(at_px(Vector2(962, 370)) + Vector3(0, 2.5, 0), 1.6, 7.0)
+	# 08 Main Tavern and 12 Shop are part of the Steps insert
+	var steps := INSERT_SCENE.instantiate()
+	steps.set("insert", true)
+	steps.position = INSERT_AT
+	add_child(steps)
 	# 07 Tion Tower
 	var tion := at_px(Vector2(515, 390))
 	model("tion_tower", tion)
@@ -328,7 +333,7 @@ func _landmarks() -> void:
 	box(craft + Vector3(0, 2.1, -2.2), Vector3(2.0, 0.6, 1.6), M.blue_light, false)
 	# 13 Tram / subway station, angled toward the docks
 	var tram := at_px(Vector2(1030, 505))
-	model("tram_station", tram, deg_to_rad(-33))
+	model("tram_station", tram, deg_to_rad(-33), 0.8)
 	warm_light(tram + Vector3(-3, 3, 6), 1.6, 8.0)
 	# tram line north-south, and 16 Imperial Tower
 	var north := at_px(Vector2(1160, 10)) + Vector3(0, 0, 0)
@@ -389,7 +394,25 @@ func _spawns_and_exits() -> void:
 		var m := Marker3D.new()
 		m.name = k
 		m.position = nearest_walk(SPAWNS[k]) + Vector3(0, 0.1, 0)
+		if k == "default":
+			m.position = INSERT_AT + Vector3(2, 0.05, 5)
 		spawns.add_child(m)
+	var door := Interactable3D.new()
+	door.name = "PodB17Door"
+	door.prompt = "Knock"
+	door.label = "Pod B-17"
+	door.dialogue_id = "anjabi/pod_b17"
+	door.radius = 1.4
+	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 3.4)
+	add_child(door)
+	var sign := Interactable3D.new()
+	sign.name = "MineSign"
+	sign.prompt = "Read"
+	sign.label = "Warning sign"
+	sign.dialogue_id = "anjabi/mine_approach_sign"
+	sign.position = nearest_walk(Vector2(232, 676)) + Vector3(0, 0.9, 0)
+	add_child(sign)
+	box(sign.position + Vector3(0, 0.2, -0.4), Vector3(0.8, 0.6, 0.06), M.concrete, false)
 	_exit("ToMineRoad", "Enter", "Mine yard", Vector2(212, 692), "anjabi_mine", "default")
 	_exit("ToMineFromAirpad", "Walk", "Mine yard", Vector2(322, 745), "anjabi_mine", "east")
 

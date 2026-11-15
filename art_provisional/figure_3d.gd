@@ -11,7 +11,6 @@ var hood := false
 ## Draw a faint silhouette wherever the figure is hidden behind scenery (player only).
 var xray := false
 
-var _xray_mat: StandardMaterial3D
 
 var _hips: Node3D
 var _leg_l: Node3D
@@ -185,14 +184,8 @@ func _mat(c: Color, rough: float, metal: float = 0.0) -> StandardMaterial3D:
 	m.roughness = rough
 	m.metallic = metal
 	if xray:
-		if _xray_mat == null:
-			_xray_mat = StandardMaterial3D.new()
-			_xray_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			_xray_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			_xray_mat.albedo_color = Color(1.0, 0.72, 0.35, 0.45)
-			_xray_mat.depth_test = BaseMaterial3D.DEPTH_TEST_INVERTED
-			_xray_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
-		m.next_pass = _xray_mat
+		m.stencil_mode = BaseMaterial3D.STENCIL_MODE_XRAY
+		m.stencil_color = Color(1.0, 0.72, 0.35, 0.5)
 	if c.v < 0.12:
 		m.set_meta("boot", true)
 	return m

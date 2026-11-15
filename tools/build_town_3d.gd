@@ -24,11 +24,20 @@ const GRASS := 2
 const SAND := 3
 const SLAB := 4
 const CLIFF := 5
+## Cells covered by the detailed Steps insert (maps/anjabi/district.gd placed at
+## INSERT_AT): drawn and collided by the insert, not by the grid.
+const INSERT := 6
+## World position (m) of the insert's origin: the Steps, greybox (880, 415).
+const INSERT_AT := Vector2(101.52, 45.72)
+## Insert walk areas in insert-local metres (x0, z0, x1, z1) and their heights.
+const INSERT_AREAS := [
+	[Rect2(-12, -10, 32, 20), 0.0],   # the Steps plaza
+	[Rect2(-24, -28, 36, 18), 3.0],   # tavern terrace
+]
 ## Image px -> height (m). Walk cells within ANCHOR_R of each are fixed.
 const ANCHORS := [
 	[Vector2(880, 415), 0.0],    # the Steps
 	[Vector2(930, 385), 0.0],    # shop front
-	[Vector2(760, 350), 3.0],    # tavern
 	[Vector2(650, 250), 4.0],    # pods approach
 	[Vector2(580, 70), 6.0],     # pods
 	[Vector2(945, 130), 6.0],    # guard tower
@@ -48,6 +57,8 @@ const ANCHOR_R := 4.0
 var cls := PackedByteArray()
 var hv := PackedFloat32Array()
 var hc := PackedFloat32Array()
+var insert_h := PackedFloat32Array()
+var insert_fix := PackedByteArray()
 
 
 func _init() -> void:
@@ -77,6 +88,27 @@ func _init() -> void:
 			cls[z * W + x] = t
 			counts[t] += 1
 	print("cells: water %d path %d grass %d sand %d slab %d cliff %d" % counts)
+	# reserve the insert: cells inside it, and a one-cell rim pinned to its height
+	insert_h.resize(W * H)
+	insert_fix.resize(W * H)
+	for a: Array in INSERT_AREAS:
+		var r: Rect2 = a[0]
+		r.position += INSERT_AT
+		for z in range(int(r.position.y) - 1, int(r.end.y) + 2):
+			for x in range(int(r.position.x) - 1, int(r.end.x) + 2):
+				if x < 0 or z < 0 or x >= W or z >= H:
+					continue
+				var c := Vector2(x + 0.5, z + 0.5)
+				var i := z * W + x
+				if r.grow(-0.5).has_point(c):
+					cls[i] = INSERT
+					insert_h[i] = a[1]
+					insert_fix[i] = 1
+				elif r.grow(0.6).has_point(c) and cls[i] != INSERT and cls[i] != WATER and insert_fix[i] == 0:
+					# a walkable rim so the insert always meets the town at its own height
+					cls[i] = PATH
+					insert_h[i] = a[1] - 0.03
+					insert_fix[i] = 2
 	_heights()
 	_report()
 	var out := Image.create(W, H, false, Image.FORMAT_RGBF)
@@ -98,7 +130,7 @@ func _init() -> void:
 
 
 static func _walk(t: int) -> bool:
-	return t == PATH or t == GRASS or t == SAND
+	return t == PATH or t == GRASS or t == SAND or t == INSERT
 
 
 func _heights() -> void:
@@ -114,6 +146,10 @@ func _heights() -> void:
 				if _walk(cls[i]) and Vector2(x + 0.5, z + 0.5).distance_to(c) <= ANCHOR_R:
 					fixed[i] = 1
 					hv[i] = a[1]
+	for i in W * H:
+		if insert_fix[i] > 0:
+			fixed[i] = 1
+			hv[i] = insert_h[i]
 	# successive over-relaxation over walk cells only
 	for it in 4000:
 		var worst := 0.0
@@ -171,6 +207,9 @@ func _heights() -> void:
 			q.append(n)
 	for i in W * H:
 		var t := cls[i]
+		if t == INSERT:
+			hc[i] = -30.0
+			continue
 		if _walk(t):
 			continue
 		var b := base[i] if dist[i] >= 0 else 0.0
@@ -189,8 +228,10 @@ func _report() -> void:
 	for z in H:
 		for x in W - 1:
 			var i := z * W + x
-			if _walk(cls[i]) and _walk(cls[i + 1]):
+			if cls[i] == INSERT:
+				continue
+			if _walk(cls[i]) and _walk(cls[i + 1]) and cls[i + 1] != INSERT:
 				worst = maxf(worst, absf(hv[i] - hv[i + 1]))
-			if z < H - 1 and _walk(cls[i]) and _walk(cls[i + W]):
+			if z < H - 1 and _walk(cls[i]) and _walk(cls[i + W]) and cls[i + W] != INSERT:
 				worst = maxf(worst, absf(hv[i] - hv[i + W]))
 	print("steepest walkable step between neighbouring cells: %.2f m (%.0f deg)" % [worst, rad_to_deg(atan(worst))])

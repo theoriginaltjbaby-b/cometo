@@ -12,13 +12,12 @@ func _ready() -> void:
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
 	await get_tree().create_timer(1.0).timeout
+	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
 	var shots := {
-		"3d_01_steps": Vector3(2, 0.05, 5),
-		"3d_02_tavern": Vector3(-6, 3.05, -11.5),
-		"3d_03_bridge": Vector3(8.5, 6.05, -31),
-		"3d_04_b17": Vector3(5, 6.05, -36),
-		"3d_05_mine_approach": Vector3(-33, -2.95, 3),
-		"3d_06_west_stairs": Vector3(-14, -1.5, 2),
+		"3d_01_steps": o + Vector3(2, 0.05, 5),
+		"3d_02_tavern": o + Vector3(-6, 3.05, -11.5),
+		"3d_03_steps_east": o + Vector3(21, 0.05, 1),
+		"3d_04_terrace_west": o + Vector3(-22, 3.05, -18),
 	}
 	for k: String in shots:
 		var player: Player3D = main.get("player")
@@ -30,7 +29,7 @@ func _ready() -> void:
 		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
 	# walking pose and a conversation
 	var p: Player3D = main.get("player")
-	p.global_position = Vector3(-5.6, 3.05, -10.9)
+	p.global_position = o + Vector3(-5.6, 3.05, -10.9)
 	p.camera.reset_smoothing()
 	Input.action_press(&"move_left")
 	await get_tree().create_timer(0.3).timeout
