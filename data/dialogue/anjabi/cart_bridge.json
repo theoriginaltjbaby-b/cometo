@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "roll"}],
+	"nodes": {
+		"roll": {
+			"say": [
+				["", "The cart gathers speed down the grade, reaches the washout and drops. It wedges between the banks, bed up, level with the ground."],
+				["", "It will bear your weight."]
+			]
+		}
+	}
+}

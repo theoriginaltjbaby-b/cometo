@@ -1,0 +1,20 @@
+{
+	"entry": [
+		{"if": {"clue": "sealed_outside"}, "goto": "again"},
+		{"goto": "look"}
+	],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The mine door. Plate steel, set into a timber frame, set into the rock."],
+				["", "A weld bead runs all the way round the frame. Bright, unweathered. On this side."],
+				["", "Stacked against the rock beside it: rescue stretchers, still in their wrap. Never opened."],
+				["", "Nobody seals a collapse from the outside before the rescue crews have been in."]
+			],
+			"then": [{"clue": "sealed_outside"}, {"objective": "quiet_mine.door"}, {"complete": "quiet_mine"}]
+		},
+		"again": {
+			"say": [["", "The weld is cold. You put your ear to the steel anyway. Rain, and your own pulse."]]
+		}
+	}
+}

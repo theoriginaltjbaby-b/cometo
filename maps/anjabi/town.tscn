@@ -1,0 +1,62 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/town.gd" id="1"]
+[ext_resource type="Texture2D" path="res://maps/anjabi/town_greybox.png" id="2"]
+[ext_resource type="Script" path="res://maps/walk_mask.gd" id="3"]
+[ext_resource type="BitMap" path="res://maps/anjabi/town_walk.res" id="4"]
+[ext_resource type="Script" path="res://game/interaction/map_exit.gd" id="5"]
+
+[node name="Town" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_town"
+display_name = "ANJABI"
+bounds = Rect2(64, 64, 2768, 1812)
+
+[node name="Grade" type="CanvasModulate" parent="."]
+color = Color(0.7, 0.76, 0.85, 1)
+
+[node name="Greybox" type="Sprite2D" parent="."]
+z_index = -10
+texture_filter = 2
+scale = Vector2(2, 2)
+texture = ExtResource("2")
+centered = false
+
+[node name="WalkMask" type="Node2D" parent="."]
+script = ExtResource("3")
+mask = ExtResource("4")
+pixel_size = 2.0
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="default" type="Marker2D" parent="Spawns"]
+position = Vector2(1760, 830)
+
+[node name="mine" type="Marker2D" parent="Spawns"]
+position = Vector2(424, 1364)
+
+[node name="airpad" type="Marker2D" parent="Spawns"]
+position = Vector2(672, 1492)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="ToMineRoad" type="Area2D" parent="Interactables"]
+position = Vector2(424, 1400)
+script = ExtResource("5")
+prompt = "Enter"
+label = "Mine yard"
+radius = 24.0
+target_map = "anjabi_mine"
+target_spawn = "default"
+
+[node name="ToMineFromAirpad" type="Area2D" parent="Interactables"]
+position = Vector2(640, 1490)
+script = ExtResource("5")
+prompt = "Walk"
+label = "Mine yard"
+radius = 20.0
+target_map = "anjabi_mine"
+target_spawn = "east"

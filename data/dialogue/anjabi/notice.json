@@ -1,0 +1,13 @@
+{
+	"entry": [{"goto": "read"}],
+	"nodes": {
+		"read": {
+			"say": [
+				["", "A laminated notice, cable-tied to the fence. Rain has got in under the laminate."],
+				["", "NO. 2 WORKING - CLOSED. ROOF COLLAPSE, LOWER LEVEL. NO ENTRY BY ORDER OF THE SITE OFFICE. WORKERS WILL BE NOTIFIED OF REASSIGNMENT."],
+				["", "Underneath, someone has scratched two words into the plastic with a nail: NOTIFIED WHEN?"]
+			],
+			"then": [{"clue": "closure_notice"}, {"objective": "quiet_mine.notice"}]
+		}
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "roll"}],
+	"nodes": {
+		"roll": {
+			"say": [
+				["", "The cart rolls over the points, takes the right-hand spur and fetches up against the buffer with a bang that carries."],
+				["", "Wrong road. The points are set by the lever beside the junction."]
+			]
+		}
+	}
+}

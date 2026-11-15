@@ -1,0 +1,21 @@
+{
+	"entry": [
+		{
+			"goto": "look"
+		}
+	],
+	"nodes": {
+		"look": {
+			"say": [
+				[
+					"",
+					"The old haul road runs to the fence and stops. Beyond it the ledge ends and the mist begins."
+				],
+				[
+					"",
+					"Somewhere under the mist, water is moving against rock."
+				]
+			]
+		}
+	}
+}

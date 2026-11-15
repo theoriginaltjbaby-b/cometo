@@ -1,0 +1,18 @@
+{
+	"closure_notice": {
+		"title": "The closure notice",
+		"text": "No. 2 Working is closed for a roof collapse on the lower level, by order of the site office. Someone has scratched NOTIFIED WHEN? underneath."
+	},
+	"early_recall": {
+		"title": "Pulled at the half",
+		"text": "The lower-level crew was ordered out mid-shift, before any collapse was reported. A driller who was there heard nothing from the rock."
+	},
+	"power_cut": {
+		"title": "A dark yard",
+		"text": "The upper yard lost all power on the night of the collapse. By morning the mine door was the way it is now. Nobody passed the gate in between."
+	},
+	"sealed_outside": {
+		"title": "Welded from outside",
+		"text": "The mine door is welded shut on the outside, the bead still bright. Rescue stretchers sit beside it, never unwrapped."
+	}
+}

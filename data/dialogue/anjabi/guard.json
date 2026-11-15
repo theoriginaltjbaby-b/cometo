@@ -1,0 +1,74 @@
+{
+	"entry": [
+		{"if": {"all": [{"clue": "sealed_outside"}, {"not": {"flag": "guard.told_seal"}}]}, "goto": "after_door"},
+		{"if": {"flag": "guard.met"}, "goto": "again"},
+		{"goto": "first"}
+	],
+	"nodes": {
+		"first": {
+			"do": [{"set": {"guard.met": true}}],
+			"say": [
+				["", "A guard in a rain cape stands square in front of the gate. The cape has been mended more than once."],
+				["Gate guard", "Working's closed. Road ends here."]
+			],
+			"goto": "menu"
+		},
+		"again": {
+			"say": [["Gate guard", "Still closed."]],
+			"goto": "menu"
+		},
+		"menu": {
+			"choices": [
+				{"text": "What happened up there?", "goto": "what"},
+				{"text": "The crew was pulled out before the collapse was reported.", "if": {"all": [{"clue": "early_recall"}, {"not": {"clue": "power_cut"}}]}, "goto": "press"},
+				{"text": "Is there another way up?", "if": {"clue": "power_cut"}, "goto": "spur"},
+				{"text": "Let me through.", "goto": "through"},
+				{"text": "I'll go.", "goto": "end"}
+			]
+		},
+		"what": {
+			"say": [["Gate guard", "Roof collapse, lower level. It's on the notice."]],
+			"goto": "menu"
+		},
+		"through": {
+			"say": [["Gate guard", "No."]],
+			"goto": "menu"
+		},
+		"press": {
+			"say": [
+				["", "The guard looks at the gate, not at you."],
+				["Gate guard", "I stand where I'm posted. That night I was posted here."],
+				["Gate guard", "Yard lost power. Gate, floods, the lot. Dark till morning."],
+				["Gate guard", "When it came back the door was how it is now. Nobody came down this road in between. I'd have seen."],
+				["Gate guard", "And you didn't get any of that from this post."]
+			],
+			"then": [{"clue": "power_cut"}, {"reveal": "quiet_mine.way_in"}],
+			"goto": "menu"
+		},
+		"spur": {
+			"say": [
+				["Gate guard", "There's the old spur line, round the east side. Washed out years back. Nobody uses it."],
+				["Gate guard", "I can't see the spur from here. That's all I'm saying about the spur."]
+			],
+			"goto": "menu"
+		},
+		"after_door": {
+			"do": [{"set": {"guard.told_seal": true}}],
+			"say": [
+				["Gate guard", "I can't see the spur from here."],
+				["Gate guard", "...Was it how I said?"]
+			],
+			"choices": [
+				{"text": "It's welded. From the outside.", "goto": "lid"},
+				{"text": "I didn't see anything.", "goto": "nothing"}
+			]
+		},
+		"lid": {
+			"do": [{"set": {"guard.knows_seal": true}}],
+			"say": [["Gate guard", "Then I've been guarding a lid."]]
+		},
+		"nothing": {
+			"say": [["Gate guard", "No. Me neither."]]
+		}
+	}
+}

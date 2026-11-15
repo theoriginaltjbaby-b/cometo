@@ -1,0 +1,59 @@
+{
+	"entry": [
+		{"if": {"all": [{"clue": "sealed_outside"}, {"not": {"flag": "driller.told_seal"}}]}, "goto": "after_door"},
+		{"if": {"flag": "driller.met"}, "goto": "again"},
+		{"goto": "first"}
+	],
+	"nodes": {
+		"first": {
+			"do": [{"set": {"driller.met": true}}],
+			"say": [
+				["", "A driller sits out of the rain under the wash-house awning, turning an unlit hand-lamp over and over."],
+				["Driller", "You're not off the pods. If it's the tram you want, it's the other side of town."]
+			],
+			"choices": [
+				{"text": "What happened at the mine?", "goto": "mine"},
+				{"text": "Just walking.", "goto": "walking"}
+			]
+		},
+		"walking": {
+			"say": [["Driller", "Then you've picked the wrong stairs. Nothing down here but a locked gate."]]
+		},
+		"again": {
+			"say": [["Driller", "Still here. So's the gate."]],
+			"choices": [
+				{"text": "What happened at the mine?", "if": {"not": {"clue": "early_recall"}}, "goto": "mine"},
+				{"text": "Who gave the order to pull the crew?", "if": {"clue": "early_recall"}, "goto": "who"},
+				{"text": "Nothing. Stay dry.", "goto": "end"}
+			]
+		},
+		"mine": {
+			"say": [
+				["Driller", "Number Two? Roof came in on the lower level. That's what the notice says."],
+				["Driller", "I was on the lower level that shift. They pulled us at the half. Whole crew, up and out, no reason given."],
+				["Driller", "The collapse got reported after. We were already in the wash-house."],
+				["Driller", "I've listened to that rock most of my life. It talks before it goes. That night it said nothing."]
+			],
+			"then": [{"clue": "early_recall"}, {"objective": "quiet_mine.ask"}],
+			"choices": [
+				{"text": "Who gave the order?", "goto": "who"},
+				{"text": "I'll leave you to it.", "goto": "end"}
+			]
+		},
+		"who": {
+			"say": [
+				["Driller", "Came down the line from the site office. No name on it."],
+				["Driller", "Ask the gate, if you like. Same guard was on that night. You'll get the notice read back to you."]
+			]
+		},
+		"after_door": {
+			"do": [{"set": {"driller.told_seal": true}}],
+			"say": [
+				["You", "The mine door is welded shut. From the outside. The stretchers were never unwrapped."],
+				["", "The driller stops turning the lamp."],
+				["Driller", "Then nothing fell."],
+				["Driller", "You didn't tell me that. And I'd go on not telling people, if I were you."]
+			]
+		}
+	}
+}

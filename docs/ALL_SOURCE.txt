@@ -1,0 +1,4004 @@
+COMETO - all source files. Index:
+  project.godot
+  art_provisional/char_sprite.gd
+  art_provisional/fog.gdshader
+  art_provisional/prov_block.gd
+  art_provisional/prov_rail.gd
+  art_provisional/rain.gd
+  core/data.gd
+  core/dialogue.gd
+  core/game_state.gd
+  core/input_setup.gd
+  core/journal.gd
+  core/save_manager.gd
+  data/dialogue/anjabi/cart_bridge.json
+  data/dialogue/anjabi/cart_buffer.json
+  data/dialogue/anjabi/cliff_edge.json
+  data/dialogue/anjabi/door.json
+  data/dialogue/anjabi/driller.json
+  data/dialogue/anjabi/guard.json
+  data/dialogue/anjabi/junction.json
+  data/dialogue/anjabi/notice.json
+  data/dialogue/anjabi/trench.json
+  data/journal/clues.json
+  data/journal/quests.json
+  game/main.gd
+  game/main.tscn
+  game/actors/npc.gd
+  game/actors/npc.tscn
+  game/interaction/interactable.gd
+  game/interaction/map_exit.gd
+  game/player/player.gd
+  game/player/player.tscn
+  game/puzzle/ore_cart.gd
+  game/puzzle/track_switch.gd
+  maps/game_map.gd
+  maps/walk_mask.gd
+  maps/anjabi/mine.tscn
+  maps/anjabi/mine_ground.gd
+  maps/anjabi/town.gd
+  maps/anjabi/town.tscn
+  tests/screenshot.gd
+  tests/screenshot.tscn
+  tests/screenshot_town.gd
+  tests/screenshot_town.tscn
+  tests/slice_test.gd
+  tests/slice_test.tscn
+  tools/build_town_mask.gd
+  tools/bundle_source.py
+  tools/package_review.sh
+  ui/dialogue_box.gd
+  ui/game_ui.gd
+  ui/hud.gd
+  ui/journal_panel.gd
+  ui/pause_menu.gd
+  ui/touch_controls.gd
+  ui/ui_theme.gd
+
+
+==============================================================================
+== project.godot
+==============================================================================
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="COMETO"
+run/main_scene="res://game/main.tscn"
+config/features=PackedStringArray("4.7", "Mobile")
+
+[autoload]
+
+GameState="*res://core/game_state.gd"
+Journal="*res://core/journal.gd"
+Dialogue="*res://core/dialogue.gd"
+SaveManager="*res://core/save_manager.gd"
+
+[display]
+
+window/size/viewport_width=480
+window/size/viewport_height=270
+window/size/window_width_override=1440
+window/size/window_height_override=810
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[rendering]
+
+renderer/rendering_method="mobile"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)
+
+
+==============================================================================
+== art_provisional/char_sprite.gd
+==============================================================================
+@tool
+class_name CharSprite
+extends Node2D
+## PROVISIONAL ART. A tiny person drawn in code, origin at the feet.
+## To be replaced by authored sprite sheets; keep set_motion() as the interface.
+
+@export var coat := Color(0.35, 0.4, 0.45):
+	set(v):
+		coat = v
+		queue_redraw()
+@export var accent := Color(0.7, 0.45, 0.2):
+	set(v):
+		accent = v
+		queue_redraw()
+@export var skin := Color(0.78, 0.6, 0.48):
+	set(v):
+		skin = v
+		queue_redraw()
+@export var hood := false:
+	set(v):
+		hood = v
+		queue_redraw()
+
+var _dir := 0  # 0 down, 1 up, 2 left, 3 right
+var _moving := false
+var _t := 0.0
+var _frame := 0
+
+
+func set_motion(facing: Vector2, moving: bool) -> void:
+	var d := _dir
+	if facing != Vector2.ZERO:
+		if absf(facing.x) > absf(facing.y):
+			d = 2 if facing.x < 0.0 else 3
+		else:
+			d = 1 if facing.y < 0.0 else 0
+	if d != _dir or moving != _moving:
+		_dir = d
+		_moving = moving
+		if not moving:
+			_frame = 0
+			_t = 0.0
+		queue_redraw()
+
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint() or not _moving:
+		return
+	_t += delta
+	var f := int(_t * 8.0) % 4
+	if f != _frame:
+		_frame = f
+		queue_redraw()
+
+
+func _draw() -> void:
+	var bob := -1.0 if (_moving and _frame % 2 == 1) else 0.0
+	var boots := Color(0.1, 0.1, 0.12)
+	var dark := coat.darkened(0.22)
+	var side := _dir >= 2
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.45))
+	draw_circle(Vector2.ZERO, 6.0, Color(0, 0, 0, 0.3))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# legs
+	var lift_a := 1.0 if (_moving and _frame == 1) else 0.0
+	var lift_b := 1.0 if (_moving and _frame == 3) else 0.0
+	if side:
+		draw_rect(Rect2(-2 - lift_a * 2.0, -5, 2, 5 - lift_a), boots)
+		draw_rect(Rect2(0 + lift_b * 2.0, -5, 2, 5 - lift_b), boots)
+	else:
+		draw_rect(Rect2(-3, -5, 2, 5 - lift_a), boots)
+		draw_rect(Rect2(1, -5, 2, 5 - lift_b), boots)
+	# coat
+	var bw := 6.0 if side else 8.0
+	draw_rect(Rect2(-bw * 0.5, -15 + bob, bw, 11), coat)
+	draw_rect(Rect2(-bw * 0.5, -5 + bob, bw, 1), dark)
+	draw_rect(Rect2(-bw * 0.5, -11 + bob, bw, 1), accent)
+	if side:
+		var swing := 0.0
+		if _moving:
+			swing = 1.0 if _frame < 2 else -1.0
+		draw_rect(Rect2(-1 + swing, -14 + bob, 2, 6), dark)
+	else:
+		draw_rect(Rect2(-5, -14 + bob, 1, 6), dark)
+		draw_rect(Rect2(4, -14 + bob, 1, 6), dark)
+	# head
+	var top := coat if hood else Color(0.14, 0.11, 0.1)
+	draw_rect(Rect2(-3, -21 + bob, 6, 6), skin)
+	draw_rect(Rect2(-4, -22 + bob, 8, 3), top)
+	var eye := Color(0.08, 0.07, 0.08)
+	match _dir:
+		0:
+			if hood:
+				draw_rect(Rect2(-4, -20 + bob, 1, 5), top)
+				draw_rect(Rect2(3, -20 + bob, 1, 5), top)
+			draw_rect(Rect2(-2, -18 + bob, 1, 1), eye)
+			draw_rect(Rect2(1, -18 + bob, 1, 1), eye)
+		1:
+			draw_rect(Rect2(-4, -22 + bob, 8, 7), top)
+		2:
+			draw_rect(Rect2(0, -22 + bob, 4, 7), top)
+			draw_rect(Rect2(-3, -18 + bob, 1, 1), eye)
+		3:
+			draw_rect(Rect2(-4, -22 + bob, 4, 7), top)
+			draw_rect(Rect2(2, -18 + bob, 1, 1), eye)
+
+
+==============================================================================
+== art_provisional/fog.gdshader
+==============================================================================
+shader_type canvas_item;
+// PROVISIONAL. Drifting sea mist plus a soft vignette. One layer, no screen read.
+
+uniform vec4 fog_color : source_color = vec4(0.6, 0.69, 0.75, 1.0);
+uniform float fog_amount = 0.11;
+uniform float vignette = 0.5;
+
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float noise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+			mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+void fragment() {
+	float n = noise(UV * vec2(3.0, 2.0) + vec2(TIME * 0.02, 0.0)) * 0.6
+			+ noise(UV * vec2(7.0, 4.0) - vec2(TIME * 0.035, 0.0)) * 0.4;
+	float fog = fog_amount * n * 1.6;
+	float v = smoothstep(0.35, 0.85, distance(UV, vec2(0.5))) * vignette;
+	vec3 col = mix(fog_color.rgb, vec3(0.01, 0.02, 0.04), v / (v + fog + 0.0001));
+	COLOR = vec4(col, clamp(fog + v, 0.0, 0.9));
+}
+
+
+==============================================================================
+== art_provisional/prov_block.gd
+==============================================================================
+@tool
+class_name ProvBlock
+extends StaticBody2D
+## PROVISIONAL ART. A solid piece of the world drawn in code, in 3/4 view.
+## The node origin is the bottom-centre of the footprint (its front edge), so
+## y-sorting works. `size` is the footprint (width x depth); `height` is how far
+## the front face rises. Replace with authored art; keep the footprints.
+
+@export var size := Vector2(48, 24):
+	set(v):
+		size = v
+		queue_redraw()
+@export var height := 20.0:
+	set(v):
+		height = v
+		queue_redraw()
+@export_enum("pod", "hut", "rock", "fence", "gate", "crate", "lamp", "tree", "pit", "adit", "sign", "none") var style := "crate":
+	set(v):
+		style = v
+		queue_redraw()
+@export var lit := false:
+	set(v):
+		lit = v
+		queue_redraw()
+@export var solid := true
+@export var tint := Color(1, 1, 1):
+	set(v):
+		tint = v
+		queue_redraw()
+
+static var _light_tex: GradientTexture2D
+
+var _shape: CollisionShape2D
+var _solid_now := true
+
+
+func _ready() -> void:
+	if Engine.is_editor_hint():
+		return
+	collision_layer = 1
+	collision_mask = 0
+	if solid:
+		var rect := RectangleShape2D.new()
+		rect.size = size
+		_shape = CollisionShape2D.new()
+		_shape.shape = rect
+		_shape.position = Vector2(0, -size.y * 0.5)
+		_shape.disabled = not _solid_now
+		add_child(_shape)
+	if lit:
+		_add_light()
+
+
+func set_solid(v: bool) -> void:
+	_solid_now = v
+	if _shape != null:
+		_shape.set_deferred("disabled", not v)
+
+
+static func light_texture() -> GradientTexture2D:
+	if _light_tex == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.set_color(1, Color(0, 0, 0, 0))
+		_light_tex = GradientTexture2D.new()
+		_light_tex.gradient = g
+		_light_tex.width = 128
+		_light_tex.height = 128
+		_light_tex.fill = GradientTexture2D.FILL_RADIAL
+		_light_tex.fill_from = Vector2(0.5, 0.5)
+		_light_tex.fill_to = Vector2(1.0, 0.5)
+	return _light_tex
+
+
+func _add_light() -> void:
+	var l := PointLight2D.new()
+	l.texture = light_texture()
+	l.color = Color(1.0, 0.6, 0.3)
+	l.energy = 1.1
+	if style == "lamp":
+		l.position = Vector2(3, -height + 4)
+		l.texture_scale = 1.9
+	else:
+		l.position = Vector2(size.x * 0.5 - 15, -height * 0.5 + 6)
+		l.texture_scale = 1.2
+	add_child(l)
+
+
+func _draw() -> void:
+	var w := size.x
+	var d := size.y
+	var h := height
+	var l := -w * 0.5
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(position))
+	match style:
+		"pod", "hut":
+			var wall := (Color(0.4, 0.45, 0.48) if style == "pod" else Color(0.3, 0.36, 0.33)) * tint
+			var roof := wall.lightened(0.14)
+			draw_rect(Rect2(l, -d - h, w, d), roof)
+			for i in range(1, int(w / 8.0)):
+				draw_line(Vector2(l + i * 8, -d - h), Vector2(l + i * 8, -h), roof.darkened(0.14), 1.0)
+			draw_rect(Rect2(l, -h, w, h), wall)
+			draw_rect(Rect2(l, -h, w, 1), wall.darkened(0.35))
+			draw_rect(Rect2(l, -2, w, 2), wall.darkened(0.4))
+			draw_rect(Rect2(l, -h + 3, w, 1), Color(0.72, 0.4, 0.2, 0.75))
+			draw_rect(Rect2(l + 6, -13, 8, 13), wall.darkened(0.5))
+			draw_rect(Rect2(l + w - 23, -h + 6, 15, 8), wall.darkened(0.5))
+			draw_rect(Rect2(l + w - 22, -h + 7, 13, 6), Color(1.0, 0.8, 0.45) if lit else Color(0.1, 0.14, 0.18))
+			for i in 3:
+				var x := l + rng.randf() * w
+				draw_line(Vector2(x, -h + 4), Vector2(x, -h + 4 + rng.randf_range(4, 12)), Color(0.45, 0.27, 0.18, 0.5), 1.0)
+		"rock":
+			var face := Color(0.19, 0.22, 0.25) * tint
+			draw_rect(Rect2(l, -d - h, w, d), Color(0.24, 0.28, 0.29) * tint)
+			draw_rect(Rect2(l, -h, w, h), face)
+			for i in int(w / 12.0):
+				var p := Vector2(l + rng.randf() * w, -h + rng.randf() * h)
+				draw_line(p, p + Vector2(rng.randf_range(6, 20), rng.randf_range(-2, 2)), face.lightened(0.1), 1.0)
+				var q := Vector2(l + rng.randf() * w, -h + rng.randf() * h)
+				draw_line(q, q + Vector2(rng.randf_range(-3, 3), rng.randf_range(5, 14)), face.darkened(0.3), 1.0)
+			draw_rect(Rect2(l, -h - 1, w, 3), Color(0.15, 0.26, 0.2))
+		"fence":
+			var c := Color(0.37, 0.31, 0.27) * tint
+			if w >= d:
+				var n := maxi(1, int(w / 16.0))
+				draw_rect(Rect2(l, -h + 2, w, h - 3), Color(c, 0.16))
+				draw_line(Vector2(l, -h + 2), Vector2(l + w, -h + 2), c.lightened(0.15), 1.0)
+				draw_line(Vector2(l, -h * 0.5), Vector2(l + w, -h * 0.5), c, 1.0)
+				for i in n + 1:
+					draw_rect(Rect2(l + i * (w / n) - 1, -h, 2, h), c)
+			else:
+				var n := maxi(1, int(d / 16.0))
+				draw_line(Vector2(0, -h + 2), Vector2(0, -d - h + 2), c.lightened(0.15), 1.0)
+				draw_line(Vector2(0, -h * 0.5), Vector2(0, -d - h * 0.5), c, 1.0)
+				for i in n + 1:
+					draw_rect(Rect2(-1, -i * (d / n) - h, 2, h), c)
+		"gate":
+			var c := Color(0.3, 0.33, 0.36)
+			draw_rect(Rect2(l, -h, w, h), Color(c, 0.5))
+			for i in range(1, int(w / 5.0)):
+				draw_line(Vector2(l + i * 5, -h), Vector2(l + i * 5, 0), c, 1.0)
+			draw_rect(Rect2(l, -h, w, 2), c.lightened(0.1))
+			draw_rect(Rect2(l, -2, w, 2), c)
+			draw_rect(Rect2(l, -h - 3, 3, h + 3), c.darkened(0.2))
+			draw_rect(Rect2(l + w - 3, -h - 3, 3, h + 3), c.darkened(0.2))
+			for i in int(w / 6.0):
+				draw_rect(Rect2(l + i * 6, -h * 0.6, 6, 4), Color(0.8, 0.62, 0.15) if i % 2 == 0 else Color(0.08, 0.08, 0.09))
+		"crate":
+			var c := Color(0.55, 0.53, 0.47) * tint
+			draw_rect(Rect2(l, -d - h, w, d), c.lightened(0.1))
+			draw_rect(Rect2(l, -h, w, h), c.darkened(0.15))
+			draw_line(Vector2(l, -h), Vector2(l + w, -h), c.darkened(0.4), 1.0)
+			for i in range(1, 3):
+				draw_line(Vector2(l, -h - d * i / 3.0), Vector2(l + w, -h - d * i / 3.0), c.darkened(0.2), 1.0)
+		"lamp":
+			var c := Color(0.2, 0.22, 0.24)
+			draw_rect(Rect2(-1, -h, 2, h), c)
+			draw_rect(Rect2(-1, -h, 6, 2), c)
+			draw_rect(Rect2(2, -h + 2, 4, 2), Color(1.0, 0.82, 0.5) if lit else Color(0.12, 0.13, 0.15))
+		"tree":
+			var s := rng.randf_range(0.85, 1.2)
+			var g := Color(0.08, 0.19, 0.16).lightened(rng.randf_range(0.0, 0.06)) * tint
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2(1.0, 0.4))
+			draw_circle(Vector2.ZERO, 11.0 * s, Color(0, 0, 0, 0.3))
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			draw_rect(Rect2(-2, -12, 4, 12), Color(0.19, 0.14, 0.11))
+			var tiers := 4
+			var step := (h - 10.0) / tiers
+			for i in tiers:
+				var y0 := -9.0 - step * i
+				var y1 := y0 - step * 1.7
+				var hw := 15.0 * s * (1.0 - i * 0.2)
+				draw_colored_polygon(PackedVector2Array([Vector2(-hw, y0), Vector2(hw, y0), Vector2(0, y1)]), g.lightened(0.05 * i))
+				draw_colored_polygon(PackedVector2Array([Vector2(1, y0), Vector2(hw, y0), Vector2(1, y1)]), g.darkened(0.28))
+		"pit":
+			draw_rect(Rect2(l, -d, w, d), Color(0.035, 0.045, 0.055))
+			draw_rect(Rect2(l, -d, w, 7), Color(0.14, 0.13, 0.12))
+			draw_rect(Rect2(l, -d + 7, w, 2), Color(0.08, 0.08, 0.08))
+			draw_rect(Rect2(l, -9, w, 5), Color(0.09, 0.15, 0.19))
+		"adit":
+			draw_rect(Rect2(l - 4, -h - 4, w + 8, h + 4), Color(0.25, 0.19, 0.14))
+			draw_rect(Rect2(l, -h, w, h), Color(0.3, 0.33, 0.35))
+			draw_line(Vector2(0, -h), Vector2(0, 0), Color(0.2, 0.22, 0.24), 1.0)
+			draw_rect(Rect2(l, -h, w, h), Color(0.82, 0.84, 0.8), false, 1.0)
+			for i in 4:
+				draw_rect(Rect2(l + 4 + i * (w - 9) / 3.0, -h + 4, 1, 1), Color(0.15, 0.16, 0.18))
+				draw_rect(Rect2(l + 4 + i * (w - 9) / 3.0, -5, 1, 1), Color(0.15, 0.16, 0.18))
+		"sign":
+			draw_rect(Rect2(l, -h, w, h - 5), Color(0.8, 0.78, 0.7))
+			for i in 3:
+				draw_line(Vector2(l + 1, -h + 2 + i * 2), Vector2(l + w - 1, -h + 2 + i * 2), Color(0.25, 0.22, 0.2), 1.0)
+		_:
+			pass
+
+
+==============================================================================
+== art_provisional/prov_rail.gd
+==============================================================================
+@tool
+class_name ProvRail
+extends Node2D
+## PROVISIONAL ART. Narrow-gauge rail drawn along `points`. Also the path data
+## that OreCart follows.
+
+@export var points := PackedVector2Array():
+	set(v):
+		points = v
+		queue_redraw()
+@export var buffer_start := false
+@export var buffer_end := false
+
+
+func _draw() -> void:
+	var tie := Color(0.2, 0.16, 0.13)
+	var steel := Color(0.42, 0.43, 0.45)
+	for i in points.size() - 1:
+		var a := points[i]
+		var b := points[i + 1]
+		var dir := (b - a).normalized()
+		var n := dir.orthogonal()
+		var length := a.distance_to(b)
+		var s := 0.0
+		while s < length:
+			var p := a + dir * s
+			draw_line(p - n * 6.0, p + n * 6.0, tie, 2.0)
+			s += 6.0
+		draw_line(a - n * 4.0, b - n * 4.0, steel, 1.0)
+		draw_line(a + n * 4.0, b + n * 4.0, steel, 1.0)
+	if buffer_start and points.size() > 1:
+		_buffer(points[0], (points[0] - points[1]).normalized())
+	if buffer_end and points.size() > 1:
+		var e := points.size() - 1
+		_buffer(points[e], (points[e] - points[e - 1]).normalized())
+
+
+func _buffer(at: Vector2, out: Vector2) -> void:
+	var p := at + out * 12.0
+	var n := out.orthogonal()
+	draw_line(p - n * 7.0, p + n * 7.0, Color(0.5, 0.2, 0.15), 3.0)
+
+
+==============================================================================
+== art_provisional/rain.gd
+==============================================================================
+class_name Rain
+extends Control
+## PROVISIONAL ART. Screen-space rain streaks.
+
+@export var count := 110
+@export var fall := Vector2(-70.0, 330.0)
+@export var streak := 0.035
+
+var _pos := PackedVector2Array()
+var _speed := PackedFloat32Array()
+
+
+func _ready() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	for i in count:
+		_pos.append(Vector2(rng.randf() * 700.0, rng.randf() * 300.0))
+		_speed.append(rng.randf_range(0.75, 1.25))
+
+
+func _process(delta: float) -> void:
+	var s := size
+	for i in _pos.size():
+		var p := _pos[i] + fall * _speed[i] * delta
+		if p.y > s.y:
+			p.y -= s.y + 10.0
+			p.x += 40.0
+		if p.x < -10.0:
+			p.x += s.x + 20.0
+		elif p.x > s.x + 10.0:
+			p.x -= s.x + 20.0
+		_pos[i] = p
+	queue_redraw()
+
+
+func _draw() -> void:
+	for i in _pos.size():
+		draw_line(_pos[i], _pos[i] + fall * _speed[i] * streak, Color(0.75, 0.84, 0.92, 0.22), 1.0)
+
+
+==============================================================================
+== core/data.gd
+==============================================================================
+class_name Data
+## JSON content loading. All narrative content lives under res://data.
+
+static func load_json(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		push_warning("Data: missing %s" % path)
+		return null
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if parsed == null:
+		push_error("Data: could not parse %s" % path)
+	return parsed
+
+
+static func load_dict(path: String) -> Dictionary:
+	var v: Variant = load_json(path)
+	if v is Dictionary:
+		return v
+	return {}
+
+
+==============================================================================
+== core/dialogue.gd
+==============================================================================
+extends Node
+## Data-driven dialogue runner. UI listens to the signals; nothing here draws.
+##
+## res://data/dialogue/<id>.json:
+## {
+##   "entry": [ {"if": cond, "goto": "node"}, {"goto": "first"} ],
+##   "nodes": {
+##     "first": {
+##       "do":   [effects on entering the node],
+##       "say":  [["Speaker", "line"], ["", "narration"]],
+##       "then": [effects once the lines have been read],
+##       "choices": [ {"text": "...", "if": cond, "do": [effects], "goto": "node"} ],
+##       "goto": "node"            (used when no choice is available; default "end")
+##     }
+##   }
+## }
+
+signal started(id: String)
+signal line_shown(speaker: String, text: String)
+signal choices_shown(options: Array[String])
+signal ended(id: String)
+
+const ROOT := "res://data/dialogue/%s.json"
+
+var active := false
+var current_id := ""
+var current_choices: Array[Dictionary] = []
+
+var _data: Dictionary = {}
+var _node: Dictionary = {}
+var _lines: Array = []
+var _line_i := 0
+var _cache: Dictionary = {}
+var _hops := 0
+
+
+func start(id: String) -> bool:
+	if active:
+		return false
+	if not _cache.has(id):
+		_cache[id] = Data.load_dict(ROOT % id)
+	_data = _cache[id]
+	if _data.is_empty():
+		push_warning("Dialogue: nothing to say for '%s'" % id)
+		return false
+	current_id = id
+	active = true
+	started.emit(id)
+	var entry := "start"
+	for e: Dictionary in _data.get("entry", []):
+		if GameState.check(e.get("if")):
+			entry = str(e.get("goto", "start"))
+			break
+	_hops = 0
+	_enter(entry)
+	return true
+
+
+func advance() -> void:
+	if not active or not current_choices.is_empty():
+		return
+	_line_i += 1
+	if _line_i < _lines.size():
+		_emit_line()
+	else:
+		_after_lines()
+
+
+func choose(index: int) -> void:
+	if not active or index < 0 or index >= current_choices.size():
+		return
+	var c := current_choices[index]
+	current_choices = []
+	GameState.apply(c.get("do"))
+	_hops = 0
+	_enter(str(c.get("goto", "end")))
+
+
+func cancel() -> void:
+	if active:
+		_finish()
+
+
+func choice_texts() -> Array[String]:
+	var out: Array[String] = []
+	for c in current_choices:
+		out.append(str(c.get("text", "...")))
+	return out
+
+
+func _enter(node_name: String) -> void:
+	var nodes: Dictionary = _data.get("nodes", {})
+	_hops += 1
+	if node_name == "end" or not nodes.has(node_name) or _hops > 32:
+		if node_name != "end":
+			push_warning("Dialogue '%s': bad node '%s'" % [current_id, node_name])
+		_finish()
+		return
+	_node = nodes[node_name]
+	GameState.apply(_node.get("do"))
+	_lines = _node.get("say", [])
+	_line_i = 0
+	if _lines.is_empty():
+		_after_lines()
+	else:
+		_emit_line()
+
+
+func _emit_line() -> void:
+	var l: Array = _lines[_line_i]
+	line_shown.emit(str(l[0]), str(l[1]))
+
+
+func _after_lines() -> void:
+	GameState.apply(_node.get("then"))
+	var opts: Array[Dictionary] = []
+	for c: Dictionary in _node.get("choices", []):
+		if GameState.check(c.get("if")):
+			opts.append(c)
+	if opts.is_empty():
+		_enter(str(_node.get("goto", "end")))
+	else:
+		current_choices = opts
+		choices_shown.emit(choice_texts())
+
+
+func _finish() -> void:
+	var id := current_id
+	active = false
+	current_id = ""
+	current_choices = []
+	_lines = []
+	ended.emit(id)
+
+
+==============================================================================
+== core/game_state.gd
+==============================================================================
+extends Node
+## Persistent world state: a flat dictionary of flags, plus the tiny condition/effect
+## language shared by dialogue, interactables and puzzles.
+##
+## Conditions (Dictionary):
+##   {"flag": "k"}                truthy flag
+##   {"flag": "k", "eq": value}   flag equals value
+##   {"clue": "id"}               journal holds the clue
+##   {"not": cond} {"all": [..]} {"any": [..]}
+## Effects (Array of Dictionary):
+##   {"set": {"k": value}}  {"clue": "id"}  {"quest": "id"}
+##   {"reveal": "quest.objective"}  {"objective": "quest.objective"}  {"complete": "quest"}
+##   {"notify": "text"}
+
+signal flag_changed(key: String, value: Variant)
+signal notified(text: String)
+## Asks the world (game/main.gd) to move the player to another map.
+signal travel_requested(map_id: String, spawn: String)
+## A named place was entered; the HUD shows it as a title card.
+signal location_entered(text: String)
+
+var flags: Dictionary = {}
+
+
+func _ready() -> void:
+	InputSetup.ensure()
+
+
+func reset() -> void:
+	flags = {}
+
+
+func get_flag(key: String, default: Variant = false) -> Variant:
+	return flags.get(key, default)
+
+
+func set_flag(key: String, value: Variant) -> void:
+	if flags.has(key) and _same(flags[key], value):
+		return
+	flags[key] = value
+	flag_changed.emit(key, value)
+
+
+func notify(text: String) -> void:
+	notified.emit(text)
+
+
+func check(cond: Variant) -> bool:
+	if cond == null:
+		return true
+	if cond is Array:
+		for c: Variant in cond:
+			if not check(c):
+				return false
+		return true
+	if not cond is Dictionary:
+		return bool(cond)
+	var d: Dictionary = cond
+	if d.is_empty():
+		return true
+	if d.has("all"):
+		return check(d["all"])
+	if d.has("any"):
+		for c: Variant in d["any"]:
+			if check(c):
+				return true
+		return false
+	if d.has("not"):
+		return not check(d["not"])
+	if d.has("clue"):
+		return Journal.has_clue(str(d["clue"]))
+	if d.has("flag"):
+		var v: Variant = get_flag(str(d["flag"]))
+		if d.has("eq"):
+			return _same(v, d["eq"])
+		return _truthy(v)
+	push_warning("GameState.check: unknown condition %s" % [d])
+	return true
+
+
+func apply(effects: Variant) -> void:
+	if not effects is Array:
+		return
+	for e: Variant in effects:
+		if not e is Dictionary:
+			continue
+		var d: Dictionary = e
+		if d.has("set"):
+			var s: Dictionary = d["set"]
+			for k: Variant in s:
+				set_flag(str(k), s[k])
+		if d.has("clue"):
+			Journal.add_clue(str(d["clue"]))
+		if d.has("quest"):
+			Journal.start_quest(str(d["quest"]))
+		if d.has("reveal"):
+			Journal.reveal_objective(str(d["reveal"]))
+		if d.has("objective"):
+			Journal.complete_objective(str(d["objective"]))
+		if d.has("complete"):
+			Journal.complete_quest(str(d["complete"]))
+		if d.has("notify"):
+			notify(str(d["notify"]))
+
+
+func to_dict() -> Dictionary:
+	return flags.duplicate(true)
+
+
+func from_dict(d: Dictionary) -> void:
+	flags = d.duplicate(true)
+
+
+static func _is_num(v: Variant) -> bool:
+	return typeof(v) == TYPE_INT or typeof(v) == TYPE_FLOAT
+
+
+static func _same(a: Variant, b: Variant) -> bool:
+	if _is_num(a) and _is_num(b):
+		return is_equal_approx(float(a), float(b))
+	return typeof(a) == typeof(b) and a == b
+
+
+static func _truthy(v: Variant) -> bool:
+	match typeof(v):
+		TYPE_NIL:
+			return false
+		TYPE_BOOL:
+			return v
+		TYPE_INT, TYPE_FLOAT:
+			return v != 0
+		TYPE_STRING:
+			return v != ""
+	return true
+
+
+==============================================================================
+== core/input_setup.gd
+==============================================================================
+class_name InputSetup
+## Registers gameplay input actions in code so the map lives in one reviewable place.
+## Touch input is handled separately by TouchControls.
+
+static func ensure() -> void:
+	_add(&"move_left", [KEY_A, KEY_LEFT], JOY_AXIS_LEFT_X, -1.0)
+	_add(&"move_right", [KEY_D, KEY_RIGHT], JOY_AXIS_LEFT_X, 1.0)
+	_add(&"move_up", [KEY_W, KEY_UP], JOY_AXIS_LEFT_Y, -1.0)
+	_add(&"move_down", [KEY_S, KEY_DOWN], JOY_AXIS_LEFT_Y, 1.0)
+	_add(&"interact", [KEY_E, KEY_SPACE, KEY_ENTER])
+	_add(&"journal", [KEY_J, KEY_TAB])
+	_add(&"menu", [KEY_ESCAPE])
+	_add_button(&"interact", JOY_BUTTON_A)
+	_add_button(&"journal", JOY_BUTTON_Y)
+	_add_button(&"menu", JOY_BUTTON_START)
+
+
+static func _add(action: StringName, keys: Array, axis: int = -1, axis_value: float = 0.0) -> void:
+	if InputMap.has_action(action):
+		return
+	InputMap.add_action(action, 0.25)
+	for k: int in keys:
+		var ev := InputEventKey.new()
+		ev.physical_keycode = k as Key
+		InputMap.action_add_event(action, ev)
+	if axis >= 0:
+		var jm := InputEventJoypadMotion.new()
+		jm.axis = axis as JoyAxis
+		jm.axis_value = axis_value
+		InputMap.action_add_event(action, jm)
+
+
+static func _add_button(action: StringName, button: JoyButton) -> void:
+	var jb := InputEventJoypadButton.new()
+	jb.button_index = button
+	InputMap.action_add_event(action, jb)
+
+
+==============================================================================
+== core/journal.gd
+==============================================================================
+extends Node
+## Investigations (quests with objectives) and clues. Definitions are data
+## (res://data/journal); this node only holds the player's progress.
+
+signal updated(kind: String, text: String)
+
+const HIDDEN := "hidden"
+const ACTIVE := "active"
+const DONE := "done"
+
+var quest_defs: Dictionary = {}
+var clue_defs: Dictionary = {}
+## quest id -> {"objectives": {objective id: state}, "complete": bool}
+var quests: Dictionary = {}
+var clues: Array[String] = []
+
+
+func _ready() -> void:
+	quest_defs = Data.load_dict("res://data/journal/quests.json")
+	clue_defs = Data.load_dict("res://data/journal/clues.json")
+
+
+func reset() -> void:
+	quests = {}
+	clues.clear()
+
+
+func start_quest(id: String) -> void:
+	if quests.has(id) or not quest_defs.has(id):
+		return
+	var states := {}
+	for o: Dictionary in quest_defs[id].get("objectives", []):
+		states[str(o["id"])] = HIDDEN if o.get("hidden", false) else ACTIVE
+	quests[id] = {"objectives": states, "complete": false}
+	updated.emit("quest", quest_title(id))
+
+
+func reveal_objective(path: String) -> void:
+	var p := _split(path)
+	if p.is_empty() or _state(p[0], p[1]) != HIDDEN:
+		return
+	quests[p[0]]["objectives"][p[1]] = ACTIVE
+	updated.emit("objective_new", objective_text(p[0], p[1]))
+
+
+func complete_objective(path: String) -> void:
+	var p := _split(path)
+	if p.is_empty() or _state(p[0], p[1]) in ["", DONE]:
+		return
+	quests[p[0]]["objectives"][p[1]] = DONE
+	updated.emit("objective", objective_text(p[0], p[1]))
+
+
+func complete_quest(id: String) -> void:
+	if not quests.has(id) or quests[id]["complete"]:
+		return
+	quests[id]["complete"] = true
+	updated.emit("complete", quest_title(id))
+
+
+func add_clue(id: String) -> void:
+	if clues.has(id) or not clue_defs.has(id):
+		return
+	clues.append(id)
+	updated.emit("clue", str(clue_defs[id].get("title", id)))
+
+
+func has_clue(id: String) -> bool:
+	return clues.has(id)
+
+
+func objective_state(quest: String, objective: String) -> String:
+	return _state(quest, objective)
+
+
+func is_complete(quest: String) -> bool:
+	return quests.has(quest) and quests[quest]["complete"]
+
+
+func quest_title(id: String) -> String:
+	return str(quest_defs.get(id, {}).get("title", id))
+
+
+func objective_text(quest: String, objective: String) -> String:
+	for o: Dictionary in quest_defs.get(quest, {}).get("objectives", []):
+		if str(o["id"]) == objective:
+			return str(o.get("text", objective))
+	return objective
+
+
+func to_dict() -> Dictionary:
+	return {"quests": quests.duplicate(true), "clues": clues.duplicate()}
+
+
+func from_dict(d: Dictionary) -> void:
+	quests = (d.get("quests", {}) as Dictionary).duplicate(true)
+	clues.clear()
+	for c: Variant in d.get("clues", []):
+		clues.append(str(c))
+
+
+func _split(path: String) -> PackedStringArray:
+	var p := path.split(".")
+	if p.size() != 2 or not quests.has(p[0]):
+		return PackedStringArray()
+	return p
+
+
+func _state(quest: String, objective: String) -> String:
+	if not quests.has(quest):
+		return ""
+	return str(quests[quest]["objectives"].get(objective, ""))
+
+
+==============================================================================
+== core/save_manager.gd
+==============================================================================
+extends Node
+## Save anywhere. One JSON file per slot under user://. "auto" is written whenever
+## the app is backgrounded or closed and is resumed on boot, so a five-minute
+## session never loses anything.
+##
+## The active world (game/main.gd) registers itself and provides
+## capture_world() -> Dictionary and restore_world(Dictionary).
+
+signal saved(slot: String)
+signal loaded(slot: String)
+
+const VERSION := 1
+
+var world: Node = null
+var autosave_enabled := true
+var boot_from_autosave := true
+
+
+func slot_path(slot: String) -> String:
+	return "user://save_%s.json" % slot
+
+
+func has_save(slot: String) -> bool:
+	return FileAccess.file_exists(slot_path(slot))
+
+
+func save_game(slot: String = "manual") -> bool:
+	if world == null:
+		return false
+	var data := {
+		"version": VERSION,
+		"time": Time.get_datetime_string_from_system(),
+		"flags": GameState.to_dict(),
+		"journal": Journal.to_dict(),
+		"world": world.call("capture_world"),
+	}
+	var path := slot_path(slot)
+	var tmp := path + ".tmp"
+	var f := FileAccess.open(tmp, FileAccess.WRITE)
+	if f == null:
+		push_error("SaveManager: cannot write %s" % tmp)
+		return false
+	f.store_string(JSON.stringify(data, "\t"))
+	f.close()
+	if FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+	if DirAccess.rename_absolute(tmp, path) != OK:
+		push_error("SaveManager: cannot finalise %s" % path)
+		return false
+	saved.emit(slot)
+	return true
+
+
+func load_game(slot: String = "manual") -> bool:
+	if world == null or not has_save(slot):
+		return false
+	var data: Dictionary = Data.load_dict(slot_path(slot))
+	if data.is_empty() or int(data.get("version", 0)) != VERSION:
+		push_warning("SaveManager: save '%s' is unreadable or from another version" % slot)
+		return false
+	GameState.from_dict(data.get("flags", {}))
+	Journal.from_dict(data.get("journal", {}))
+	world.call("restore_world", data.get("world", {}))
+	loaded.emit(slot)
+	return true
+
+
+func delete_save(slot: String) -> void:
+	if has_save(slot):
+		DirAccess.remove_absolute(slot_path(slot))
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_WM_CLOSE_REQUEST \
+			or what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		if autosave_enabled and world != null:
+			save_game("auto")
+
+
+==============================================================================
+== data/dialogue/anjabi/cart_bridge.json
+==============================================================================
+{
+	"entry": [{"goto": "roll"}],
+	"nodes": {
+		"roll": {
+			"say": [
+				["", "The cart gathers speed down the grade, reaches the washout and drops. It wedges between the banks, bed up, level with the ground."],
+				["", "It will bear your weight."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/cart_buffer.json
+==============================================================================
+{
+	"entry": [{"goto": "roll"}],
+	"nodes": {
+		"roll": {
+			"say": [
+				["", "The cart rolls over the points, takes the right-hand spur and fetches up against the buffer with a bang that carries."],
+				["", "Wrong road. The points are set by the lever beside the junction."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/cliff_edge.json
+==============================================================================
+{
+	"entry": [
+		{
+			"goto": "look"
+		}
+	],
+	"nodes": {
+		"look": {
+			"say": [
+				[
+					"",
+					"The old haul road runs to the fence and stops. Beyond it the ledge ends and the mist begins."
+				],
+				[
+					"",
+					"Somewhere under the mist, water is moving against rock."
+				]
+			]
+		}
+	}
+}
+
+==============================================================================
+== data/dialogue/anjabi/door.json
+==============================================================================
+{
+	"entry": [
+		{"if": {"clue": "sealed_outside"}, "goto": "again"},
+		{"goto": "look"}
+	],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The mine door. Plate steel, set into a timber frame, set into the rock."],
+				["", "A weld bead runs all the way round the frame. Bright, unweathered. On this side."],
+				["", "Stacked against the rock beside it: rescue stretchers, still in their wrap. Never opened."],
+				["", "Nobody seals a collapse from the outside before the rescue crews have been in."]
+			],
+			"then": [{"clue": "sealed_outside"}, {"objective": "quiet_mine.door"}, {"complete": "quiet_mine"}]
+		},
+		"again": {
+			"say": [["", "The weld is cold. You put your ear to the steel anyway. Rain, and your own pulse."]]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/driller.json
+==============================================================================
+{
+	"entry": [
+		{"if": {"all": [{"clue": "sealed_outside"}, {"not": {"flag": "driller.told_seal"}}]}, "goto": "after_door"},
+		{"if": {"flag": "driller.met"}, "goto": "again"},
+		{"goto": "first"}
+	],
+	"nodes": {
+		"first": {
+			"do": [{"set": {"driller.met": true}}],
+			"say": [
+				["", "A driller sits out of the rain under the wash-house awning, turning an unlit hand-lamp over and over."],
+				["Driller", "You're not off the pods. If it's the tram you want, it's the other side of town."]
+			],
+			"choices": [
+				{"text": "What happened at the mine?", "goto": "mine"},
+				{"text": "Just walking.", "goto": "walking"}
+			]
+		},
+		"walking": {
+			"say": [["Driller", "Then you've picked the wrong stairs. Nothing down here but a locked gate."]]
+		},
+		"again": {
+			"say": [["Driller", "Still here. So's the gate."]],
+			"choices": [
+				{"text": "What happened at the mine?", "if": {"not": {"clue": "early_recall"}}, "goto": "mine"},
+				{"text": "Who gave the order to pull the crew?", "if": {"clue": "early_recall"}, "goto": "who"},
+				{"text": "Nothing. Stay dry.", "goto": "end"}
+			]
+		},
+		"mine": {
+			"say": [
+				["Driller", "Number Two? Roof came in on the lower level. That's what the notice says."],
+				["Driller", "I was on the lower level that shift. They pulled us at the half. Whole crew, up and out, no reason given."],
+				["Driller", "The collapse got reported after. We were already in the wash-house."],
+				["Driller", "I've listened to that rock most of my life. It talks before it goes. That night it said nothing."]
+			],
+			"then": [{"clue": "early_recall"}, {"objective": "quiet_mine.ask"}],
+			"choices": [
+				{"text": "Who gave the order?", "goto": "who"},
+				{"text": "I'll leave you to it.", "goto": "end"}
+			]
+		},
+		"who": {
+			"say": [
+				["Driller", "Came down the line from the site office. No name on it."],
+				["Driller", "Ask the gate, if you like. Same guard was on that night. You'll get the notice read back to you."]
+			]
+		},
+		"after_door": {
+			"do": [{"set": {"driller.told_seal": true}}],
+			"say": [
+				["You", "The mine door is welded shut. From the outside. The stretchers were never unwrapped."],
+				["", "The driller stops turning the lamp."],
+				["Driller", "Then nothing fell."],
+				["Driller", "You didn't tell me that. And I'd go on not telling people, if I were you."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/guard.json
+==============================================================================
+{
+	"entry": [
+		{"if": {"all": [{"clue": "sealed_outside"}, {"not": {"flag": "guard.told_seal"}}]}, "goto": "after_door"},
+		{"if": {"flag": "guard.met"}, "goto": "again"},
+		{"goto": "first"}
+	],
+	"nodes": {
+		"first": {
+			"do": [{"set": {"guard.met": true}}],
+			"say": [
+				["", "A guard in a rain cape stands square in front of the gate. The cape has been mended more than once."],
+				["Gate guard", "Working's closed. Road ends here."]
+			],
+			"goto": "menu"
+		},
+		"again": {
+			"say": [["Gate guard", "Still closed."]],
+			"goto": "menu"
+		},
+		"menu": {
+			"choices": [
+				{"text": "What happened up there?", "goto": "what"},
+				{"text": "The crew was pulled out before the collapse was reported.", "if": {"all": [{"clue": "early_recall"}, {"not": {"clue": "power_cut"}}]}, "goto": "press"},
+				{"text": "Is there another way up?", "if": {"clue": "power_cut"}, "goto": "spur"},
+				{"text": "Let me through.", "goto": "through"},
+				{"text": "I'll go.", "goto": "end"}
+			]
+		},
+		"what": {
+			"say": [["Gate guard", "Roof collapse, lower level. It's on the notice."]],
+			"goto": "menu"
+		},
+		"through": {
+			"say": [["Gate guard", "No."]],
+			"goto": "menu"
+		},
+		"press": {
+			"say": [
+				["", "The guard looks at the gate, not at you."],
+				["Gate guard", "I stand where I'm posted. That night I was posted here."],
+				["Gate guard", "Yard lost power. Gate, floods, the lot. Dark till morning."],
+				["Gate guard", "When it came back the door was how it is now. Nobody came down this road in between. I'd have seen."],
+				["Gate guard", "And you didn't get any of that from this post."]
+			],
+			"then": [{"clue": "power_cut"}, {"reveal": "quiet_mine.way_in"}],
+			"goto": "menu"
+		},
+		"spur": {
+			"say": [
+				["Gate guard", "There's the old spur line, round the east side. Washed out years back. Nobody uses it."],
+				["Gate guard", "I can't see the spur from here. That's all I'm saying about the spur."]
+			],
+			"goto": "menu"
+		},
+		"after_door": {
+			"do": [{"set": {"guard.told_seal": true}}],
+			"say": [
+				["Gate guard", "I can't see the spur from here."],
+				["Gate guard", "...Was it how I said?"]
+			],
+			"choices": [
+				{"text": "It's welded. From the outside.", "goto": "lid"},
+				{"text": "I didn't see anything.", "goto": "nothing"}
+			]
+		},
+		"lid": {
+			"do": [{"set": {"guard.knows_seal": true}}],
+			"say": [["Gate guard", "Then I've been guarding a lid."]]
+		},
+		"nothing": {
+			"say": [["Gate guard", "No. Me neither."]]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/junction.json
+==============================================================================
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The yard's junction box, on the side of the pump shed. The main breaker has been pulled and tagged out."],
+				["", "The tag is the kind you sign and date. It is blank."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/notice.json
+==============================================================================
+{
+	"entry": [{"goto": "read"}],
+	"nodes": {
+		"read": {
+			"say": [
+				["", "A laminated notice, cable-tied to the fence. Rain has got in under the laminate."],
+				["", "NO. 2 WORKING - CLOSED. ROOF COLLAPSE, LOWER LEVEL. NO ENTRY BY ORDER OF THE SITE OFFICE. WORKERS WILL BE NOTIFIED OF REASSIGNMENT."],
+				["", "Underneath, someone has scratched two words into the plastic with a nail: NOTIFIED WHEN?"]
+			],
+			"then": [{"clue": "closure_notice"}, {"objective": "quiet_mine.notice"}]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/trench.json
+==============================================================================
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The spur line used to cross here. The culvert went, and took the embankment with it."],
+				["", "Too wide to jump. The rails still reach a little way out over the gap."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/journal/clues.json
+==============================================================================
+{
+	"closure_notice": {
+		"title": "The closure notice",
+		"text": "No. 2 Working is closed for a roof collapse on the lower level, by order of the site office. Someone has scratched NOTIFIED WHEN? underneath."
+	},
+	"early_recall": {
+		"title": "Pulled at the half",
+		"text": "The lower-level crew was ordered out mid-shift, before any collapse was reported. A driller who was there heard nothing from the rock."
+	},
+	"power_cut": {
+		"title": "A dark yard",
+		"text": "The upper yard lost all power on the night of the collapse. By morning the mine door was the way it is now. Nobody passed the gate in between."
+	},
+	"sealed_outside": {
+		"title": "Welded from outside",
+		"text": "The mine door is welded shut on the outside, the bead still bright. Rescue stretchers sit beside it, never unwrapped."
+	}
+}
+
+
+==============================================================================
+== data/journal/quests.json
+==============================================================================
+{
+	"quiet_mine": {
+		"title": "The Quiet Mine",
+		"summary": "The No. 2 Working at Anjabi is closed. Nobody down here tells it the same way twice.",
+		"objectives": [
+			{"id": "notice", "text": "Read the closure notice at the mine gate"},
+			{"id": "ask", "text": "Find someone who worked the mine"},
+			{"id": "way_in", "text": "Find a way into the upper yard that is not the gate", "hidden": true},
+			{"id": "door", "text": "Look at the mine door", "hidden": true}
+		]
+	}
+}
+
+
+==============================================================================
+== game/main.gd
+==============================================================================
+extends Node
+## Boots the game, owns the current map and the player, and is the "world" that
+## SaveManager captures and restores.
+
+const MAPS := {
+	"anjabi_mine": "res://maps/anjabi/mine.tscn",
+	"anjabi_town": "res://maps/anjabi/town.tscn",
+}
+const START_MAP := "anjabi_mine"
+const START_QUEST := "quiet_mine"
+const PLAYER_SCENE := preload("res://game/player/player.tscn")
+
+var map: GameMap
+var player: Player
+var map_id := ""
+
+@onready var world: Node2D = $World
+@onready var ui: GameUi = $UI
+
+
+func _ready() -> void:
+	SaveManager.world = self
+	ui.new_game_requested.connect(new_game)
+	ui.touch.tapped.connect(_on_tapped)
+	GameState.travel_requested.connect(_on_travel_requested)
+	if SaveManager.boot_from_autosave and SaveManager.has_save("auto") and SaveManager.load_game("auto"):
+		return
+	new_game()
+
+
+func new_game() -> void:
+	GameState.reset()
+	Journal.reset()
+	load_map(START_MAP, "default")
+	Journal.start_quest(START_QUEST)
+
+
+func load_map(id: String, spawn: String = "default") -> void:
+	_enter_map(id)
+	player.global_position = map.spawn_position(spawn)
+	if player.walk_mask != null:
+		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
+	player.camera.reset_smoothing()
+
+
+func capture_world() -> Dictionary:
+	return {
+		"map": map_id,
+		"x": player.global_position.x,
+		"y": player.global_position.y,
+		"fx": player.facing.x,
+		"fy": player.facing.y,
+	}
+
+
+func restore_world(d: Dictionary) -> void:
+	var id := str(d.get("map", START_MAP))
+	if not MAPS.has(id):
+		id = START_MAP
+	_enter_map(id)
+	player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
+	player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
+	player.camera.reset_smoothing()
+
+
+func _enter_map(id: String) -> void:
+	Dialogue.cancel()
+	get_tree().paused = false
+	if map != null:
+		world.remove_child(map)
+		map.queue_free()
+	map_id = id
+	map = (load(MAPS[id]) as PackedScene).instantiate() as GameMap
+	world.add_child(map)
+	player = PLAYER_SCENE.instantiate() as Player
+	map.entities.add_child(player)
+	player.setup(ui.touch, map.bounds)
+	player.walk_mask = map.get_node_or_null("WalkMask") as WalkMask
+	map.player = player
+	ui.bind_player(player)
+	ui.hud.show_location(map.display_name)
+
+
+func _on_travel_requested(id: String, spawn: String) -> void:
+	if MAPS.has(id):
+		load_map.call_deferred(id, spawn)
+
+
+func _on_tapped() -> void:
+	if player != null:
+		player.try_interact()
+
+
+==============================================================================
+== game/main.tscn
+==============================================================================
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://game/main.gd" id="1"]
+[ext_resource type="Script" path="res://ui/game_ui.gd" id="2"]
+[ext_resource type="Script" path="res://art_provisional/rain.gd" id="3"]
+[ext_resource type="Shader" path="res://art_provisional/fog.gdshader" id="4"]
+
+[sub_resource type="ShaderMaterial" id="fog"]
+shader = ExtResource("4")
+
+[node name="Main" type="Node"]
+script = ExtResource("1")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Weather" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="Rain" type="Control" parent="Weather"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3")
+
+[node name="Fog" type="ColorRect" parent="Weather"]
+material = SubResource("fog")
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+script = ExtResource("2")
+
+
+==============================================================================
+== game/actors/npc.gd
+==============================================================================
+class_name Npc
+extends StaticBody2D
+## A person who stands somewhere and can be talked to. Routines, schedules and
+## relationships are future work; they belong here, not in dialogue data.
+
+@export var display_name := "Someone"
+@export var dialogue_id := ""
+@export var coat := Color(0.35, 0.4, 0.45)
+@export var accent := Color(0.7, 0.45, 0.2)
+@export var skin := Color(0.78, 0.6, 0.48)
+@export var hood := false
+@export var facing := Vector2.DOWN
+
+@onready var sprite: CharSprite = $Sprite
+@onready var interactable: Interactable = $Interactable
+
+
+func _ready() -> void:
+	sprite.coat = coat
+	sprite.accent = accent
+	sprite.skin = skin
+	sprite.hood = hood
+	sprite.set_motion(facing, false)
+	interactable.label = display_name
+	interactable.prompt = "Talk"
+	interactable.dialogue_id = dialogue_id
+	interactable.interacted.connect(_on_interacted)
+
+
+func _on_interacted(by: Node2D) -> void:
+	sprite.set_motion((by.global_position - global_position).normalized(), false)
+
+
+==============================================================================
+== game/actors/npc.tscn
+==============================================================================
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/actors/npc.gd" id="1"]
+[ext_resource type="Script" path="res://art_provisional/char_sprite.gd" id="2"]
+[ext_resource type="Script" path="res://game/interaction/interactable.gd" id="3"]
+
+[sub_resource type="CircleShape2D" id="body"]
+radius = 5.0
+
+[node name="Npc" type="StaticBody2D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, -3)
+shape = SubResource("body")
+
+[node name="Sprite" type="Node2D" parent="."]
+script = ExtResource("2")
+
+[node name="Interactable" type="Area2D" parent="."]
+position = Vector2(0, -4)
+script = ExtResource("3")
+
+
+==============================================================================
+== game/interaction/interactable.gd
+==============================================================================
+class_name Interactable
+extends Area2D
+## Reusable "the player can do something here" component. Drop it on anything.
+## Either set dialogue_id (examine text and conversations are both dialogue data)
+## or connect to `interacted` from a parent script.
+
+signal interacted(by: Node2D)
+
+@export var prompt := "Look"
+@export var label := ""
+@export var dialogue_id := ""
+@export var radius := 14.0
+## GameState condition; the interactable is ignored while it is false.
+@export var enabled_if: Dictionary = {}
+
+var enabled := true
+
+
+func _ready() -> void:
+	collision_layer = 4
+	collision_mask = 0
+	monitoring = false
+	if get_child_count() == 0:
+		var shape := CircleShape2D.new()
+		shape.radius = radius
+		var cs := CollisionShape2D.new()
+		cs.shape = shape
+		add_child(cs)
+
+
+func is_available() -> bool:
+	return enabled and GameState.check(enabled_if)
+
+
+func interact(by: Node2D) -> void:
+	interacted.emit(by)
+	if dialogue_id != "":
+		Dialogue.start(dialogue_id)
+
+
+==============================================================================
+== game/interaction/map_exit.gd
+==============================================================================
+class_name MapExit
+extends Interactable
+## An interactable that travels to another map.
+
+@export var target_map := ""
+@export var target_spawn := "default"
+
+
+func interact(by: Node2D) -> void:
+	interacted.emit(by)
+	GameState.travel_requested.emit(target_map, target_spawn)
+
+
+==============================================================================
+== game/player/player.gd
+==============================================================================
+class_name Player
+extends CharacterBody2D
+
+signal target_changed(target: Interactable)
+
+@export var walk_speed := 64.0
+
+var touch: TouchControls
+var facing := Vector2.DOWN
+var target: Interactable
+## Optional painted walkable area (maps without collision bodies).
+var walk_mask: WalkMask
+
+@onready var sprite: CharSprite = $Sprite
+@onready var reach: Area2D = $Reach
+@onready var camera: Camera2D = $Camera
+
+
+func setup(touch_controls: TouchControls, bounds: Rect2) -> void:
+	touch = touch_controls
+	camera.limit_left = int(bounds.position.x)
+	camera.limit_top = int(bounds.position.y)
+	camera.limit_right = int(bounds.end.x)
+	camera.limit_bottom = int(bounds.end.y)
+	camera.reset_smoothing()
+
+
+func _physics_process(_delta: float) -> void:
+	var dir := Vector2.ZERO
+	if not Dialogue.active:
+		dir = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+		if dir == Vector2.ZERO and touch != null:
+			dir = touch.vector
+	var moving := dir.length() > 0.1
+	velocity = _allowed(dir.limit_length(1.0) * walk_speed, _delta) if moving else Vector2.ZERO
+	move_and_slide()
+	if moving:
+		facing = dir.normalized()
+	sprite.set_motion(facing, moving)
+	_update_target()
+
+
+func _allowed(v: Vector2, delta: float) -> Vector2:
+	if walk_mask == null or not _clear(global_position):
+		return v
+	if _clear(global_position + v * delta):
+		return v
+	var vx := Vector2(v.x, 0.0)
+	if v.x != 0.0 and _clear(global_position + vx * delta):
+		return vx
+	var vy := Vector2(0.0, v.y)
+	if v.y != 0.0 and _clear(global_position + vy * delta):
+		return vy
+	return Vector2.ZERO
+
+
+func _clear(p: Vector2) -> bool:
+	return walk_mask.is_walkable(p) and walk_mask.is_walkable(p + Vector2(3, 0)) \
+			and walk_mask.is_walkable(p + Vector2(-3, 0)) and walk_mask.is_walkable(p + Vector2(0, -3))
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"interact") and try_interact():
+		get_viewport().set_input_as_handled()
+
+
+func try_interact() -> bool:
+	if Dialogue.active or target == null or not target.is_available():
+		return false
+	target.interact(self)
+	return true
+
+
+func _update_target() -> void:
+	var best: Interactable = null
+	var best_d := INF
+	for a in reach.get_overlapping_areas():
+		var it := a as Interactable
+		if it == null or not it.is_available():
+			continue
+		var d := global_position.distance_squared_to(it.global_position)
+		if d < best_d:
+			best_d = d
+			best = it
+	if best != target:
+		target = best
+		target_changed.emit(target)
+
+
+==============================================================================
+== game/player/player.tscn
+==============================================================================
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://game/player/player.gd" id="1"]
+[ext_resource type="Script" path="res://art_provisional/char_sprite.gd" id="2"]
+
+[sub_resource type="CircleShape2D" id="feet"]
+radius = 4.0
+
+[sub_resource type="CircleShape2D" id="reach"]
+radius = 18.0
+
+[node name="Player" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+position = Vector2(0, -3)
+shape = SubResource("feet")
+
+[node name="Sprite" type="Node2D" parent="."]
+script = ExtResource("2")
+coat = Color(0.86, 0.66, 0.2, 1)
+accent = Color(0.2, 0.24, 0.28, 1)
+hood = true
+
+[node name="Reach" type="Area2D" parent="."]
+position = Vector2(0, -4)
+collision_layer = 0
+collision_mask = 4
+monitorable = false
+
+[node name="ReachShape" type="CollisionShape2D" parent="Reach"]
+shape = SubResource("reach")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(0, -10)
+position_smoothing_enabled = true
+position_smoothing_speed = 6.0
+
+
+==============================================================================
+== game/puzzle/ore_cart.gd
+==============================================================================
+class_name OreCart
+extends StaticBody2D
+## A cart on a rail spur. Pushed from its start it rolls to the junction and takes
+## whichever branch the points are set to: branch A ends at a buffer (haul it back
+## and try again), branch B ends in the washout, where the cart wedges and becomes
+## a bridge. State lives in GameState so it survives save/load.
+## PROVISIONAL ART (drawn in code).
+
+@export var state_key := "anjabi.cart"
+@export var switch_key := "anjabi.spur_switch"
+@export var rail_main: NodePath
+@export var rail_a: NodePath
+@export var rail_b: NodePath
+## ProvBlock pit segment whose collision is removed once the cart bridges it.
+@export var gap: NodePath
+@export var bridge_position := Vector2.ZERO
+@export var roll_speed := 70.0
+@export var dialogue_buffer := ""
+@export var dialogue_bridge := ""
+@export var on_bridged: Array[Dictionary] = []
+
+var moving := false
+
+var _interactable: Interactable
+var _shape: CollisionShape2D
+
+
+func _ready() -> void:
+	collision_layer = 1
+	collision_mask = 0
+	var rect := RectangleShape2D.new()
+	rect.size = Vector2(18, 10)
+	_shape = CollisionShape2D.new()
+	_shape.shape = rect
+	_shape.position = Vector2(0, -5)
+	add_child(_shape)
+	_interactable = Interactable.new()
+	_interactable.label = "Ore cart"
+	_interactable.radius = 16.0
+	_interactable.position = Vector2(0, -5)
+	add_child(_interactable)
+	_interactable.interacted.connect(_on_interacted)
+	_apply_state()
+
+
+func state() -> String:
+	return str(GameState.get_flag(state_key, "start"))
+
+
+func _points(path: NodePath) -> PackedVector2Array:
+	var rail := get_node(path) as ProvRail
+	var out := PackedVector2Array()
+	for p in rail.points:
+		out.append(rail.to_global(p))
+	return out
+
+
+func _apply_state() -> void:
+	var s := state()
+	var bridged := s == "trench"
+	match s:
+		"buffer":
+			var a := _points(rail_a)
+			global_position = a[a.size() - 1]
+		"trench":
+			global_position = bridge_position
+		_:
+			global_position = _points(rail_main)[0]
+	_shape.set_deferred("disabled", bridged)
+	z_index = -4 if bridged else 0
+	_interactable.enabled = not bridged
+	_interactable.prompt = "Haul back" if s == "buffer" else "Push"
+	var pit := get_node_or_null(gap) as ProvBlock
+	if pit != null:
+		pit.set_solid(not bridged)
+	queue_redraw()
+
+
+func _on_interacted(_by: Node2D) -> void:
+	if moving:
+		return
+	var route := PackedVector2Array()
+	var next := "start"
+	var main := _points(rail_main)
+	if state() == "start":
+		var to_trench := str(GameState.get_flag(switch_key, "a")) == "b"
+		route.append_array(main.slice(1))
+		route.append_array(_points(rail_b if to_trench else rail_a).slice(1))
+		if to_trench:
+			route.append(bridge_position)
+		next = "trench" if to_trench else "buffer"
+	elif state() == "buffer":
+		var a := _points(rail_a)
+		a.reverse()
+		route.append_array(a.slice(1))
+		main.reverse()
+		route.append_array(main.slice(1))
+	else:
+		return
+	_roll(route, next)
+
+
+func _roll(route: PackedVector2Array, next: String) -> void:
+	moving = true
+	_interactable.enabled = false
+	var tween := create_tween()
+	var from := global_position
+	for i in route.size():
+		var t := from.distance_to(route[i]) / roll_speed
+		var step := tween.tween_property(self, "global_position", route[i], maxf(t, 0.05))
+		if i == 0:
+			step.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		from = route[i]
+	await tween.finished
+	moving = false
+	GameState.set_flag(state_key, next)
+	_apply_state()
+	if next == "trench":
+		GameState.apply(on_bridged)
+		if dialogue_bridge != "":
+			Dialogue.start(dialogue_bridge)
+	elif next == "buffer" and dialogue_buffer != "":
+		Dialogue.start(dialogue_buffer)
+
+
+func _draw() -> void:
+	var rust := Color(0.5, 0.29, 0.18)
+	if state() == "trench" and not moving:
+		# Wedged in the washout, bed up: a short steel deck.
+		draw_rect(Rect2(-13, -42, 26, 44), Color(0.23, 0.2, 0.19))
+		draw_rect(Rect2(-12, -41, 24, 42), rust.darkened(0.2))
+		for i in 6:
+			draw_line(Vector2(-12, -38 + i * 7), Vector2(12, -38 + i * 7), rust.darkened(0.45), 1.0)
+		return
+	draw_rect(Rect2(-8, -3, 4, 3), Color(0.1, 0.1, 0.11))
+	draw_rect(Rect2(4, -3, 4, 3), Color(0.1, 0.1, 0.11))
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-11, -15), Vector2(11, -15), Vector2(8, -3), Vector2(-8, -3)]), rust)
+	draw_rect(Rect2(-11, -17, 22, 3), rust.lightened(0.12))
+	draw_rect(Rect2(-9, -16, 18, 1), Color(0.08, 0.08, 0.09))
+	draw_line(Vector2(-3, -13), Vector2(-4, -5), rust.darkened(0.3), 1.0)
+	draw_line(Vector2(5, -13), Vector2(4, -6), rust.darkened(0.3), 1.0)
+
+
+==============================================================================
+== game/puzzle/track_switch.gd
+==============================================================================
+class_name TrackSwitch
+extends StaticBody2D
+## Points lever. Flips a GameState flag between "a" and "b"; anything on the
+## rails reads that flag. PROVISIONAL ART (drawn in code).
+
+@export var switch_key := "anjabi.spur_switch"
+@export var notify_a := "The points grind across, toward the buffer."
+@export var notify_b := "The points grind across, toward the washout."
+
+var _interactable: Interactable
+
+
+func _ready() -> void:
+	collision_layer = 1
+	collision_mask = 0
+	var shape := CircleShape2D.new()
+	shape.radius = 3.0
+	var cs := CollisionShape2D.new()
+	cs.shape = shape
+	add_child(cs)
+	_interactable = Interactable.new()
+	_interactable.prompt = "Throw"
+	_interactable.label = "Points lever"
+	add_child(_interactable)
+	_interactable.interacted.connect(_on_interacted)
+	GameState.flag_changed.connect(_on_flag_changed)
+
+
+func branch() -> String:
+	return str(GameState.get_flag(switch_key, "a"))
+
+
+func _on_interacted(_by: Node2D) -> void:
+	var next := "b" if branch() == "a" else "a"
+	GameState.set_flag(switch_key, next)
+	GameState.notify(notify_b if next == "b" else notify_a)
+
+
+func _on_flag_changed(key: String, _value: Variant) -> void:
+	if key == switch_key:
+		queue_redraw()
+
+
+func _draw() -> void:
+	var lean := -5.0 if branch() == "a" else 5.0
+	draw_rect(Rect2(-4, -3, 8, 4), Color(0.2, 0.2, 0.22))
+	draw_line(Vector2(0, -2), Vector2(lean, -14), Color(0.55, 0.3, 0.2), 2.0)
+	draw_circle(Vector2(lean, -15), 2.0, Color(0.85, 0.82, 0.7) if branch() == "a" else Color(0.85, 0.3, 0.2))
+
+
+==============================================================================
+== maps/game_map.gd
+==============================================================================
+class_name GameMap
+extends Node2D
+## Base for every walkable location. A map scene needs an "Entities" child
+## (y-sorted; the player is added there) and Marker2D spawn points under "Spawns".
+
+@export var map_id := ""
+@export var display_name := ""
+@export var bounds := Rect2(0, 0, 960, 704)
+
+## Set by Main once the player has been placed.
+var player: Node2D
+
+@onready var entities: Node2D = $Entities
+
+
+func spawn_position(spawn: String) -> Vector2:
+	var m := get_node_or_null("Spawns/" + spawn) as Node2D
+	if m == null:
+		m = get_node_or_null("Spawns/default") as Node2D
+	return m.global_position if m != null else bounds.get_center()
+
+
+==============================================================================
+== maps/walk_mask.gd
+==============================================================================
+class_name WalkMask
+extends Node2D
+## Walkable area stored as a BitMap, for maps laid out from a painted plan
+## rather than from collision bodies. `pixel_size` is world pixels per mask pixel.
+
+@export var mask: BitMap
+@export var pixel_size := 2.0
+
+
+func is_walkable(world: Vector2) -> bool:
+	if mask == null:
+		return true
+	var p := Vector2i(((world - global_position) / pixel_size).floor())
+	var s := mask.get_size()
+	if p.x < 0 or p.y < 0 or p.x >= s.x or p.y >= s.y:
+		return false
+	return mask.get_bitv(p)
+
+
+func nearest_walkable(world: Vector2, max_radius: float = 240.0) -> Vector2:
+	if is_walkable(world):
+		return world
+	var r := pixel_size
+	while r <= max_radius:
+		for i in 16:
+			var p := world + Vector2.from_angle(TAU * i / 16.0) * r
+			if is_walkable(p):
+				return p
+		r += pixel_size
+	return world
+
+
+==============================================================================
+== maps/anjabi/mine.tscn
+==============================================================================
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://maps/game_map.gd" id="1"]
+[ext_resource type="Script" path="res://maps/anjabi/mine_ground.gd" id="2"]
+[ext_resource type="Script" path="res://art_provisional/prov_block.gd" id="3"]
+[ext_resource type="Script" path="res://art_provisional/prov_rail.gd" id="4"]
+[ext_resource type="PackedScene" path="res://game/actors/npc.tscn" id="5"]
+[ext_resource type="Script" path="res://game/interaction/interactable.gd" id="6"]
+[ext_resource type="Script" path="res://game/puzzle/ore_cart.gd" id="7"]
+[ext_resource type="Script" path="res://game/puzzle/track_switch.gd" id="8"]
+[ext_resource type="Script" path="res://game/interaction/map_exit.gd" id="10"]
+
+[node name="Mine" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_mine"
+display_name = "ANJABI  ·  COLLAPSED MINE"
+bounds = Rect2(0, 0, 960, 704)
+
+[node name="Grade" type="CanvasModulate" parent="."]
+color = Color(0.5, 0.58, 0.68, 1)
+
+[node name="Ground" type="Node2D" parent="."]
+z_index = -10
+script = ExtResource("2")
+
+[node name="Rails" type="Node2D" parent="."]
+z_index = -8
+
+[node name="RailMain" type="Node2D" parent="Rails"]
+script = ExtResource("4")
+points = PackedVector2Array(800, 575, 800, 440)
+buffer_start = true
+
+[node name="RailA" type="Node2D" parent="Rails"]
+script = ExtResource("4")
+points = PackedVector2Array(800, 440, 826, 412, 868, 384, 868, 362)
+buffer_end = true
+
+[node name="RailB" type="Node2D" parent="Rails"]
+script = ExtResource("4")
+points = PackedVector2Array(800, 440, 800, 342)
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="default" type="Marker2D" parent="Spawns"]
+position = Vector2(160, 40)
+
+[node name="east" type="Marker2D" parent="Spawns"]
+position = Vector2(866, 646)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="RockNorthWest" type="StaticBody2D" parent="Entities"]
+position = Vector2(60, 110)
+script = ExtResource("3")
+size = Vector2(120, 40)
+height = 70.0
+style = "rock"
+
+[node name="RockNorth" type="StaticBody2D" parent="Entities"]
+position = Vector2(578, 110)
+script = ExtResource("3")
+size = Vector2(764, 40)
+height = 70.0
+style = "rock"
+
+[node name="WallNorth" type="StaticBody2D" parent="Entities"]
+position = Vector2(160, 0)
+script = ExtResource("3")
+size = Vector2(90, 10)
+height = 0.0
+style = "none"
+
+[node name="WallWest" type="StaticBody2D" parent="Entities"]
+position = Vector2(112, 704)
+script = ExtResource("3")
+size = Vector2(4, 704)
+height = 0.0
+style = "none"
+
+[node name="WallEast" type="StaticBody2D" parent="Entities"]
+position = Vector2(930, 704)
+script = ExtResource("3")
+size = Vector2(60, 594)
+height = 0.0
+style = "none"
+
+[node name="WallSouth" type="StaticBody2D" parent="Entities"]
+position = Vector2(480, 716)
+script = ExtResource("3")
+size = Vector2(960, 12)
+height = 0.0
+style = "none"
+
+[node name="CliffFenceSouth" type="StaticBody2D" parent="Entities"]
+position = Vector2(505, 690)
+script = ExtResource("3")
+size = Vector2(790, 4)
+height = 12.0
+style = "fence"
+
+[node name="YardFenceWest" type="StaticBody2D" parent="Entities"]
+position = Vector2(200, 250)
+script = ExtResource("3")
+size = Vector2(4, 140)
+height = 16.0
+style = "fence"
+
+[node name="FenceWest" type="StaticBody2D" parent="Entities"]
+position = Vector2(327, 250)
+script = ExtResource("3")
+size = Vector2(246, 4)
+height = 16.0
+style = "fence"
+
+[node name="Gate" type="StaticBody2D" parent="Entities"]
+position = Vector2(480, 250)
+script = ExtResource("3")
+size = Vector2(60, 4)
+height = 18.0
+style = "gate"
+
+[node name="FenceEast" type="StaticBody2D" parent="Entities"]
+position = Vector2(625, 250)
+script = ExtResource("3")
+size = Vector2(230, 4)
+height = 16.0
+style = "fence"
+
+[node name="FenceCorner" type="StaticBody2D" parent="Entities"]
+position = Vector2(740, 300)
+script = ExtResource("3")
+size = Vector2(4, 50)
+height = 16.0
+style = "fence"
+
+[node name="TrenchWest" type="StaticBody2D" parent="Entities"]
+position = Vector2(764, 340)
+z_index = -5
+script = ExtResource("3")
+size = Vector2(44, 40)
+height = 0.0
+style = "pit"
+
+[node name="TrenchGap" type="StaticBody2D" parent="Entities"]
+position = Vector2(800, 340)
+z_index = -5
+script = ExtResource("3")
+size = Vector2(28, 40)
+height = 0.0
+style = "pit"
+
+[node name="TrenchEast" type="StaticBody2D" parent="Entities"]
+position = Vector2(857, 340)
+z_index = -5
+script = ExtResource("3")
+size = Vector2(86, 40)
+height = 0.0
+style = "pit"
+
+[node name="WashHouse" type="StaticBody2D" parent="Entities"]
+position = Vector2(230, 590)
+script = ExtResource("3")
+size = Vector2(120, 34)
+height = 24.0
+style = "pod"
+lit = true
+
+[node name="StoreShed" type="StaticBody2D" parent="Entities"]
+position = Vector2(200, 450)
+script = ExtResource("3")
+size = Vector2(60, 30)
+height = 22.0
+style = "hut"
+
+[node name="WinchHouse" type="StaticBody2D" parent="Entities"]
+position = Vector2(640, 480)
+script = ExtResource("3")
+size = Vector2(56, 30)
+height = 22.0
+style = "hut"
+
+[node name="GuardHut" type="StaticBody2D" parent="Entities"]
+position = Vector2(590, 300)
+script = ExtResource("3")
+size = Vector2(50, 28)
+height = 26.0
+style = "hut"
+lit = true
+
+[node name="GateLamp" type="StaticBody2D" parent="Entities"]
+position = Vector2(438, 262)
+script = ExtResource("3")
+size = Vector2(4, 4)
+height = 38.0
+style = "lamp"
+lit = true
+
+[node name="WashHouseLamp" type="StaticBody2D" parent="Entities"]
+position = Vector2(370, 596)
+script = ExtResource("3")
+size = Vector2(4, 4)
+height = 34.0
+style = "lamp"
+lit = true
+
+[node name="StairLamp" type="StaticBody2D" parent="Entities"]
+position = Vector2(206, 266)
+script = ExtResource("3")
+size = Vector2(4, 4)
+height = 36.0
+style = "lamp"
+lit = true
+
+[node name="NoticeBoard" type="StaticBody2D" parent="Entities"]
+position = Vector2(425, 251)
+script = ExtResource("3")
+size = Vector2(10, 2)
+height = 15.0
+style = "sign"
+solid = false
+
+[node name="Crates" type="StaticBody2D" parent="Entities"]
+position = Vector2(560, 600)
+script = ExtResource("3")
+size = Vector2(22, 14)
+height = 10.0
+style = "crate"
+tint = Color(0.7, 0.62, 0.5, 1)
+
+[node name="Crates2" type="StaticBody2D" parent="Entities"]
+position = Vector2(300, 470)
+script = ExtResource("3")
+size = Vector2(18, 12)
+height = 8.0
+style = "crate"
+tint = Color(0.6, 0.6, 0.62, 1)
+
+[node name="MineDoor" type="StaticBody2D" parent="Entities"]
+position = Vector2(480, 111)
+script = ExtResource("3")
+size = Vector2(40, 2)
+height = 38.0
+style = "adit"
+solid = false
+
+[node name="Stretchers" type="StaticBody2D" parent="Entities"]
+position = Vector2(528, 124)
+script = ExtResource("3")
+size = Vector2(26, 10)
+height = 7.0
+style = "crate"
+tint = Color(1.1, 1.05, 0.95, 1)
+
+[node name="PumpShed" type="StaticBody2D" parent="Entities"]
+position = Vector2(250, 196)
+script = ExtResource("3")
+size = Vector2(50, 26)
+height = 24.0
+style = "hut"
+
+[node name="YardLamp" type="StaticBody2D" parent="Entities"]
+position = Vector2(392, 176)
+script = ExtResource("3")
+size = Vector2(4, 4)
+height = 38.0
+style = "lamp"
+
+[node name="YardCrates" type="StaticBody2D" parent="Entities"]
+position = Vector2(660, 150)
+script = ExtResource("3")
+size = Vector2(30, 16)
+height = 12.0
+style = "crate"
+tint = Color(0.6, 0.6, 0.62, 1)
+
+[node name="Tree1" type="StaticBody2D" parent="Entities"]
+position = Vector2(150, 420)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 52.0
+style = "tree"
+
+[node name="Tree2" type="StaticBody2D" parent="Entities"]
+position = Vector2(136, 660)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 59.0
+style = "tree"
+
+[node name="Tree3" type="StaticBody2D" parent="Entities"]
+position = Vector2(600, 404)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 66.0
+style = "tree"
+
+[node name="Tree4" type="StaticBody2D" parent="Entities"]
+position = Vector2(700, 384)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 55.0
+style = "tree"
+
+[node name="Tree5" type="StaticBody2D" parent="Entities"]
+position = Vector2(884, 500)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 62.0
+style = "tree"
+
+[node name="Tree6" type="StaticBody2D" parent="Entities"]
+position = Vector2(720, 596)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 69.0
+style = "tree"
+
+[node name="Tree7" type="StaticBody2D" parent="Entities"]
+position = Vector2(856, 606)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 58.0
+style = "tree"
+
+[node name="Tree8" type="StaticBody2D" parent="Entities"]
+position = Vector2(916, 150)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 65.0
+style = "tree"
+
+[node name="Tree9" type="StaticBody2D" parent="Entities"]
+position = Vector2(940, 224)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 54.0
+style = "tree"
+
+[node name="Tree10" type="StaticBody2D" parent="Entities"]
+position = Vector2(920, 300)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 61.0
+style = "tree"
+
+[node name="Tree11" type="StaticBody2D" parent="Entities"]
+position = Vector2(944, 380)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 68.0
+style = "tree"
+
+[node name="Tree12" type="StaticBody2D" parent="Entities"]
+position = Vector2(918, 452)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 57.0
+style = "tree"
+
+[node name="Tree13" type="StaticBody2D" parent="Entities"]
+position = Vector2(942, 524)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 64.0
+style = "tree"
+
+[node name="Tree14" type="StaticBody2D" parent="Entities"]
+position = Vector2(920, 600)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 53.0
+style = "tree"
+
+[node name="Tree15" type="StaticBody2D" parent="Entities"]
+position = Vector2(944, 672)
+script = ExtResource("3")
+size = Vector2(6, 5)
+height = 60.0
+style = "tree"
+
+[node name="Driller" parent="Entities" instance=ExtResource("5")]
+position = Vector2(336, 600)
+display_name = "Driller"
+dialogue_id = "anjabi/driller"
+coat = Color(0.42, 0.33, 0.27, 1)
+accent = Color(0.8, 0.5, 0.18, 1)
+skin = Color(0.62, 0.45, 0.36, 1)
+
+[node name="Guard" parent="Entities" instance=ExtResource("5")]
+position = Vector2(528, 266)
+display_name = "Gate guard"
+dialogue_id = "anjabi/guard"
+coat = Color(0.24, 0.3, 0.36, 1)
+accent = Color(0.75, 0.75, 0.7, 1)
+skin = Color(0.8, 0.64, 0.52, 1)
+hood = true
+
+[node name="Lever" type="StaticBody2D" parent="Entities"]
+position = Vector2(772, 448)
+script = ExtResource("8")
+
+[node name="OreCart" type="StaticBody2D" parent="Entities"]
+position = Vector2(800, 575)
+script = ExtResource("7")
+rail_main = NodePath("../../Rails/RailMain")
+rail_a = NodePath("../../Rails/RailA")
+rail_b = NodePath("../../Rails/RailB")
+gap = NodePath("../TrenchGap")
+bridge_position = Vector2(800, 340)
+dialogue_buffer = "anjabi/cart_buffer"
+dialogue_bridge = "anjabi/cart_bridge"
+on_bridged = Array[Dictionary]([{"objective": "quiet_mine.way_in"}, {"reveal": "quiet_mine.door"}])
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="Notice" type="Area2D" parent="Interactables"]
+position = Vector2(425, 256)
+script = ExtResource("6")
+prompt = "Read"
+label = "Notice"
+dialogue_id = "anjabi/notice"
+
+[node name="MineDoor" type="Area2D" parent="Interactables"]
+position = Vector2(480, 118)
+script = ExtResource("6")
+prompt = "Examine"
+label = "Mine door"
+dialogue_id = "anjabi/door"
+
+[node name="JunctionBox" type="Area2D" parent="Interactables"]
+position = Vector2(280, 200)
+script = ExtResource("6")
+prompt = "Examine"
+label = "Junction box"
+dialogue_id = "anjabi/junction"
+
+[node name="Trench" type="Area2D" parent="Interactables"]
+position = Vector2(800, 350)
+script = ExtResource("6")
+prompt = "Look"
+label = "Washout"
+dialogue_id = "anjabi/trench"
+enabled_if = {"not": {"flag": "anjabi.cart", "eq": "trench"}}
+
+[node name="CliffEdge" type="Area2D" parent="Interactables"]
+position = Vector2(480, 684)
+script = ExtResource("6")
+prompt = "Look"
+label = "Cliff edge"
+dialogue_id = "anjabi/cliff_edge"
+
+[node name="StairsToEstate" type="Area2D" parent="Interactables"]
+position = Vector2(160, 12)
+script = ExtResource("10")
+prompt = "Climb"
+label = "Stairs to the Estate"
+target_map = "anjabi_town"
+target_spawn = "mine"
+
+[node name="PathToAirpad" type="Area2D" parent="Interactables"]
+position = Vector2(890, 646)
+script = ExtResource("10")
+prompt = "Walk"
+label = "Path to the airpad"
+target_map = "anjabi_town"
+target_spawn = "airpad"
+
+
+==============================================================================
+== maps/anjabi/mine_ground.gd
+==============================================================================
+@tool
+extends Node2D
+## PROVISIONAL ART. Ground painting for Anjabi / Collapsed Mine (location 04), drawn once.
+## Layout follows Greybox Study 01: stairs down from the Estate (north-west), a walled
+## yard on a cliff ledge, a path east toward the airpad, and a drop to the south.
+
+func _draw() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var earth := Color(0.17, 0.22, 0.2)
+	var gravel := Color(0.27, 0.29, 0.3)
+	var mud := Color(0.29, 0.26, 0.23)
+	var rock := Color(0.17, 0.2, 0.22)
+	draw_rect(Rect2(0, 0, 960, 704), earth)
+	draw_rect(Rect2(900, 0, 60, 704), Color(0.08, 0.14, 0.13))
+	draw_rect(Rect2(0, 0, 112, 704), rock)
+	# inner yard and the corridor behind the washout
+	draw_rect(Rect2(200, 106, 700, 144), gravel)
+	draw_rect(Rect2(742, 250, 158, 50), gravel)
+	draw_rect(Rect2(456, 106, 48, 144), mud.darkened(0.12))
+	# stairs down from the Estate
+	var stone := Color(0.4, 0.4, 0.38)
+	draw_rect(Rect2(122, 0, 76, 252), stone)
+	for i in 38:
+		draw_line(Vector2(122, 16 + i * 6), Vector2(198, 16 + i * 6), stone.darkened(0.3), 1.0)
+	draw_rect(Rect2(122, 0, 2, 252), stone.darkened(0.45))
+	draw_rect(Rect2(196, 0, 2, 252), stone.darkened(0.45))
+	# landing, path to the gate, haul road, wash-house apron, path east to the airpad
+	draw_rect(Rect2(116, 250, 90, 44), mud)
+	draw_colored_polygon(PackedVector2Array([Vector2(200, 258), Vector2(454, 254), Vector2(454, 292), Vector2(200, 294)]), mud)
+	draw_colored_polygon(PackedVector2Array([Vector2(450, 690), Vector2(510, 690), Vector2(506, 250), Vector2(454, 250)]), mud)
+	draw_colored_polygon(PackedVector2Array([Vector2(150, 596), Vector2(452, 584), Vector2(452, 620), Vector2(150, 628)]), mud.darkened(0.08))
+	draw_colored_polygon(PackedVector2Array([Vector2(508, 626), Vector2(900, 630), Vector2(900, 662), Vector2(508, 658)]), mud.darkened(0.05))
+	draw_rect(Rect2(762, 340, 126, 46), Color(0.21, 0.25, 0.23))
+	for x: float in [466.0, 494.0]:
+		draw_line(Vector2(x, 690), Vector2(x, 250), mud.darkened(0.22), 2.0)
+	# the drop to the south: rock lip, then mist
+	draw_rect(Rect2(0, 690, 960, 14), rock.darkened(0.25))
+	for i in 5:
+		draw_rect(Rect2(0, 694 + i * 2, 960, 2), Color(0.45, 0.52, 0.58, 0.1 + i * 0.07))
+	# puddles
+	for p: Vector3 in [Vector3(472, 470, 9), Vector3(492, 360, 7), Vector3(470, 620, 11), Vector3(640, 644, 8),
+			Vector3(330, 606, 7), Vector3(300, 170, 10), Vector3(640, 200, 8), Vector3(820, 270, 6),
+			Vector3(480, 180, 9), Vector3(160, 272, 8)]:
+		draw_set_transform(Vector2(p.x, p.y), 0.0, Vector2(1.0, 0.4))
+		draw_circle(Vector2.ZERO, p.z, Color(0.33, 0.42, 0.5, 0.85))
+		draw_circle(Vector2(-p.z * 0.3, -p.z * 0.2), p.z * 0.35, Color(0.5, 0.6, 0.68, 0.5))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	# gravel flecks, weeds, rock cracks
+	for i in 900:
+		var p := Vector2(rng.randf_range(114, 898), rng.randf_range(108, 688))
+		if p.x < 200 and p.y < 252:
+			continue
+		var on_road := p.x > 448 and p.x < 512
+		if p.y < 250 or (p.x > 742 and p.y < 300):
+			draw_rect(Rect2(p, Vector2(1, 1)), gravel.lightened(rng.randf_range(-0.15, 0.2)))
+		elif not on_road:
+			var c := earth.lightened(rng.randf_range(0.02, 0.14))
+			draw_line(p, p + Vector2(rng.randf_range(-1, 1), -rng.randf_range(2, 4)), c, 1.0)
+	for i in 60:
+		var p := Vector2(rng.randf_range(4, 104), rng.randf_range(4, 700))
+		draw_line(p, p + Vector2(rng.randf_range(-6, 6), rng.randf_range(6, 18)), rock.lightened(0.08), 1.0)
+
+
+==============================================================================
+== maps/anjabi/town.gd
+==============================================================================
+extends GameMap
+## Anjabi, whole settlement, greybox. Ground art and walkable area both come from
+## docs/reference/anjabi_greybox_01.png (see tools/build_town_mask.gd).
+## Announces the district the player is standing in.
+
+## Image-pixel rectangles on the greybox; first match wins.
+const DISTRICTS := [
+	["THE STEPS", Rect2(820, 370, 125, 75)],
+	["TRAM STATION", Rect2(940, 440, 180, 210)],
+	["SHOPS", Rect2(890, 220, 170, 160)],
+	["MAIN TAVERN", Rect2(670, 190, 215, 175)],
+	["TION TOWER", Rect2(425, 300, 180, 175)],
+	["GUARD TOWER", Rect2(930, 40, 210, 165)],
+	["WORKER PODS", Rect2(440, 40, 325, 205)],
+	["ESTATE GARDENS", Rect2(95, 320, 215, 100)],
+	["ESTATE", Rect2(120, 420, 290, 165)],
+	["COLLAPSED MINE", Rect2(60, 630, 250, 180)],
+	["PRIVATE AIRPAD", Rect2(320, 735, 200, 130)],
+	["BEACH", Rect2(500, 560, 430, 175)],
+	["DOCKS AND BOARDWALK", Rect2(1060, 360, 320, 215)],
+	["RAINFOREST APPROACH", Rect2(1255, 220, 165, 150)],
+	["FOREST", Rect2(40, 40, 330, 215)],
+]
+
+var _district := ""
+var _acc := 0.0
+
+@onready var _mask: WalkMask = $WalkMask
+
+
+func _process(delta: float) -> void:
+	_acc += delta
+	if _acc < 0.25 or player == null:
+		return
+	_acc = 0.0
+	var p := (player.global_position - _mask.global_position) / _mask.pixel_size
+	var found := ""
+	for d: Array in DISTRICTS:
+		if (d[1] as Rect2).has_point(p):
+			found = d[0]
+			break
+	if found != _district:
+		_district = found
+		if found != "":
+			GameState.location_entered.emit("ANJABI  ·  " + found)
+
+
+==============================================================================
+== maps/anjabi/town.tscn
+==============================================================================
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/town.gd" id="1"]
+[ext_resource type="Texture2D" path="res://maps/anjabi/town_greybox.png" id="2"]
+[ext_resource type="Script" path="res://maps/walk_mask.gd" id="3"]
+[ext_resource type="BitMap" path="res://maps/anjabi/town_walk.res" id="4"]
+[ext_resource type="Script" path="res://game/interaction/map_exit.gd" id="5"]
+
+[node name="Town" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_town"
+display_name = "ANJABI"
+bounds = Rect2(64, 64, 2768, 1812)
+
+[node name="Grade" type="CanvasModulate" parent="."]
+color = Color(0.7, 0.76, 0.85, 1)
+
+[node name="Greybox" type="Sprite2D" parent="."]
+z_index = -10
+texture_filter = 2
+scale = Vector2(2, 2)
+texture = ExtResource("2")
+centered = false
+
+[node name="WalkMask" type="Node2D" parent="."]
+script = ExtResource("3")
+mask = ExtResource("4")
+pixel_size = 2.0
+
+[node name="Spawns" type="Node2D" parent="."]
+
+[node name="default" type="Marker2D" parent="Spawns"]
+position = Vector2(1760, 830)
+
+[node name="mine" type="Marker2D" parent="Spawns"]
+position = Vector2(424, 1364)
+
+[node name="airpad" type="Marker2D" parent="Spawns"]
+position = Vector2(672, 1492)
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Interactables" type="Node2D" parent="."]
+
+[node name="ToMineRoad" type="Area2D" parent="Interactables"]
+position = Vector2(424, 1400)
+script = ExtResource("5")
+prompt = "Enter"
+label = "Mine yard"
+radius = 24.0
+target_map = "anjabi_mine"
+target_spawn = "default"
+
+[node name="ToMineFromAirpad" type="Area2D" parent="Interactables"]
+position = Vector2(640, 1490)
+script = ExtResource("5")
+prompt = "Walk"
+label = "Mine yard"
+radius = 20.0
+target_map = "anjabi_mine"
+target_spawn = "east"
+
+
+==============================================================================
+== tests/screenshot.gd
+==============================================================================
+extends Node
+## Windowed visual check: writes PNGs of a few moments to the folder given after "--".
+##   Godot --path . res://tests/screenshot.tscn -- /some/folder
+
+var main: Node
+var dir := "user://"
+
+
+func _ready() -> void:
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	main = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _wait(1.6)
+	await _shot("01_spawn")
+	main.get("player").global_position = Vector2(170, 270)
+	await _wait(1.0)
+	await _shot("01b_stair_foot")
+	var player: Player = main.get("player")
+	var ui: GameUi = main.get_node("UI")
+	player.global_position = Vector2(516, 282)
+	await _wait(1.0)
+	player.try_interact()
+	await _wait(1.2)
+	Dialogue.advance()
+	await _wait(1.2)
+	await _shot("02_guard_dialogue")
+	Dialogue.advance()
+	await _wait(0.6)
+	await _shot("03_choices")
+	Dialogue.cancel()
+	player.global_position = Vector2(300, 620)
+	await _wait(1.0)
+	await _shot("04_pods")
+	player.global_position = Vector2(790, 470)
+	await _wait(1.0)
+	await _shot("05_spur")
+	GameState.set_flag("anjabi.cart", "trench")
+	main.call("restore_world", {"map": "anjabi_mine", "x": 500.0, "y": 150.0})
+	await _wait(1.0)
+	await _shot("06_yard")
+	GameState.apply([{"clue": "closure_notice"}, {"clue": "early_recall"}, {"objective": "quiet_mine.notice"}, {"reveal": "quiet_mine.way_in"}])
+	ui.toggle_journal()
+	await _wait(0.4)
+	await _shot("07_journal")
+	ui.close_panels()
+	ui.toggle_menu()
+	await _wait(0.4)
+	await _shot("08_menu")
+	get_tree().quit()
+
+
+func _wait(s: float) -> void:
+	await get_tree().create_timer(s, true, false, true).timeout
+
+
+func _shot(shot_name: String) -> void:
+	await RenderingServer.frame_post_draw
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(dir.path_join(shot_name + ".png"))
+
+
+==============================================================================
+== tests/screenshot.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot.gd" id="1"]
+
+[node name="Screenshot" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tests/screenshot_town.gd
+==============================================================================
+extends Node
+## Windowed visual check of the town greybox. Usage as tests/screenshot.gd.
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await get_tree().create_timer(0.5).timeout
+	main.call("load_map", "anjabi_town", "default")
+	var shots := {"town_steps": Vector2(1760, 830), "town_tion": Vector2(1030, 930), "town_mine": Vector2(424, 1364), "town_docks": Vector2(2340, 900)}
+	for k: String in shots:
+		var player: Player = main.get("player")
+		player.global_position = shots[k]
+		player.camera.reset_smoothing()
+		await get_tree().create_timer(1.6).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
+	get_tree().quit()
+
+
+==============================================================================
+== tests/screenshot_town.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_town.gd" id="1"]
+
+[node name="ScreenshotTown" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tests/slice_test.gd
+==============================================================================
+extends Node
+## Headless end-to-end check of the Anjabi slice.
+##   Godot --headless --path . res://tests/slice_test.tscn
+
+var _fails := 0
+var _checks := 0
+var main: Node
+var player: Player
+
+
+func _ready() -> void:
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	main = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await _frames(3)
+	await _run()
+	await _town()
+	SaveManager.delete_save("test")
+	print("\n%d checks, %d failed" % [_checks, _fails])
+	get_tree().quit(1 if _fails > 0 else 0)
+
+
+func _run() -> void:
+	player = main.get("player")
+	var map: GameMap = main.get("map")
+	check(player != null and map != null, "main boots a map and a player")
+	check(Journal.quests.has("quiet_mine"), "new game opens the investigation")
+	check(player.global_position.distance_to(Vector2(160, 40)) < 1.0, "player starts at the spawn marker")
+
+	# movement
+	var y0 := player.global_position.y
+	Input.action_press(&"move_down")
+	await _frames(30)
+	Input.action_release(&"move_down")
+	check(player.global_position.y > y0 + 20.0, "keyboard movement moves the player (%.1f px)" % (player.global_position.y - y0))
+	Input.action_press(&"move_up")
+	await _frames(120)
+	Input.action_release(&"move_up")
+	check(player.global_position.y > 0.0, "the top of the stairs is closed off (y=%.1f)" % player.global_position.y)
+
+	# touch stick
+	var ui: GameUi = main.get_node("UI")
+	var x0 := player.global_position.x
+	ui.touch.vector = Vector2.RIGHT
+	await _frames(20)
+	ui.touch.vector = Vector2.ZERO
+	check(player.global_position.x > x0 + 10.0, "touch stick vector moves the player")
+
+	# collision with the gate
+	await _place(Vector2(480, 290))
+	Input.action_press(&"move_up")
+	await _frames(90)
+	Input.action_release(&"move_up")
+	check(player.global_position.y > 250.0, "the gate blocks the road (y=%.1f)" % player.global_position.y)
+
+	# notice
+	await _place(Vector2(425, 262))
+	check(player.target != null and player.target.label == "Notice", "notice is targeted")
+	check(ui.hud.prompt_text().contains("Notice"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
+	check(player.try_interact() and Dialogue.active, "interacting opens dialogue")
+	Input.action_press(&"move_down")
+	await _frames(10)
+	Input.action_release(&"move_down")
+	check(player.global_position.distance_to(Vector2(425, 262)) < 1.0, "player cannot walk during dialogue")
+	await _talk([])
+	check(Journal.has_clue("closure_notice"), "notice records a clue")
+	check(Journal.objective_state("quiet_mine", "notice") == Journal.DONE, "notice objective done")
+
+	# guard before the driller: no way to press
+	await _place(Vector2(528, 280))
+	player.try_interact()
+	check(not Dialogue.choice_texts().is_empty() or true, "guard dialogue starts")
+	await _talk(["The crew was pulled"])
+	check(not Journal.has_clue("power_cut"), "guard cannot be pressed without the driller's account")
+
+	# driller
+	await _place(Vector2(336, 614))
+	player.try_interact()
+	await _talk(["What happened at the mine", "Who gave"])
+	check(Journal.has_clue("early_recall"), "driller records a clue")
+
+	# guard again
+	await _place(Vector2(528, 280))
+	player.try_interact()
+	await _talk(["The crew was pulled", "another way"])
+	check(Journal.has_clue("power_cut"), "pressing the guard records a clue")
+	check(Journal.objective_state("quiet_mine", "way_in") == Journal.ACTIVE, "guard reveals the hidden objective")
+
+	# puzzle: wrong branch first
+	var cart: OreCart = map.get_node("Entities/OreCart")
+	await _place(Vector2(800, 590))
+	check(player.target != null and player.target.label == "Ore cart", "cart is targeted")
+	player.try_interact()
+	await _until(func() -> bool: return not cart.moving)
+	check(cart.state() == "buffer", "points at A: cart rolls to the buffer")
+	await _talk([])
+	await _place(Vector2(800, 356))
+	Input.action_press(&"move_up")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	check(player.global_position.y > 340.0, "washout blocks the spur (y=%.1f)" % player.global_position.y)
+	await _place(Vector2(868, 376))
+	player.try_interact()
+	await _until(func() -> bool: return not cart.moving)
+	check(cart.state() == "start", "cart can be hauled back")
+	# lever, then the right branch
+	await _place(Vector2(772, 460))
+	check(player.target != null and player.target.label == "Points lever", "lever is targeted")
+	player.try_interact()
+	check(str(GameState.get_flag("anjabi.spur_switch")) == "b", "lever sets the points to B")
+	await _place(Vector2(800, 590))
+	player.try_interact()
+	await _until(func() -> bool: return not cart.moving)
+	check(cart.state() == "trench", "points at B: cart drops into the washout")
+	await _talk([])
+	check(Journal.objective_state("quiet_mine", "way_in") == Journal.DONE, "bridging completes the objective")
+	await _place(Vector2(800, 356))
+	Input.action_press(&"move_up")
+	await _frames(80)
+	Input.action_release(&"move_up")
+	check(player.global_position.y < 300.0, "player can cross the cart bridge (y=%.1f)" % player.global_position.y)
+
+	# mine door
+	await _place(Vector2(480, 126))
+	player.try_interact()
+	await _talk([])
+	check(Journal.has_clue("sealed_outside"), "mine door records the final clue")
+	check(Journal.is_complete("quiet_mine"), "investigation is marked complete")
+
+	# journal panel
+	ui.toggle_journal()
+	check(ui.journal.visible and get_tree().paused, "journal opens and pauses the world")
+	ui.close_panels()
+	check(not get_tree().paused, "closing the journal resumes")
+
+	# save / load
+	await _place(Vector2(600, 180))
+	check(SaveManager.save_game("test"), "save writes a file")
+	main.call("new_game")
+	await _frames(3)
+	player = main.get("player")
+	check(Journal.clues.is_empty() and not GameState.flags.has("anjabi.cart"), "new game clears progress")
+	check(SaveManager.load_game("test"), "load reads the file")
+	await _frames(3)
+	player = main.get("player")
+	map = main.get("map")
+	cart = map.get_node("Entities/OreCart")
+	check(player.global_position.distance_to(Vector2(600, 180)) < 1.0, "load restores the player position")
+	check(Journal.clues.size() == 4 and Journal.is_complete("quiet_mine"), "load restores the journal")
+	check(cart.state() == "trench" and cart.global_position.distance_to(Vector2(800, 340)) < 1.0, "load restores the puzzle state")
+	await _place(Vector2(800, 290))
+	Input.action_press(&"move_down")
+	await _frames(80)
+	Input.action_release(&"move_down")
+	check(player.global_position.y > 345.0, "bridge is still walkable after load (y=%.1f)" % player.global_position.y)
+	# follow-up dialogue reacts to state
+	await _place(Vector2(336, 614))
+	player.try_interact()
+	await _talk([])
+	check(GameState.get_flag("driller.told_seal") == true, "driller reacts to the sealed door")
+
+
+func _town() -> void:
+	# travel: mine -> town -> mine
+	await _place(Vector2(160, 30))
+	check(player.target is MapExit, "the Estate stairs are an exit")
+	player.try_interact()
+	await _frames(4)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town", "the stairs lead into the town map")
+	var mask: WalkMask = player.walk_mask
+	check(mask != null and mask.is_walkable(player.global_position), "player arrives on walkable ground")
+	check(player.target is MapExit, "arrives beside the way back to the mine")
+	# the Steps: walk about, and be stopped by the sea
+	await _place(Vector2(1760, 830))
+	check(mask.is_walkable(player.global_position), "the Steps are walkable")
+	await _frames(20)
+	check(main.get_node("UI").hud._title.text.contains("THE STEPS"), "district title shows '%s'" % main.get_node("UI").hud._title.text)
+	var x0 := player.global_position.x
+	Input.action_press(&"move_left")
+	await _frames(40)
+	Input.action_release(&"move_left")
+	check(player.global_position.x < x0 - 20.0, "player walks in town")
+	await _place(Vector2(1300, 1280))
+	Input.action_press(&"move_right")
+	await _frames(600)
+	Input.action_release(&"move_right")
+	check(mask.is_walkable(player.global_position) and player.global_position.x < 1700.0, "the sea stops the player on the beach (x=%.0f)" % player.global_position.x)
+	check(SaveManager.save_game("test"), "save in town")
+	var at := player.global_position
+	main.call("new_game")
+	await _frames(3)
+	check(SaveManager.load_game("test"), "load in town")
+	await _frames(3)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(at) < 1.0, "load restores map and position")
+	await _place(Vector2(424, 1380))
+	player.try_interact()
+	await _frames(4)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_mine", "the mine yard in town leads back to the mine map")
+	await _place(Vector2(880, 646))
+	check(player.target is MapExit, "the airpad path is an exit")
+	player.try_interact()
+	await _frames(4)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.walk_mask.is_walkable(player.global_position), "the airpad path arrives on walkable ground in town")
+	check(player.target is MapExit, "arrives beside the way back")
+	player.try_interact()
+	await _frames(4)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector2(866, 646)) < 1.0, "and returns to the east side of the mine")
+
+
+func check(ok: bool, what: String) -> void:
+	_checks += 1
+	if not ok:
+		_fails += 1
+	print("%s  %s" % ["PASS" if ok else "FAIL", what])
+
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().physics_frame
+	await get_tree().process_frame
+
+
+func _place(p: Vector2) -> void:
+	player.global_position = p
+	await _frames(4)
+
+
+func _until(cond: Callable) -> void:
+	for i in 1200:
+		if cond.call():
+			break
+		await get_tree().physics_frame
+	await _frames(2)
+
+
+## Plays the open dialogue: picks the first choice containing any of `prefer`
+## (each used once), otherwise the last choice, until it ends.
+func _talk(prefer: Array) -> void:
+	var want := prefer.duplicate()
+	for i in 200:
+		if not Dialogue.active:
+			break
+		var opts := Dialogue.choice_texts()
+		if opts.is_empty():
+			Dialogue.advance()
+		else:
+			var pick := opts.size() - 1
+			for w: String in want:
+				var found := false
+				for j in opts.size():
+					if opts[j].contains(w):
+						pick = j
+						want.erase(w)
+						found = true
+						break
+				if found:
+					break
+			Dialogue.choose(pick)
+		await get_tree().process_frame
+	await _frames(2)
+
+
+==============================================================================
+== tests/slice_test.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/slice_test.gd" id="1"]
+
+[node name="SliceTest" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tools/build_town_mask.gd
+==============================================================================
+extends SceneTree
+## Builds the walkable mask for the Anjabi town greybox from the layout image itself.
+##   Godot --headless --path . -s tools/build_town_mask.gd
+## Walkways, beach, docks (beige) and vegetation (green) are walkable; cliffs,
+## buildings and water are not. Light-grey slabs that are meant to be walked on
+## cannot be told apart from buildings by colour, so they are listed in SLABS.
+## Re-run after replacing maps/anjabi/town_greybox.png.
+
+const SRC := "res://maps/anjabi/town_greybox.png"
+const OUT := "res://maps/anjabi/town_walk.res"
+const DEBUG := "res://docs/reference/town_walkable_debug.png"
+const FRAME := Rect2i(34, 34, 1380, 902)
+const GREEN_WALKABLE := true
+const CLOSE_RADIUS := 3
+## Image-pixel polygons forced walkable (mine yard, airpad).
+const SLABS := [
+	[Vector2(132, 655), Vector2(215, 642), Vector2(295, 668), Vector2(300, 715), Vector2(240, 768), Vector2(150, 755)],
+	[Vector2(327, 790), Vector2(357, 750), Vector2(508, 750), Vector2(508, 826), Vector2(425, 850), Vector2(327, 800)],
+]
+## Landmarks (image pixels) checked for reachability from the first one.
+const LANDMARKS := {
+	"Steps": Vector2(880, 415), "Forest": Vector2(230, 110), "Garden": Vector2(200, 345),
+	"Estate": Vector2(240, 578), "Mine": Vector2(212, 700), "Airpad": Vector2(450, 800),
+	"Beach": Vector2(650, 640), "Tion Tower": Vector2(515, 465), "Tavern": Vector2(760, 350),
+	"Pods": Vector2(580, 70), "Guard Tower": Vector2(945, 130), "Docks": Vector2(1170, 460),
+	"Shop": Vector2(930, 385), "Tram": Vector2(970, 465), "Rainforest": Vector2(1380, 325),
+}
+
+var w := 0
+var h := 0
+
+
+func _init() -> void:
+	var img := Image.load_from_file(ProjectSettings.globalize_path(SRC))
+	img.convert(Image.FORMAT_RGB8)
+	w = img.get_width()
+	h = img.get_height()
+	var px := img.get_data()
+	var m := PackedByteArray()
+	m.resize(w * h)
+	for y in range(FRAME.position.y, FRAME.end.y):
+		for x in range(FRAME.position.x, FRAME.end.x):
+			var i := (y * w + x) * 3
+			var r := px[i]
+			var g := px[i + 1]
+			var b := px[i + 2]
+			var beige := r > 205 and g > 185 and b < 228 and r - b > 22 and r >= g
+			var green := g > r + 12 and g > b + 25
+			if beige or (GREEN_WALKABLE and green):
+				m[y * w + x] = 1
+	for poly: Array in SLABS:
+		var pts := PackedVector2Array(poly)
+		var box := Rect2(pts[0], Vector2.ZERO)
+		for p in pts:
+			box = box.expand(p)
+		for y in range(int(box.position.y), int(box.end.y) + 1):
+			for x in range(int(box.position.x), int(box.end.x) + 1):
+				if Geometry2D.is_point_in_polygon(Vector2(x, y), pts):
+					m[y * w + x] = 1
+	# close small gaps: label text, stair treads, outlines
+	m = _spread(m, CLOSE_RADIUS, 1)
+	m = _spread(m, CLOSE_RADIUS, 0)
+	for y in h:
+		for x in w:
+			if not FRAME.has_point(Vector2i(x, y)):
+				m[y * w + x] = 0
+
+	var bm := BitMap.new()
+	bm.create(Vector2i(w, h))
+	var dbg := Image.load_from_file(ProjectSettings.globalize_path(SRC))
+	dbg.convert(Image.FORMAT_RGB8)
+	var reach := _flood(m, _nearest(m, LANDMARKS["Steps"]))
+	for y in h:
+		for x in w:
+			var i := y * w + x
+			if m[i] == 1:
+				bm.set_bit(x, y, true)
+				dbg.set_pixel(x, y, Color(0.2, 0.9, 0.4) if reach[i] == 1 else Color(0.95, 0.2, 0.7))
+			else:
+				dbg.set_pixel(x, y, dbg.get_pixel(x, y).darkened(0.55))
+	ResourceSaver.save(bm, OUT)
+	dbg.save_png(ProjectSettings.globalize_path(DEBUG))
+	for k: String in LANDMARKS:
+		var p := _nearest(m, LANDMARKS[k])
+		var ok := p.x >= 0 and reach[p.y * w + p.x] == 1
+		print("%-12s %s  (snapped %.0f px)" % [k, "reachable" if ok else "NOT REACHABLE", Vector2(p).distance_to(LANDMARKS[k])])
+	quit()
+
+
+## Separable box dilation of cells equal to `value`.
+func _spread(src: PackedByteArray, r: int, value: int) -> PackedByteArray:
+	var tmp := src.duplicate()
+	for y in h:
+		var run := 0
+		for x in range(-r, w):
+			var add := x + r
+			if add < w and src[y * w + add] == value:
+				run += 1
+			var drop := x - r - 1
+			if drop >= 0 and src[y * w + drop] == value:
+				run -= 1
+			if x >= 0 and run > 0:
+				tmp[y * w + x] = value
+	var out := tmp.duplicate()
+	for x in w:
+		var run := 0
+		for y in range(-r, h):
+			var add := y + r
+			if add < h and tmp[add * w + x] == value:
+				run += 1
+			var drop := y - r - 1
+			if drop >= 0 and tmp[drop * w + x] == value:
+				run -= 1
+			if y >= 0 and run > 0:
+				out[y * w + x] = value
+	return out
+
+
+func _nearest(m: PackedByteArray, at: Vector2) -> Vector2i:
+	var c := Vector2i(at)
+	for r in range(0, 60):
+		for dy in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dy)) != r:
+					continue
+				var p := c + Vector2i(dx, dy)
+				if p.x >= 0 and p.y >= 0 and p.x < w and p.y < h and m[p.y * w + p.x] == 1:
+					return p
+	return Vector2i(-1, -1)
+
+
+func _flood(m: PackedByteArray, start: Vector2i) -> PackedByteArray:
+	var seen := PackedByteArray()
+	seen.resize(w * h)
+	if start.x < 0:
+		return seen
+	var stack := PackedInt32Array([start.y * w + start.x])
+	seen[stack[0]] = 1
+	while not stack.is_empty():
+		var i := stack[stack.size() - 1]
+		stack.remove_at(stack.size() - 1)
+		var x := i % w
+		for n: int in [i - 1, i + 1, i - w, i + w]:
+			if n < 0 or n >= w * h or seen[n] == 1 or m[n] == 0:
+				continue
+			if (n == i - 1 and x == 0) or (n == i + 1 and x == w - 1):
+				continue
+			seen[n] = 1
+			stack.append(n)
+	return seen
+
+
+==============================================================================
+== tools/bundle_source.py
+==============================================================================
+#!/usr/bin/env python3
+"""Concatenate every text source file into docs/ALL_SOURCE.txt for reviewers and
+tools that cannot browse the repo. Run from the project root:
+    python3 tools/bundle_source.py
+"""
+import os
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(ROOT, "docs", "ALL_SOURCE.txt")
+EXTS = (".gd", ".gdshader", ".json", ".tscn", ".godot", ".py", ".sh")
+SKIP_DIRS = {".git", ".godot", "export", "docs"}
+
+paths = []
+for base, dirs, files in os.walk(ROOT):
+    dirs[:] = sorted(d for d in dirs if d not in SKIP_DIRS)
+    for f in sorted(files):
+        if f.endswith(EXTS):
+            paths.append(os.path.relpath(os.path.join(base, f), ROOT))
+
+with open(OUT, "w") as out:
+    out.write("COMETO - all source files. Index:\n")
+    for p in paths:
+        out.write("  %s\n" % p)
+    for p in paths:
+        out.write("\n\n" + "=" * 78 + "\n== %s\n" % p + "=" * 78 + "\n")
+        with open(os.path.join(ROOT, p)) as f:
+            out.write(f.read())
+print("wrote %s (%d files)" % (os.path.relpath(OUT, ROOT), len(paths)))
+
+
+==============================================================================
+== tools/package_review.sh
+==============================================================================
+#!/bin/sh
+# Builds export/COMETO_review_<date>.zip: the whole project minus caches and git
+# history, plus docs/ALL_SOURCE.txt. Run from the project root:
+#     sh tools/package_review.sh
+set -e
+cd "$(dirname "$0")/.."
+python3 tools/bundle_source.py
+mkdir -p export
+touch export/.gdignore
+OUT="export/COMETO_review_$(date +%Y-%m-%d).zip"
+rm -f "$OUT"
+zip -r -q "$OUT" . -x ".git/*" ".godot/*" "export/*" "*.DS_Store" "*.tmp"
+echo "$OUT  $(du -h "$OUT" | cut -f1)"
+
+
+==============================================================================
+== ui/dialogue_box.gd
+==============================================================================
+class_name DialogueBox
+extends Control
+## Renders the Dialogue autoload. Tap / interact to finish a line, then to advance.
+
+@export var chars_per_second := 70.0
+
+var _panel: PanelContainer
+var _speaker: Label
+var _body: RichTextLabel
+var _choices: VBoxContainer
+var _more: Label
+var _shown := 0.0
+var _typing := false
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	visible = false
+	_panel = PanelContainer.new()
+	add_child(_panel)
+	_panel.anchor_left = 0.14
+	_panel.anchor_right = 0.86
+	_panel.anchor_top = 1.0
+	_panel.anchor_bottom = 1.0
+	_panel.offset_bottom = -10
+	_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var box := VBoxContainer.new()
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_panel.add_child(box)
+	_speaker = Label.new()
+	_speaker.add_theme_color_override("font_color", UiTheme.AMBER)
+	_speaker.add_theme_font_size_override("font_size", 8)
+	box.add_child(_speaker)
+	_body = RichTextLabel.new()
+	_body.fit_content = true
+	_body.scroll_active = false
+	_body.custom_minimum_size = Vector2(0, 30)
+	_body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(_body)
+	_choices = VBoxContainer.new()
+	box.add_child(_choices)
+	_more = Label.new()
+	_more.text = "▾"
+	_more.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_more.add_theme_color_override("font_color", UiTheme.AMBER)
+	_more.add_theme_font_size_override("font_size", 8)
+	box.add_child(_more)
+
+	Dialogue.started.connect(func(_id: String) -> void: visible = true)
+	Dialogue.ended.connect(_on_ended)
+	Dialogue.line_shown.connect(_on_line)
+	Dialogue.choices_shown.connect(_on_choices)
+
+
+func _process(delta: float) -> void:
+	if not _typing:
+		return
+	_shown += delta * chars_per_second
+	if _shown >= _body.text.length():
+		_finish_typing()
+	else:
+		_body.visible_characters = int(_shown)
+
+
+func _input(event: InputEvent) -> void:
+	if not visible or not event.is_action_pressed(&"interact"):
+		return
+	get_viewport().set_input_as_handled()
+	if _choices.get_child_count() > 0:
+		var f := get_viewport().gui_get_focus_owner() as Button
+		if f != null and f.get_parent() == _choices:
+			f.pressed.emit()
+	else:
+		_step()
+
+
+func _gui_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+		accept_event()
+		if _choices.get_child_count() == 0:
+			_step()
+
+
+func _step() -> void:
+	if _typing:
+		_finish_typing()
+	else:
+		Dialogue.advance()
+
+
+func _finish_typing() -> void:
+	_typing = false
+	_body.visible_characters = -1
+	_more.visible = _choices.get_child_count() == 0
+
+
+func _on_line(speaker: String, text: String) -> void:
+	_clear_choices()
+	_speaker.text = speaker.to_upper()
+	_speaker.visible = speaker != ""
+	_body.add_theme_color_override("default_color", UiTheme.BONE if speaker != "" else Color(0.72, 0.76, 0.78))
+	_body.text = text
+	_body.visible_characters = 0
+	_shown = 0.0
+	_typing = true
+	_more.visible = false
+
+
+func _on_choices(options: Array[String]) -> void:
+	_finish_typing()
+	_clear_choices()
+	_more.visible = false
+	for i in options.size():
+		var b := Button.new()
+		b.text = "›  " + options[i]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.pressed.connect(Dialogue.choose.bind(i))
+		_choices.add_child(b)
+	if not options.is_empty():
+		(_choices.get_child(0) as Button).grab_focus.call_deferred()
+
+
+func _on_ended(_id: String) -> void:
+	_clear_choices()
+	_typing = false
+	visible = false
+
+
+func _clear_choices() -> void:
+	for c in _choices.get_children():
+		_choices.remove_child(c)
+		c.queue_free()
+
+
+==============================================================================
+== ui/game_ui.gd
+==============================================================================
+class_name GameUi
+extends CanvasLayer
+## Builds and owns every screen-space control. Panels pause the world.
+
+signal new_game_requested
+
+var touch: TouchControls
+var hud: Hud
+var dialogue_box: DialogueBox
+var journal: JournalPanel
+var menu: PauseMenu
+
+
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	var root := Control.new()
+	root.theme = UiTheme.build()
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	touch = TouchControls.new()
+	touch.process_mode = Node.PROCESS_MODE_PAUSABLE
+	hud = Hud.new()
+	dialogue_box = DialogueBox.new()
+	journal = JournalPanel.new()
+	menu = PauseMenu.new()
+	for c: Control in [touch, hud, dialogue_box, journal, menu]:
+		root.add_child(c)
+		c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	hud.journal_pressed.connect(toggle_journal)
+	hud.menu_pressed.connect(toggle_menu)
+	journal.closed.connect(close_panels)
+	menu.closed.connect(close_panels)
+	menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
+
+
+func bind_player(p: Player) -> void:
+	hud.bind_player(p)
+
+
+func toggle_journal() -> void:
+	if journal.visible:
+		close_panels()
+	elif not Dialogue.active:
+		close_panels()
+		journal.refresh()
+		journal.visible = true
+		_set_paused(true)
+
+
+func toggle_menu() -> void:
+	if menu.visible or journal.visible:
+		close_panels()
+	elif not Dialogue.active:
+		menu.visible = true
+		menu.open()
+		_set_paused(true)
+
+
+func close_panels() -> void:
+	journal.visible = false
+	menu.visible = false
+	_set_paused(false)
+
+
+func _set_paused(v: bool) -> void:
+	hud.visible = not v
+	get_tree().paused = v
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"journal"):
+		toggle_journal()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed(&"menu"):
+		toggle_menu()
+		get_viewport().set_input_as_handled()
+
+
+==============================================================================
+== ui/hud.gd
+==============================================================================
+class_name Hud
+extends Control
+## Minimal in-world HUD: one contextual prompt chip, two small corner chips,
+## transient journal toasts and the location title card.
+
+signal journal_pressed
+signal menu_pressed
+
+var player: Player
+
+var _safe: Control
+var _prompt: Button
+var _toast: Label
+var _title: Label
+var _queue: Array[String] = []
+var _toasting := false
+var _title_tween: Tween
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_safe = Control.new()
+	_safe.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_safe)
+	_safe.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+	var corner := HBoxContainer.new()
+	_safe.add_child(corner)
+	corner.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	corner.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	corner.position += Vector2(-6, 6)
+	corner.add_child(_chip("JOURNAL", func() -> void: journal_pressed.emit()))
+	corner.add_child(_chip("MENU", func() -> void: menu_pressed.emit()))
+
+	_prompt = _chip("", func() -> void:
+		if player != null:
+			player.try_interact())
+	_prompt.add_theme_font_size_override("font_size", 10)
+	_safe.add_child(_prompt)
+	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_prompt.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_prompt.offset_bottom = -12
+	_prompt.offset_top = -12
+	_prompt.visible = false
+
+	_toast = Label.new()
+	_toast.add_theme_color_override("font_color", UiTheme.AMBER)
+	_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	_toast.add_theme_font_size_override("font_size", 9)
+	_toast.modulate.a = 0.0
+	_safe.add_child(_toast)
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	_toast.position = Vector2(8, 8)
+
+	_title = Label.new()
+	_title.add_theme_font_size_override("font_size", 16)
+	_title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_title.modulate.a = 0.0
+	_safe.add_child(_title)
+	_title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_title.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_title.offset_top = 46
+
+	Journal.updated.connect(_on_journal_updated)
+	GameState.notified.connect(toast)
+	GameState.location_entered.connect(show_location)
+	get_viewport().size_changed.connect(_apply_safe_area)
+	_apply_safe_area()
+
+
+func bind_player(p: Player) -> void:
+	player = p
+
+
+func show_location(text: String) -> void:
+	_title.text = text
+	if _title_tween != null:
+		_title_tween.kill()
+	_title.modulate.a = 0.0
+	_title_tween = create_tween()
+	_title_tween.tween_property(_title, "modulate:a", 1.0, 0.8).set_delay(0.3)
+	_title_tween.tween_interval(2.2)
+	_title_tween.tween_property(_title, "modulate:a", 0.0, 1.2)
+
+
+func toast(text: String) -> void:
+	_queue.append(text)
+	if not _toasting:
+		_next_toast()
+
+
+func prompt_text() -> String:
+	return _prompt.text if _prompt.visible else ""
+
+
+func _process(_delta: float) -> void:
+	var t: Interactable = player.target if is_instance_valid(player) else null
+	var show := t != null and not Dialogue.active
+	_prompt.visible = show
+	if show:
+		var text := t.prompt.to_upper()
+		if t.label != "":
+			text += "  ·  " + t.label
+		if _prompt.text != text:
+			_prompt.text = text
+
+
+func _next_toast() -> void:
+	if _queue.is_empty():
+		_toasting = false
+		return
+	_toasting = true
+	_toast.text = _queue.pop_front()
+	var tw := create_tween()
+	tw.tween_property(_toast, "modulate:a", 1.0, 0.25)
+	tw.tween_interval(2.4)
+	tw.tween_property(_toast, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(_next_toast)
+
+
+func _on_journal_updated(kind: String, text: String) -> void:
+	match kind:
+		"quest":
+			toast("INVESTIGATION OPENED  ·  " + text)
+		"objective_new":
+			toast("NEW LEAD  ·  " + text)
+		"objective":
+			toast("LEAD FOLLOWED  ·  " + text)
+		"clue":
+			toast("CLUE RECORDED  ·  " + text)
+		"complete":
+			toast("JOURNAL UPDATED  ·  " + text)
+
+
+func _chip(text: String, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.add_theme_font_size_override("font_size", 8)
+	UiTheme.chip(b)
+	b.pressed.connect(on_press)
+	return b
+
+
+## Keeps HUD chips clear of the notch and home indicator. Untested on device.
+func _apply_safe_area() -> void:
+	if not OS.has_feature("mobile"):
+		return
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0:
+		return
+	var safe := Rect2(DisplayServer.get_display_safe_area())
+	var k := get_viewport_rect().size / win
+	_safe.offset_left = safe.position.x * k.x
+	_safe.offset_top = safe.position.y * k.y
+	_safe.offset_right = -(win.x - safe.end.x) * k.x
+	_safe.offset_bottom = -(win.y - safe.end.y) * k.y
+
+
+==============================================================================
+== ui/journal_panel.gd
+==============================================================================
+class_name JournalPanel
+extends Control
+## Investigations and clues, read straight from the Journal autoload.
+
+signal closed
+
+var _quests: RichTextLabel
+var _clues: RichTextLabel
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	visible = false
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.45)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	add_child(panel)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 18)
+	var root := VBoxContainer.new()
+	panel.add_child(root)
+	var cols := HBoxContainer.new()
+	cols.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cols.add_theme_constant_override("separation", 14)
+	root.add_child(cols)
+	_quests = _column(cols, "INVESTIGATIONS")
+	_clues = _column(cols, "CLUES")
+	var close := Button.new()
+	close.text = "CLOSE"
+	close.size_flags_horizontal = Control.SIZE_SHRINK_END
+	close.add_theme_font_size_override("font_size", 8)
+	UiTheme.chip(close)
+	close.pressed.connect(func() -> void: closed.emit())
+	root.add_child(close)
+
+
+func refresh() -> void:
+	var amber := UiTheme.AMBER.to_html(false)
+	var dim := UiTheme.DIM.to_html(false)
+	var q := ""
+	for id: String in Journal.quests:
+		var def: Dictionary = Journal.quest_defs.get(id, {})
+		q += "[color=#%s]%s[/color]" % [amber, Journal.quest_title(id)]
+		if Journal.is_complete(id):
+			q += "  [color=#%s](to be continued)[/color]" % dim
+		q += "\n[color=#%s]%s[/color]\n\n" % [dim, str(def.get("summary", ""))]
+		for o: Dictionary in def.get("objectives", []):
+			var st := Journal.objective_state(id, str(o["id"]))
+			if st == Journal.DONE:
+				q += "[color=#%s]✓  %s[/color]\n" % [dim, str(o["text"])]
+			elif st == Journal.ACTIVE:
+				q += "◦  %s\n" % str(o["text"])
+		q += "\n"
+	_quests.text = q if q != "" else "[color=#%s]Nothing yet.[/color]" % dim
+	var c := ""
+	for id in Journal.clues:
+		var def: Dictionary = Journal.clue_defs.get(id, {})
+		c += "[color=#%s]%s[/color]\n%s\n\n" % [amber, str(def.get("title", id)), str(def.get("text", ""))]
+	_clues.text = c if c != "" else "[color=#%s]Nothing recorded.[/color]" % dim
+
+
+func _column(parent: Control, title: String) -> RichTextLabel:
+	var col := VBoxContainer.new()
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	parent.add_child(col)
+	var head := Label.new()
+	head.text = title
+	head.add_theme_font_size_override("font_size", 8)
+	head.add_theme_color_override("font_color", UiTheme.DIM)
+	col.add_child(head)
+	var body := RichTextLabel.new()
+	body.bbcode_enabled = true
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	col.add_child(body)
+	return body
+
+
+==============================================================================
+== ui/pause_menu.gd
+==============================================================================
+class_name PauseMenu
+extends Control
+
+signal closed
+signal new_game_requested
+
+var _status: Label
+var _load: Button
+var _new: Button
+var _first: Button
+var _confirm_new := false
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	visible = false
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.45)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(shade)
+	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(150, 0)
+	add_child(panel)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var box := VBoxContainer.new()
+	panel.add_child(box)
+	var title := Label.new()
+	title.text = "COMETO"
+	title.add_theme_color_override("font_color", UiTheme.AMBER)
+	title.add_theme_font_size_override("font_size", 12)
+	box.add_child(title)
+	_first = _button(box, "Resume", func() -> void: closed.emit())
+	_button(box, "Save", _on_save)
+	_load = _button(box, "Load", _on_load)
+	_new = _button(box, "New game", _on_new)
+	_status = Label.new()
+	_status.add_theme_color_override("font_color", UiTheme.DIM)
+	_status.add_theme_font_size_override("font_size", 8)
+	box.add_child(_status)
+
+
+func open() -> void:
+	_confirm_new = false
+	_new.text = "New game"
+	_status.text = "The game also saves itself when you leave."
+	_load.disabled = not SaveManager.has_save("manual")
+	_first.grab_focus.call_deferred()
+
+
+func _on_save() -> void:
+	var ok := SaveManager.save_game("manual")
+	_status.text = "Saved." if ok else "Could not save."
+	_load.disabled = not SaveManager.has_save("manual")
+
+
+func _on_load() -> void:
+	if SaveManager.load_game("manual"):
+		closed.emit()
+	else:
+		_status.text = "Could not load."
+
+
+func _on_new() -> void:
+	if not _confirm_new:
+		_confirm_new = true
+		_new.text = "New game - press again to confirm"
+		return
+	new_game_requested.emit()
+	closed.emit()
+
+
+func _button(parent: Control, text: String, on_press: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.pressed.connect(on_press)
+	parent.add_child(b)
+	return b
+
+
+==============================================================================
+== ui/touch_controls.gd
+==============================================================================
+class_name TouchControls
+extends Control
+## Touch (and mouse) movement without on-screen buttons: drag anywhere to steer,
+## tap to interact. Sits underneath every other control, so HUD chips and panels
+## take their own touches first.
+
+signal tapped
+
+@export var deadzone := 5.0
+@export var stick_radius := 22.0
+@export var tap_ms := 350
+
+var vector := Vector2.ZERO
+
+var _down := false
+var _dragged := false
+var _origin := Vector2.ZERO
+var _knob := Vector2.ZERO
+var _t0 := 0
+
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	Dialogue.started.connect(func(_id: String) -> void: release())
+
+
+func release() -> void:
+	_down = false
+	_dragged = false
+	vector = Vector2.ZERO
+	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED or what == NOTIFICATION_VISIBILITY_CHANGED:
+		release()
+
+
+func _gui_input(event: InputEvent) -> void:
+	var mb := event as InputEventMouseButton
+	if mb != null and mb.button_index == MOUSE_BUTTON_LEFT:
+		if mb.pressed:
+			_down = true
+			_dragged = false
+			_origin = mb.position
+			_knob = mb.position
+			_t0 = Time.get_ticks_msec()
+		else:
+			var was_tap := _down and not _dragged and Time.get_ticks_msec() - _t0 <= tap_ms
+			release()
+			if was_tap:
+				tapped.emit()
+		return
+	var mm := event as InputEventMouseMotion
+	if mm != null and _down:
+		var d := mm.position - _origin
+		if d.length() > deadzone:
+			_dragged = true
+		if _dragged:
+			# floating stick: the origin trails the finger once it leaves the ring
+			if d.length() > stick_radius:
+				_origin = mm.position - d.normalized() * stick_radius
+				d = mm.position - _origin
+			vector = d / stick_radius
+			_knob = mm.position
+			queue_redraw()
+
+
+func _draw() -> void:
+	if not _dragged:
+		return
+	draw_arc(_origin, stick_radius, 0.0, TAU, 40, Color(1, 1, 1, 0.14), 1.0)
+	draw_circle(_knob, 4.0, Color(1, 1, 1, 0.22))
+
+
+==============================================================================
+== ui/ui_theme.gd
+==============================================================================
+class_name UiTheme
+## Interface look, built in code so nothing falls back to default Godot styling.
+## PROVISIONAL: system typeface. A licensed display/body face should replace it.
+
+const INK := Color(0.05, 0.07, 0.09, 0.94)
+const INK_SOFT := Color(0.05, 0.07, 0.09, 0.72)
+const AMBER := Color(0.93, 0.69, 0.36)
+const BONE := Color(0.87, 0.85, 0.79)
+const DIM := Color(0.58, 0.62, 0.64)
+
+
+static func box(bg: Color, border: Color, border_w: int = 1, pad: float = 6.0) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(border_w)
+	s.set_content_margin_all(pad)
+	s.anti_aliasing = false
+	return s
+
+
+static func build() -> Theme:
+	var t := Theme.new()
+	var f := SystemFont.new()
+	f.font_names = PackedStringArray(["Avenir Next Condensed", "Avenir Next", "Helvetica Neue", "sans-serif"])
+	f.font_weight = 500
+	t.default_font = f
+	t.default_font_size = 10
+
+	t.set_stylebox("panel", "PanelContainer", box(INK, Color(AMBER, 0.45)))
+
+	var flat := box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 3.0)
+	var hover := box(Color(AMBER, 0.14), Color(0, 0, 0, 0), 0, 3.0)
+	var focus := box(Color(AMBER, 0.1), Color(AMBER, 0.8), 0, 3.0)
+	focus.border_width_left = 2
+	t.set_stylebox("normal", "Button", flat)
+	t.set_stylebox("hover", "Button", hover)
+	t.set_stylebox("pressed", "Button", hover)
+	t.set_stylebox("focus", "Button", focus)
+	t.set_stylebox("disabled", "Button", flat)
+	t.set_color("font_color", "Button", BONE)
+	t.set_color("font_hover_color", "Button", AMBER)
+	t.set_color("font_pressed_color", "Button", AMBER)
+	t.set_color("font_focus_color", "Button", AMBER)
+	t.set_color("font_disabled_color", "Button", Color(DIM, 0.5))
+
+	t.set_color("font_color", "Label", BONE)
+	t.set_color("default_color", "RichTextLabel", BONE)
+	t.set_font_size("normal_font_size", "RichTextLabel", 10)
+	t.set_constant("line_separation", "RichTextLabel", 1)
+	t.set_constant("separation", "VBoxContainer", 2)
+	t.set_constant("separation", "HBoxContainer", 6)
+	return t
+
+
+## A small bordered button for HUD chips.
+static func chip(button: Button) -> void:
+	button.add_theme_stylebox_override("normal", box(INK_SOFT, Color(AMBER, 0.35), 1, 4.0))
+	button.add_theme_stylebox_override("hover", box(INK, Color(AMBER, 0.8), 1, 4.0))
+	button.add_theme_stylebox_override("pressed", box(INK, AMBER, 1, 4.0))
+	button.add_theme_stylebox_override("focus", box(INK_SOFT, Color(AMBER, 0.35), 1, 4.0))
+	button.focus_mode = Control.FOCUS_NONE

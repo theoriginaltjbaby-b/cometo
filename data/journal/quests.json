@@ -1,0 +1,12 @@
+{
+	"quiet_mine": {
+		"title": "The Quiet Mine",
+		"summary": "The No. 2 Working at Anjabi is closed. Nobody down here tells it the same way twice.",
+		"objectives": [
+			{"id": "notice", "text": "Read the closure notice at the mine gate"},
+			{"id": "ask", "text": "Find someone who worked the mine"},
+			{"id": "way_in", "text": "Find a way into the upper yard that is not the gate", "hidden": true},
+			{"id": "door", "text": "Look at the mine door", "hidden": true}
+		]
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The yard's junction box, on the side of the pump shed. The main breaker has been pulled and tagged out."],
+				["", "The tag is the kind you sign and date. It is blank."]
+			]
+		}
+	}
+}

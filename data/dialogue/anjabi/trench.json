@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "The spur line used to cross here. The culvert went, and took the embankment with it."],
+				["", "Too wide to jump. The rails still reach a little way out over the gap."]
+			]
+		}
+	}
+}
