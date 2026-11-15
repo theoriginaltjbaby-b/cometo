@@ -79,6 +79,7 @@ func _plaza_feature() -> void:
 	ring.bottom_radius = 4.5
 	ring.height = 0.04
 	ring.radial_segments = 32
+	ring.rings = 0
 	var rm := MeshInstance3D.new()
 	rm.mesh = ring
 	rm.material_override = M.paving_light

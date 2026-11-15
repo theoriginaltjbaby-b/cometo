@@ -62,6 +62,8 @@ func _ready() -> void:
 			cm.top_radius = 0.2
 			cm.bottom_radius = 0.2
 			cm.height = 0.1
+			cm.radial_segments = 12
+			cm.rings = 0
 			w.mesh = cm
 			w.material_override = dark
 			w.position = Vector3(x, 0.2, z)

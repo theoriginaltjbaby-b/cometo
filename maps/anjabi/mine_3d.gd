@@ -217,6 +217,8 @@ func _props() -> void:
 		cm.top_radius = 0.6
 		cm.bottom_radius = 0.6
 		cm.height = 0.02
+		cm.radial_segments = 16
+		cm.rings = 0
 		mi.mesh = cm
 		mi.material_override = water
 		mi.position = p + Vector3(0, 0.03, 0)

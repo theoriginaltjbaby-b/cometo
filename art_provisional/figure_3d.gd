@@ -121,6 +121,70 @@ func _ready() -> void:
 	_arm_l = _limb(_torso, Vector3(-0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
 	_arm_r = _limb(_torso, Vector3(0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
 	_head()
+	for pivot: Node3D in [_torso, _leg_l, _leg_r, _arm_l, _arm_r]:
+		_merge(pivot)
+
+
+## Collapses the primitive parts under one limb pivot into a single mesh with the
+## colours in vertex colours: one surface for cloth and skin, one for metal fittings.
+## Emissive parts stay separate. Turns ~50 draws per figure into ~6.
+func _merge(pivot: Node3D) -> void:
+	var groups := {}
+	for c in pivot.get_children():
+		var mi := c as MeshInstance3D
+		if mi == null:
+			continue
+		var m := mi.material_override as StandardMaterial3D
+		if m == null or m.emission_enabled:
+			continue
+		var key := "metal" if m.metallic > 0.5 else "matte"
+		if not groups.has(key):
+			groups[key] = []
+		(groups[key] as Array).append(mi)
+	if groups.is_empty():
+		return
+	var mesh := ArrayMesh.new()
+	for key: String in groups:
+		var verts := PackedVector3Array()
+		var norms := PackedVector3Array()
+		var cols := PackedColorArray()
+		var idx := PackedInt32Array()
+		for mi: MeshInstance3D in groups[key]:
+			var a := mi.mesh.surface_get_arrays(0)
+			var x := mi.transform
+			var nb := x.basis.inverse().transposed()
+			var col := (mi.material_override as StandardMaterial3D).albedo_color
+			var base := verts.size()
+			var v: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+			var n: PackedVector3Array = a[Mesh.ARRAY_NORMAL]
+			for i in v.size():
+				verts.append(x * v[i])
+				norms.append((nb * n[i]).normalized())
+				cols.append(col)
+			var ii: PackedInt32Array = a[Mesh.ARRAY_INDEX]
+			if ii.is_empty():
+				for i in v.size():
+					idx.append(base + i)
+			else:
+				for i in ii:
+					idx.append(base + i)
+			mi.queue_free()
+			pivot.remove_child(mi)
+		var arr := []
+		arr.resize(Mesh.ARRAY_MAX)
+		arr[Mesh.ARRAY_VERTEX] = verts
+		arr[Mesh.ARRAY_NORMAL] = norms
+		arr[Mesh.ARRAY_COLOR] = cols
+		arr[Mesh.ARRAY_INDEX] = idx
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		var mat := _mat(Color.WHITE, 0.4 if key == "metal" else 0.78, 0.7 if key == "metal" else 0.05)
+		mat.vertex_color_use_as_albedo = true
+		mat.vertex_color_is_srgb = true
+		mesh.surface_set_material(mesh.get_surface_count() - 1, mat)
+	var merged := MeshInstance3D.new()
+	merged.name = "Merged"
+	merged.mesh = mesh
+	pivot.add_child(merged)
 
 
 func _head() -> void:
@@ -292,6 +356,7 @@ func _limb(parent: Node3D, at: Vector3, r: float, length: float, m: Material, en
 
 
 func _part(parent: Node3D, mesh: Mesh, m: Material, at: Vector3, s: Vector3 = Vector3.ONE) -> MeshInstance3D:
+	_lower_poly(mesh)
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.material_override = m
@@ -299,6 +364,26 @@ func _part(parent: Node3D, mesh: Mesh, m: Material, at: Vector3, s: Vector3 = Ve
 	mi.scale = s
 	parent.add_child(mi)
 	return mi
+
+
+## Godot's primitive defaults (64 segments, 32 rings) cost thousands of triangles per
+## eye or button; at handheld scale a few segments read the same. Caps what was not set.
+func _lower_poly(mesh: Mesh) -> void:
+	var big := 0.0
+	if mesh is SphereMesh:
+		var sm := mesh as SphereMesh
+		big = sm.radius
+		sm.radial_segments = mini(sm.radial_segments, 16 if big > 0.1 else (10 if big > 0.04 else 6))
+		sm.rings = mini(sm.rings, 10 if big > 0.1 else (6 if big > 0.04 else 4))
+	elif mesh is CylinderMesh:
+		var cm := mesh as CylinderMesh
+		big = maxf(cm.top_radius, cm.bottom_radius)
+		cm.radial_segments = mini(cm.radial_segments, 14 if big > 0.15 else (10 if big > 0.04 else 6))
+		cm.rings = 0
+	elif mesh is CapsuleMesh:
+		var cp := mesh as CapsuleMesh
+		cp.radial_segments = mini(cp.radial_segments, 12)
+		cp.rings = mini(cp.rings, 4)
 
 
 func _mat(c: Color, rough: float, metal: float = 0.0) -> StandardMaterial3D:

@@ -119,9 +119,9 @@ All files were created 2026-11-14 unless noted.
 | `game/camera/follow_camera.gd` | `FollowCamera`: fixed-orientation orthographic Camera3D, pitch 50°, size 14 m, smoothed follow. |
 | `game/actors/npc_3d.gd` | `Npc3D`: 3D NPC with a dialogue id; turns to the speaker. |
 | `game/interaction/interactable_3d.gd`, `map_exit_3d.gd` | 3D twins of `Interactable` and `MapExit`. |
-| `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. |
+| `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
-| `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. |
+| `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
 | `maps/anjabi/mine_3d.tscn`, `mine_3d.gd` | Map `anjabi_mine` in 3D (entry 5), replacing `mine.tscn` in `main.gd`'s registry: 6 m stairs down from the Estate landing, fenced inner yard with the welded mine door and stretchers, gate, guard hut, wash-house, sheds, spur rails, the washout as a real cut in the ground, cliff fence, path east. Driller and Gate guard as `Npc3D`; all seven interactables and both exits. |
 | `maps/anjabi/town_3d.tscn`, `town_3d.gd` | Map `anjabi_town` in 3D (entry 6): the whole settlement. Terrain in 16 m chunks with vertex colours, one HeightMapShape3D collider, sea, skirts at the shoreline, and landmark buildings on their greybox footprints (tavern dome, shop, Tion Tower, Guard Tower, pods with B-17, estate, mine headframe, airpad and craft, tram station, tram line, Imperial Tower). Trees, lamps, district titles, spawns and both exits to the mine. |
 | `art/source/anjabi_props.blend` | Blender source (entry 7) for the pod, tavern and street lamp. Ignored by Godot (`.gdignore`). |
@@ -221,7 +221,13 @@ Three combat directions were proposed; none is chosen or implemented.
   `ProvBlock`, `ProvRail` and the 2D branches in `main.gd` are unused at runtime.
 - No inventory, equipment, stats, skill checks, reputation, combat or classes
   exist in the project; none were preserved or added.
-- iPhone performance has not been measured; no device or export was available.
+- iPhone performance has not been measured; no device or export was available. After the
+  optimisation pass the desktop proxy shows 103–221 draw calls and 43–163k primitives per
+  frame (`tests/perf_probe.tscn`).
+- Batched and merged scenery (pass 9) is fixed once built: models in
+  `MapBuilder3D.BATCHED` return null from `model()`, and builder primitives under plain
+  nodes are merged one frame after `_ready`. Anything that must move or hide later has to
+  live under a scripted node (as doors, NPCs and puzzle pieces already do).
 
 - Touch: only the steering vector is tested. Real drag and tap gestures, the
   safe-area margins and gamepad input have never been tried on a device.
@@ -495,3 +501,37 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
   pass (batch pines/lanterns into MultiMeshes, merge figure parts, limit shadow casters,
   LOD on distant buildings) is the next performance step. Not measured on an iPhone.
 
+### Pass 9 — optimisation (2026-11-15)
+- Figures: Godot's primitive defaults (64 segments, 32 rings) made every eye, button and
+  joint thousands of triangles; `Figure3D._lower_poly()` caps segments by size. Each
+  limb's parts are then merged into one vertex-coloured mesh (cloth/skin surface, metal
+  surface; the emissive hard-hat lamp stays separate). 101k → 4.6k triangles and ~50 → ~6
+  draws per figure. Same segment caps on the ore cart wheels, switch lever and puddles.
+- Pines, lantern posts, barrels, planters and crate stacks are no longer instanced:
+  `model()` routes them to `batch()`, which builds one MultiMesh per model part per 24 m
+  cell (pines and lanterns cast shadows, the rest do not).
+- `scatter()` (ferns, flowers, boulders, clutter) and `railings()` are split per 24 m cell
+  so off-screen cells are culled; they were one town-wide MultiMesh each. Railings no
+  longer cast shadows. Batches fade out past 90 m.
+- `merge_static()`: after build, builder primitives (boxes, slabs, beams, cylinders, domes)
+  under plain nodes are merged into one mesh per material per cell. Scripted nodes,
+  imported models and `Entities` are left alone.
+- Moon shadows: 2 splits instead of 4, 45 m instead of 55 m. Lamp and warm lights fade
+  out beyond 42–50 m from the camera.
+- Render cost (`tests/perf_probe.tscn`, desktop Radeon Pro 570), before → after:
+
+  | spot | draws | primitives (k) |
+  |---|---|---|
+  | steps | 767 → 221 | 1491 → 106 |
+  | tavern terrace | 644 → 198 | 1344 → 163 |
+  | pods | 338 → 133 | 874 → 146 |
+  | docks | 612 → 174 | 1104 → 72 |
+  | beach | 227 → 103 | 603 → 43 |
+  | estate | 227 → 117 | 605 → 89 |
+  | mine stairs | 533 → 138 | 924 → 52 |
+  | mine yard | 699 → 186 | 1035 → 68 |
+  | mine spur | 783 → 209 | 1153 → 70 |
+
+- Screenshots before and after are visually the same. Tests 96/96 (the two mesh-count
+  checks now count all geometry instances, since scenery is batched). Not measured on an
+  iPhone.

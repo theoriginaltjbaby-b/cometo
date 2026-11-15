@@ -50,6 +50,8 @@ func _ready() -> void:
 	am.top_radius = 0.035
 	am.bottom_radius = 0.045
 	am.height = 1.0
+	am.radial_segments = 8
+	am.rings = 0
 	arm.mesh = am
 	arm.material_override = arm_m
 	arm.position.y = 0.5
@@ -58,6 +60,8 @@ func _ready() -> void:
 	var km := SphereMesh.new()
 	km.radius = 0.08
 	km.height = 0.16
+	km.radial_segments = 10
+	km.rings = 6
 	_knob.mesh = km
 	_knob.position.y = 1.02
 	_lever.add_child(_knob)

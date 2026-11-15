@@ -128,7 +128,13 @@ func _body() -> StaticBody3D:
 
 ## An authored model from res://art/models (exported from art/source/*.blend).
 ## Models face +Z (south, toward the camera). Visual only; add colliders separately.
+## Repeated small models in BATCHED are not instanced: they are gathered and drawn as
+## one MultiMesh per model part per 24 m cell (see _flush_batches), and model() returns null.
 func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
+	if model_name in BATCHED:
+		var sv: Vector3 = s if s is Vector3 else Vector3(s, s, s)
+		batch(model_name, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(sv), at))
+		return null
 	var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
 	n.position = at
 	n.rotation.y = yaw
@@ -136,6 +142,114 @@ func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Nod
 	weather_model(n)
 	add_child(n)
 	return n
+
+
+const BATCHED := ["pine", "lantern_post", "barrel", "planter", "crate_stack"]
+## Models whose batches cast shadows (the rest are too small to matter).
+const BATCH_SHADOWS := ["pine", "lantern_post"]
+const BATCH_CELL := 24.0
+var _batches := {}
+
+
+## Queue one copy of a model; all queued copies are built at the end of the frame.
+func batch(model_name: String, x: Transform3D) -> void:
+	if _batches.is_empty():
+		_flush_batches.call_deferred()
+	var key := "%s|%d|%d" % [model_name, floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL)]
+	if not _batches.has(key):
+		_batches[key] = [] as Array[Transform3D]
+	(_batches[key] as Array[Transform3D]).append(x)
+
+
+func _flush_batches() -> void:
+	for key: String in _batches:
+		var model_name := key.get_slice("|", 0)
+		var xs: Array[Transform3D] = _batches[key]
+		for part: Array in model_parts(model_name):
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.mesh = part[0]
+			mm.instance_count = xs.size()
+			for i in xs.size():
+				mm.set_instance_transform(i, xs[i] * (part[1] as Transform3D))
+			var mmi := MultiMeshInstance3D.new()
+			mmi.name = "Batch_" + model_name
+			mmi.multimesh = mm
+			mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if model_name in BATCH_SHADOWS else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			mmi.visibility_range_end = 90.0
+			add_child(mmi)
+	_batches.clear()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_READY:
+		merge_static.call_deferred()
+
+
+## Static batching: once the map is built, every primitive mesh (box, slab, beam, cyl,
+## dome) that belongs to plain scenery is merged into one mesh per material per 24 m
+## cell, so hundreds of walls, beams and steps cost a few draws. Anything under a
+## scripted node (NPCs, doors, puzzle pieces, sub-maps) or an imported model is left alone.
+func merge_static() -> void:
+	if not is_inside_tree():
+		return
+	var inv := global_transform.affine_inverse()
+	var groups := {}
+	var stack: Array[Node] = []
+	for c in get_children():
+		stack.append(c)
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		if n.get_script() != null or n.scene_file_path != "" or n.name == "Entities":
+			continue
+		for c in n.get_children():
+			stack.append(c)
+		var mi := n as MeshInstance3D
+		if mi == null or not (mi.mesh is PrimitiveMesh) or mi.material_override == null or not mi.visible:
+			continue
+		var x := inv * mi.global_transform
+		var key := [mi.material_override, mi.cast_shadow, floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL)]
+		if not groups.has(key):
+			groups[key] = []
+		(groups[key] as Array).append([mi, x])
+	for key: Array in groups:
+		var items: Array = groups[key]
+		if items.size() < 2:
+			continue
+		var st := SurfaceTool.new()
+		for it: Array in items:
+			st.append_from((it[0] as MeshInstance3D).mesh, 0, it[1])
+		var merged := MeshInstance3D.new()
+		merged.name = "Static"
+		merged.mesh = st.commit()
+		merged.material_override = key[0]
+		merged.cast_shadow = key[1]
+		add_child(merged)
+		for it: Array in items:
+			(it[0] as Node).queue_free()
+
+
+static var _parts_cache := {}
+
+
+## Every mesh in a model with its transform relative to the model root: [[Mesh, Transform3D]].
+static func model_parts(model_name: String) -> Array:
+	if not _parts_cache.has(model_name):
+		var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
+		weather_model(n)
+		var out := []
+		for mi: MeshInstance3D in n.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh == null:
+				continue
+			var x := mi.transform
+			var p := mi.get_parent() as Node3D
+			while p != null and p != n:
+				x = p.transform * x
+				p = p.get_parent() as Node3D
+			out.append([mi.mesh, x])
+		_parts_cache[model_name] = out
+		n.free()
+	return _parts_cache[model_name]
 
 
 ## The shed model (native 4 m wide, 3 m tall, 3 m deep) stretched to `size`
@@ -183,20 +297,33 @@ static func model_mesh(model_name: String) -> Mesh:
 	return _mesh_cache[model_name]
 
 
-## Many copies of one model as a single MultiMesh draw (ferns, rocks, clutter).
+## Many copies of one model as MultiMesh draws, one per 24 m cell so off-screen
+## cells are culled (ferns, rocks, clutter, flowers).
 func scatter(model_name: String, xforms: Array[Transform3D], shadows := false) -> void:
-	if xforms.is_empty():
-		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = model_mesh(model_name)
-	mm.instance_count = xforms.size()
-	for i in xforms.size():
-		mm.set_instance_transform(i, xforms[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(mmi)
+	multimesh_cells(model_mesh(model_name), xforms, shadows, model_name)
+
+
+func multimesh_cells(mesh: Mesh, xforms: Array[Transform3D], shadows: bool, label: String) -> void:
+	var cells := {}
+	for x in xforms:
+		var k := Vector2i(floori(x.origin.x / BATCH_CELL), floori(x.origin.z / BATCH_CELL))
+		if not cells.has(k):
+			cells[k] = [] as Array[Transform3D]
+		(cells[k] as Array[Transform3D]).append(x)
+	for k: Vector2i in cells:
+		var xs: Array[Transform3D] = cells[k]
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = mesh
+		mm.instance_count = xs.size()
+		for i in xs.size():
+			mm.set_instance_transform(i, xs[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Cells_" + label
+		mmi.multimesh = mm
+		mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mmi.visibility_range_end = 90.0
+		add_child(mmi)
 
 
 static var _rail_mesh: ArrayMesh
@@ -228,17 +355,7 @@ static func railing_mesh() -> ArrayMesh:
 
 ## Batched railings, one transform per metre segment.
 func railings(xforms: Array[Transform3D]) -> void:
-	if xforms.is_empty():
-		return
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = railing_mesh()
-	mm.instance_count = xforms.size()
-	for i in xforms.size():
-		mm.set_instance_transform(i, xforms[i])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	add_child(mmi)
+	multimesh_cells(railing_mesh(), xforms, false, "railing")
 
 
 static func xform(at: Vector3, yaw: float, s: float) -> Transform3D:
@@ -402,6 +519,7 @@ func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
 		l.light_energy = 2.4
 		l.omni_range = 8.5
 		l.omni_attenuation = 1.6
+		_fade(l)
 		add_child(l)
 
 
@@ -411,7 +529,15 @@ func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
 	l.light_color = Color(1.0, 0.6, 0.3)
 	l.light_energy = energy * 1.3
 	l.omni_range = rng
+	_fade(l)
 	add_child(l)
+
+
+## Lights far from the camera are switched off (the follow camera sits ~30 m back).
+static func _fade(l: Light3D) -> void:
+	l.distance_fade_enabled = true
+	l.distance_fade_begin = 42.0
+	l.distance_fade_length = 8.0
 
 
 func tree(at: Vector3, s := 1.0) -> void:
@@ -468,7 +594,10 @@ func _environment() -> void:
 	moon.light_color = Color(0.52, 0.62, 0.86)
 	moon.light_energy = 0.7
 	moon.shadow_enabled = true
-	moon.directional_shadow_max_distance = 55.0
+	# two splits instead of four halves the shadow passes; the camera never sees past ~45 m
+	moon.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	moon.directional_shadow_max_distance = 45.0
+	moon.directional_shadow_fade_start = 0.85
 	add_child(moon)
 	# low warm afterglow from the western horizon, no shadows: warm rims on everything
 	var glow := DirectionalLight3D.new()
