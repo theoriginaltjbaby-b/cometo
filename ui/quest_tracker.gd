@@ -13,14 +13,15 @@ var _list: VBoxContainer
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_constant_override("separation", 2)
-	_name = _label("Cometographia", 10, UiTheme.BONE)
-	_name.add_theme_constant_override("outline_size", 0)
+	_name = _label("COMETOGRAPHIA", 6, UiTheme.DIM)
+	_name.add_theme_font_override("font", UiTheme.caps_font())
 	_rule = ColorRect.new()
-	_rule.color = Color(UiTheme.AMBER, 0.45)
-	_rule.custom_minimum_size = Vector2(95, 1)
+	_rule.color = Color(UiTheme.ACCENT, 0.6)
+	_rule.custom_minimum_size = Vector2(110, 1)
 	_rule.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_rule)
-	_quest = _label("", 9, UiTheme.AMBER)
+	_quest = _label("", 8, UiTheme.ACCENT)
+	_quest.add_theme_font_override("font", UiTheme.caps_font())
 	_list = VBoxContainer.new()
 	_list.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_list.add_theme_constant_override("separation", 0)
@@ -40,13 +41,13 @@ func refresh() -> void:
 	if qid == "":
 		_quest.text = ""
 		return
-	_quest.text = "◆  " + Journal.quest_title(qid)
+	_quest.text = Journal.quest_title(qid).to_upper()
 	for o: Dictionary in Journal.quest_defs.get(qid, {}).get("objectives", []):
 		var st := Journal.objective_state(qid, str(o["id"]))
 		if st == Journal.ACTIVE:
-			_list.add_child(_label_node("☐  " + str(o["text"]), 7, UiTheme.BONE))
+			_list.add_child(_label_node("–  " + str(o["text"]), 7, UiTheme.BONE))
 		elif st == Journal.DONE:
-			_list.add_child(_label_node("☑  " + str(o["text"]), 7, Color(UiTheme.DIM, 0.8)))
+			_list.add_child(_label_node("✓  " + str(o["text"]), 7, Color(UiTheme.DIM, 0.8)))
 
 
 func _label(text: String, size: int, col: Color) -> Label:
@@ -60,7 +61,7 @@ func _label_node(text: String, size: int, col: Color) -> Label:
 	l.text = text
 	l.add_theme_font_size_override("font_size", size)
 	l.add_theme_color_override("font_color", col)
-	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
+	l.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
 	l.add_theme_constant_override("shadow_offset_x", 1)
 	l.add_theme_constant_override("shadow_offset_y", 1)
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE

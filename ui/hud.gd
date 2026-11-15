@@ -11,6 +11,8 @@ var player
 
 var _safe: Control
 var _prompt: Button
+var _run: Button
+var _clock: WorldClockHUD
 var _toast: Label
 var _title: Label
 var _queue: Array[String] = []
@@ -36,7 +38,7 @@ func _ready() -> void:
 	_prompt = _chip("", func() -> void:
 		if player != null:
 			player.call("try_interact"))
-	_prompt.add_theme_font_size_override("font_size", 10)
+	_prompt.add_theme_font_size_override("font_size", 8)
 	_safe.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.grow_horizontal = Control.GROW_DIRECTION_BOTH
@@ -44,6 +46,24 @@ func _ready() -> void:
 	_prompt.offset_bottom = -12
 	_prompt.offset_top = -12
 	_prompt.visible = false
+
+	_clock = WorldClockHUD.new()
+	_safe.add_child(_clock)
+	_clock.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_clock.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_clock.position += Vector2(-8, 26)
+
+	# run toggle for touch play; Shift (or pad B) does the same while held
+	_run = _chip("RUN", func() -> void: pass)
+	_run.toggle_mode = true
+	_run.toggled.connect(func(on: bool) -> void:
+		if player != null and player.get("touch") != null:
+			player.touch.sprint = on)
+	_safe.add_child(_run)
+	_run.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_run.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_run.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_run.position += Vector2(-8, -10)
 
 	var tracker := QuestTracker.new()
 	_safe.add_child(tracker)
@@ -56,9 +76,10 @@ func _ready() -> void:
 	compass.position += Vector2(10, -50)
 
 	_toast = Label.new()
-	_toast.add_theme_color_override("font_color", UiTheme.AMBER)
-	_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
-	_toast.add_theme_font_size_override("font_size", 9)
+	_toast.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_toast.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
+	_toast.add_theme_font_override("font", UiTheme.caps_font())
+	_toast.add_theme_font_size_override("font_size", 7)
 	_toast.modulate.a = 0.0
 	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_safe.add_child(_toast)
@@ -67,8 +88,9 @@ func _ready() -> void:
 	_toast.offset_top = 70
 
 	_title = Label.new()
-	_title.add_theme_font_size_override("font_size", 16)
-	_title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.7))
+	_title.add_theme_font_override("font", UiTheme.caps_font())
+	_title.add_theme_font_size_override("font_size", 13)
+	_title.add_theme_color_override("font_shadow_color", UiTheme.SHADOW)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_title.modulate.a = 0.0
 	_safe.add_child(_title)
@@ -85,6 +107,12 @@ func _ready() -> void:
 
 func bind_player(p: Node) -> void:
 	player = p
+	if p.get("touch") != null:
+		p.touch.sprint = _run.button_pressed
+
+
+func clock_text() -> String:
+	return _clock.text()
 
 
 func show_location(text: String) -> void:
@@ -112,6 +140,7 @@ func _process(_delta: float) -> void:
 	var t = player.get("target") if is_instance_valid(player) else null
 	var show := t != null and not Dialogue.active
 	_prompt.visible = show
+	_run.visible = not Dialogue.active
 	if show:
 		var text: String = str(t.prompt).to_upper()
 		if t.label != "":
@@ -150,7 +179,7 @@ func _on_journal_updated(kind: String, text: String) -> void:
 func _chip(text: String, on_press: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.add_theme_font_size_override("font_size", 8)
+	b.add_theme_font_size_override("font_size", 7)
 	UiTheme.chip(b)
 	b.pressed.connect(on_press)
 	return b

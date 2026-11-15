@@ -32,6 +32,8 @@ func _ready() -> void:
 func new_game() -> void:
 	GameState.reset()
 	Journal.reset()
+	WorldTime.reset()
+	Weather.reset()
 	load_map(START_MAP, "default")
 	Journal.start_quest(START_QUEST)
 

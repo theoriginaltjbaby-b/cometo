@@ -1,4 +1,11 @@
 ; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
 
 [application]
@@ -6,8 +13,8 @@ config_version=5
 config/name="COMETO"
 run/main_scene="res://game/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.png"
 boot_splash/bg_color=Color(0.04, 0.06, 0.08, 1)
+config/icon="res://icon.png"
 
 [autoload]
 
@@ -15,6 +22,8 @@ GameState="*res://core/game_state.gd"
 Journal="*res://core/journal.gd"
 Dialogue="*res://core/dialogue.gd"
 SaveManager="*res://core/save_manager.gd"
+WorldTime="*res://core/world_time_manager.gd"
+Weather="*res://core/weather_manager.gd"
 
 [display]
 
@@ -26,17 +35,30 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=4
 
+[dotnet]
+
+project/assembly_name="COMETO"
+
+[shader_globals]
+
+weather_wet={
+"type": "float",
+"value": 1.0
+}
+weather_snow={
+"type": "float",
+"value": 0.0
+}
+
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
 scaling_3d/mode.ios=1
+environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)
+2d/snap/snap_2d_transforms_to_pixel=true
 scaling_3d/scale.ios=0.7
 lights_and_shadows/directional_shadow/size.ios=2048
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality.ios=1
 anti_aliasing/quality/msaa_3d.ios=0
-
-renderer/rendering_method="mobile"
-renderer/rendering_method.web="gl_compatibility"
-textures/canvas_textures/default_texture_filter=0
-2d/snap/snap_2d_transforms_to_pixel=true
-environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)

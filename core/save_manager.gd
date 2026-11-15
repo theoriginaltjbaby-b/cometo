@@ -32,6 +32,8 @@ func save_game(slot: String = "manual") -> bool:
 		"time": Time.get_datetime_string_from_system(),
 		"flags": GameState.to_dict(),
 		"journal": Journal.to_dict(),
+		"world_time": WorldTime.to_dict(),
+		"weather": Weather.to_dict(),
 		"world": world.call("capture_world"),
 	}
 	var path := slot_path(slot)
@@ -60,6 +62,10 @@ func load_game(slot: String = "manual") -> bool:
 		return false
 	GameState.from_dict(data.get("flags", {}))
 	Journal.from_dict(data.get("journal", {}))
+	# clock first: the weather schedule is read against it, and the map built by
+	# restore_world() lights itself from both straight away
+	WorldTime.from_dict(data.get("world_time", {}))
+	Weather.from_dict(data.get("weather", {}))
 	world.call("restore_world", data.get("world", {}))
 	loaded.emit(slot)
 	return true

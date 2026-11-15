@@ -14,7 +14,13 @@ extends Camera3D
 ## Aim slightly ahead of the feet so the player sits a little below centre.
 @export var look_height := 1.0
 
+## Set by the player: widens the lens a touch and leads the view while running.
+var sprint := false
+@export var sprint_fov_add := 2.5
+@export var sprint_lead := 1.6
+
 var target: Node3D
+var _lead := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -38,6 +44,7 @@ func _offset() -> Vector3:
 
 
 func reset_smoothing() -> void:
+	_lead = Vector3.ZERO
 	if target != null and target.is_inside_tree():
 		global_position = target.global_position + _offset()
 
@@ -45,5 +52,12 @@ func reset_smoothing() -> void:
 func _physics_process(delta: float) -> void:
 	if target == null:
 		return
-	var want := target.global_position + _offset()
+	var ahead := Vector3.ZERO
+	if sprint and target is CharacterBody3D:
+		var v := (target as CharacterBody3D).velocity
+		ahead = Vector3(v.x, 0, v.z).limit_length(1.0) * sprint_lead
+	_lead = _lead.lerp(ahead, 1.0 - exp(-3.0 * delta))
+	var want := target.global_position + _offset() + _lead
 	global_position = global_position.lerp(want, 1.0 - exp(-follow_speed * delta))
+	if perspective:
+		fov = lerpf(fov, fov_deg + (sprint_fov_add if sprint else 0.0), 1.0 - exp(-4.0 * delta))

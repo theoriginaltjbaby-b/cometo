@@ -6,6 +6,8 @@ extends GameMap3D
 ## the footprints and colliders stay.
 
 var M := {}
+## Drives this map's light, sky, fog and precipitation from WorldTime and Weather.
+var environment: EnvironmentController
 
 static var _detail: NoiseTexture2D
 static var _detail_n: NoiseTexture2D
@@ -519,6 +521,7 @@ func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
 		l.light_energy = 2.4
 		l.omni_range = 8.5
 		l.omni_attenuation = 1.6
+		_street(l)
 		_fade(l)
 		add_child(l)
 
@@ -529,8 +532,15 @@ func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
 	l.light_color = Color(1.0, 0.6, 0.3)
 	l.light_energy = energy * 1.3
 	l.omni_range = rng
+	_street(l)
 	_fade(l)
 	add_child(l)
+
+
+## Street lighting: lit from dusk to dawn and under heavy cloud (EnvironmentController).
+static func _street(l: Light3D) -> void:
+	l.set_meta(&"lit_energy", l.light_energy)
+	l.add_to_group(&"lamp_lights")
 
 
 ## Lights far from the camera are switched off (the follow camera sits ~30 m back).
@@ -588,7 +598,7 @@ func _environment() -> void:
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
-	# cool storm moonlight with shadows
+	# one shadowed light is the sun by day and the moon by night (EnvironmentController)
 	var moon := DirectionalLight3D.new()
 	moon.rotation_degrees = Vector3(-52, -30, 0)
 	moon.light_color = Color(0.52, 0.62, 0.86)
@@ -599,13 +609,18 @@ func _environment() -> void:
 	moon.directional_shadow_max_distance = 45.0
 	moon.directional_shadow_fade_start = 0.85
 	add_child(moon)
-	# low warm afterglow from the western horizon, no shadows: warm rims on everything
+	# low warm light from the horizon, no shadows: dawn and golden-hour rims
 	var glow := DirectionalLight3D.new()
 	glow.rotation_degrees = Vector3(-12, -100, 0)
 	glow.light_color = Color(1.0, 0.55, 0.35)
 	glow.light_energy = 0.4
 	glow.light_specular = 0.6
 	add_child(glow)
+	environment = EnvironmentController.new()
+	environment.name = "EnvironmentController"
+	environment.setup(env, moon, glow)
+	environment.indoor = indoor
+	add_child(environment)
 
 
 ## A once-baked reflection probe so wet ground and glass catch the lamps.

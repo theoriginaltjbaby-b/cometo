@@ -16,13 +16,14 @@ $GODOT --path . res://tests/screenshot_3d.tscn -- /some/folder  # windowed shots
 $GODOT --headless --path . -s tools/build_town_mask.gd       # rebuild the town walkable mask from the greybox
 $GODOT --headless --path . -s tools/build_town_3d.gd         # then rebuild the 3D town grid (heights, types) from greybox + mask
 sh tools/package_review.sh                                   # export/COMETO_review_<date>.zip
+$GODOT --path . res://tests/screenshot_time.tscn -- /some/folder  # shots through the day and each weather
 $GODOT --path . res://tests/perf_probe.tscn                  # render cost per spot (desktop proxy)
 $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs iOS templates, Xcode, team id
 ```
 
 ## Layout
 
-- `core/` autoloads: `GameState` (flags, conditions, effects), `Journal`, `Dialogue`, `SaveManager`. No drawing here.
+- `core/` autoloads: `GameState` (flags, conditions, effects), `Journal`, `Dialogue`, `SaveManager`, `WorldTime` (the only clock and calendar), `Weather`. No drawing here.
 - `game/` main scene, player, NPCs, `Interactable` component, puzzle pieces.
 - `maps/<region>/` one scene per location, root script `GameMap` (2D) or `GameMap3D` (3D), with `Entities` and `Spawns`. 3D maps use `Player3D`, `Npc3D`, `Interactable3D`, `MapExit3D`, which keep the 2D classes' interfaces.
 - `ui/` all screen-space controls, built in code from `UiTheme`.
@@ -40,6 +41,7 @@ $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs i
 - Anything that must survive save/load lives in `GameState.flags` or `Journal`; scenes rebuild themselves from that state in `_ready`.
 - New interactive things use `Interactable` plus dialogue data, not bespoke UI.
 - Base resolution is 480x270, `canvas_items` stretch, `expand` aspect. Lay out UI with anchors, never fixed screen positions.
+- Anything time- or weather-dependent listens to `WorldTime` / `Weather` signals; never add another timer or calendar. Map lighting goes through `EnvironmentController`.
 - Input actions are registered in `core/input_setup.gd`, not in project settings.
 - Keep the slice test passing and extend it when adding a system.
 - `PROJECT_LOG.md` is the running project log. After every change: add a dated Changelog entry, and update its file index and limitations so they stay true. New files get a row in the index.

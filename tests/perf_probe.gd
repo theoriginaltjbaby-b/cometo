@@ -11,6 +11,10 @@ func _ready() -> void:
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	# fixed night rain so runs are comparable; pass "day" after -- to measure a low evening sun
+	WorldTime.minutes_per_second = 0.0
+	WorldTime.set_time(18 if "day" in OS.get_cmdline_user_args() else 21, 30)
+	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
 	print("spot                 draws   prims(k)  objects  frame ms")
 	var town_spots := {"steps": O + Vector3(2, 0.05, 5), "tavern terrace": O + Vector3(-6, 3.05, -11.5),

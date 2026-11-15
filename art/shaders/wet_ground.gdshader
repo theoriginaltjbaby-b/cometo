@@ -20,6 +20,9 @@ uniform float stair_start = 0.99;
 uniform float step_height = 0.18;
 // Terrain meshes carry their colour in COLOR.rgb (sRGB) and cobble amount in COLOR.a.
 uniform bool use_vertex_color = false;
+// Set by EnvironmentController: 1 while it rains (dries slowly), and settled snow 0..1.
+global uniform float weather_wet;
+global uniform float weather_snow;
 uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
 
 varying vec3 wpos;
@@ -103,8 +106,8 @@ void fragment() {
 
 	// puddles: low-frequency noise, pooling first in the joints
 	float pool = n + (1.0 - stone) * 0.1 * amount - (1.0 - up) * 2.0;
-	float puddle = smoothstep(0.52, 0.6, pool) * puddles * mix(0.35, 1.0, max(amount, planks));
-	float wet = clamp(wetness * (0.65 + 0.35 * n2) + (1.0 - stone) * amount * 0.3, 0.0, 1.0);
+	float puddle = smoothstep(0.52, 0.6, pool) * puddles * mix(0.35, 1.0, max(amount, planks)) * weather_wet;
+	float wet = clamp(wetness * (0.65 + 0.35 * n2) + (1.0 - stone) * amount * 0.3, 0.0, 1.0) * mix(0.3, 1.0, weather_wet);
 
 	// stairs: on sloped paved walkways, level treads at fixed risers following contours
 	float stairs = smoothstep(stair_start, stair_start - 0.03, wnrm.y) * smoothstep(0.5, 0.62, wnrm.y) * step(0.5, amount + planks * 0.0);
@@ -127,7 +130,11 @@ void fragment() {
 
 	ALBEDO = col * mix(1.0, 0.5, wet);
 	ALBEDO = mix(ALBEDO, ALBEDO * 0.3 + vec3(0.01, 0.015, 0.02), puddle);
+	// settled snow: patchy at first, then covering level ground; treads show through a little
+	float snow = smoothstep(0.8, 0.95, wnrm.y) * (1.0 - smoothstep(0.25, 0.75, n2 * 0.6 + n * 0.4 - weather_snow * 0.9 + 0.4)) * weather_snow * (1.0 - puddle * 0.5);
+	ALBEDO = mix(ALBEDO, vec3(0.4, 0.45, 0.53) * (0.9 + 0.2 * n2), snow * 0.85);
 	float rough = mix(0.8, 0.18, wet);
+	rough = mix(rough, 0.9, snow);
 	rough = mix(rough, 0.92, steep);
 	rough = mix(rough, 0.95, (1.0 - stone) * amount * (1.0 - wet * 0.6));
 	ROUGHNESS = mix(rough, 0.03, puddle);

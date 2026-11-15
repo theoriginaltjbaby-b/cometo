@@ -12,7 +12,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.45)
+	shade.color = Color(0.0, 0.04, 0.08, 0.55)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -37,7 +37,7 @@ func _ready() -> void:
 
 
 func refresh() -> void:
-	var amber := UiTheme.AMBER.to_html(false)
+	var amber := UiTheme.ACCENT.to_html(false)
 	var dim := UiTheme.DIM.to_html(false)
 	var q := ""
 	for id: String in Journal.quests:

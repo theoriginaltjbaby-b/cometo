@@ -11,6 +11,8 @@ signal tapped
 @export var tap_ms := 350
 
 var vector := Vector2.ZERO
+## Run toggle for touch play (the HUD's RUN chip sets it); Shift does the same on keys.
+var sprint := false
 
 var _down := false
 var _dragged := false

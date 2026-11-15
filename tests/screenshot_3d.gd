@@ -11,6 +11,10 @@ func _ready() -> void:
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	# these shots are the fixed night-rain reference; time-of-day shots are in screenshot_time
+	WorldTime.minutes_per_second = 0.0
+	WorldTime.set_time(21, 30)
+	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
 	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
 	var shots := {

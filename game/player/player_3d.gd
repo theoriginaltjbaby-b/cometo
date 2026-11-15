@@ -7,6 +7,8 @@ extends CharacterBody3D
 signal target_changed(target: Interactable3D)
 
 @export var walk_speed := 4.2
+## Held sprint (Shift, pad B/X, or the HUD's RUN toggle on touch).
+@export var run_speed := 7.4
 @export var accel := 28.0
 @export var decel := 36.0
 @export var gravity := 22.0
@@ -20,6 +22,9 @@ var figure: Figure3D
 var reach: Area3D
 var camera: FollowCamera
 ## Last place the player stood; used if they ever fall out of the world.
+## True while the sprint input is held and the player is moving.
+var sprinting := false
+var _dust: GPUParticles3D
 var _safe := Vector3.ZERO
 var _has_safe := false
 
@@ -73,6 +78,8 @@ func _init() -> void:
 	ring.material_override = rm
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(ring)
+	_dust = _make_dust()
+	add_child(_dust)
 	camera = FollowCamera.new()
 	camera.target = self
 	add_child(camera)
@@ -90,7 +97,9 @@ func _physics_process(delta: float) -> void:
 		if dir == Vector2.ZERO and touch != null:
 			dir = touch.vector
 	var moving := dir.length() > 0.1
-	var want := Vector3(dir.x, 0, dir.y).limit_length(1.0) * walk_speed if moving else Vector3.ZERO
+	sprinting = moving and (Input.is_action_pressed(&"sprint") or (touch != null and touch.sprint))
+	var top := run_speed if sprinting else walk_speed
+	var want := Vector3(dir.x, 0, dir.y).limit_length(1.0) * top if moving else Vector3.ZERO
 	var h := Vector3(velocity.x, 0, velocity.z).move_toward(want, (accel if moving else decel) * delta)
 	velocity.x = h.x
 	velocity.z = h.z
@@ -110,7 +119,41 @@ func _physics_process(delta: float) -> void:
 	var yaw := atan2(-facing.x, -facing.z)
 	figure.rotation.y = lerp_angle(figure.rotation.y, yaw, 1.0 - exp(-14.0 * delta))
 	figure.set_motion(h.length() > 0.3, h.length() / walk_speed)
+	_dust.emitting = is_on_floor() and h.length() > walk_speed * 1.25
+	camera.sprint = sprinting
 	_update_target()
+
+
+## Small kicks of spray at the heels while running.
+func _make_dust() -> GPUParticles3D:
+	var p := GPUParticles3D.new()
+	p.amount = 14
+	p.lifetime = 0.45
+	p.local_coords = false
+	p.emitting = false
+	p.position = Vector3(0, 0.06, 0)
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var pm := ParticleProcessMaterial.new()
+	pm.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	pm.emission_sphere_radius = 0.15
+	pm.direction = Vector3(0, 1, 0)
+	pm.spread = 50.0
+	pm.initial_velocity_min = 0.5
+	pm.initial_velocity_max = 1.2
+	pm.gravity = Vector3(0, -3.5, 0)
+	pm.scale_min = 0.5
+	pm.scale_max = 1.3
+	p.process_material = pm
+	var q := QuadMesh.new()
+	q.size = Vector2(0.07, 0.07)
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_color = Color(0.8, 0.86, 0.95, 0.3)
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	q.material = m
+	p.draw_pass_1 = q
+	return p
 
 
 func _unhandled_input(event: InputEvent) -> void:

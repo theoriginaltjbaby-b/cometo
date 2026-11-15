@@ -15,7 +15,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	visible = false
 	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.45)
+	shade.color = Color(0.0, 0.04, 0.08, 0.55)
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(shade)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -29,8 +29,9 @@ func _ready() -> void:
 	panel.add_child(box)
 	var title := Label.new()
 	title.text = "COMETO"
-	title.add_theme_color_override("font_color", UiTheme.AMBER)
-	title.add_theme_font_size_override("font_size", 12)
+	title.add_theme_color_override("font_color", UiTheme.ACCENT)
+	title.add_theme_font_override("font", UiTheme.caps_font())
+	title.add_theme_font_size_override("font_size", 10)
 	box.add_child(title)
 	_first = _button(box, "Resume", func() -> void: closed.emit())
 	_button(box, "Save", _on_save)

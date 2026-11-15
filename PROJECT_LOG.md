@@ -119,6 +119,13 @@ All files were created 2026-11-14 unless noted.
 | `game/camera/follow_camera.gd` | `FollowCamera`: fixed-orientation orthographic Camera3D, pitch 50°, size 14 m, smoothed follow. |
 | `game/actors/npc_3d.gd` | `Npc3D`: 3D NPC with a dialogue id; turns to the speaker. |
 | `game/interaction/interactable_3d.gd`, `map_exit_3d.gd` | 3D twins of `Interactable` and `MapExit`. |
+| `core/world_calendar.gd` | `WorldCalendar`: year, season, day, weekday, scheduled events. Pure data; owned by `WorldTime`. |
+| `core/world_time_manager.gd` | Autoload `WorldTime`: the one world clock. Signals for minute, hour, day, season, year, period; pause reasons; advance, sleep, set; save/load. |
+| `core/weather_manager.gd` | Autoload `Weather`: scheduled weather spells weighted by season, forecast, overrides, lightning hook; save/load. |
+| `game/environment_controller.gd` | `EnvironmentController`: lights a 3D map from `WorldTime` and `Weather` using Gradients and Curves; indoor override; `snap()`. |
+| `ui/world_clock_hud.gd` | `WorldClockHUD`: date, weekday, 12-hour time and a drawn weather glyph. |
+| `ui/tech_panel_style.gd` | `TechPanelStyle`: drawn panel StyleBox (dark blue field, hairline, corner brackets). |
+| `tests/screenshot_time.gd` / `.tscn` | Windowed shots through the day and in each weather, plus walk and run poses. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -236,7 +243,7 @@ Three combat directions were proposed; none is chosen or implemented.
   no Xcode (command-line tools only), macOS 13.7.8 (current Xcode needs 14.5+), no Apple
   signing team. iOS export from the .NET Godot build is experimental; this project is
   GDScript only, so use the standard Godot 4.7.2 build and its templates.
-- No audio. No combat. No companions. No NPC routines or time of day.
+- No audio. No combat. No companions. No NPC routines yet (the clock and calendar they would use exist, entry 13).
 - The town is a greybox: no NPCs or interactables there except the two mine exits.
 - The town's mine yard and the detailed mine map represent the same place twice.
 - Save files from before the mine map was renamed fall back to the start map.
@@ -535,3 +542,73 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
 - Screenshots before and after are visually the same. Tests 96/96 (the two mesh-count
   checks now count all geometry instances, since scenery is batched). Not measured on an
   iPhone.
+
+## 13. Sprint, interface restyle, world time and weather (2026-11-15)
+
+### Movement and animation
+- Sprint: hold Shift (pad B or X), or tap the HUD's RUN toggle on touch. `Player3D.run_speed`
+  7.4 m/s against a 4.2 m/s walk. Input action `sprint` in `core/input_setup.gd`.
+- `Figure3D` now has knees, elbows and a neck joint (two-segment limbs, head on its own
+  pivot). One gait phase drives thigh swing, knee fold on the forward leg, counter-swinging
+  bent arms, torso lean and twist, level head; `_run` blends walk into run (longer stride,
+  higher knees, pumping arms, more lean and bounce). Idle: breathing, arm sway, the head
+  glances about. Applies to NPCs and townsfolk as well.
+- Running kicks up spray at the heels; the camera leads 1.6 m and widens 2.5 degrees.
+
+### Interface
+- `UiTheme` rewritten: deep blue translucent fields, pale cyan accent (`ACCENT`, replacing
+  `AMBER`), cool white text, spaced capitals for labels (`caps_font()`), DIN-style face.
+- Panels use `TechPanelStyle` (hairline outline, corner brackets). Chips are underlined
+  capitals. Compass is a hairline instrument ring. Quest tracker is a small header, a rule
+  and dash-marked objectives.
+
+### World time (Phase 1)
+- `WorldTime` autoload: 24-hour clock, 1 real second = 1 game minute (`minutes_per_second`),
+  midnight advances `WorldCalendar` (7-day week, 4 seasons of 28 days, years). New games
+  start Autumn 12, Thursday, 6:40 PM (`WorldTime.start`).
+- Periods (configurable `periods`): dawn 05, morning 07, midday 11, afternoon 15, evening
+  18, night 20. Signals: `minute_changed`, `hour_changed`, `day_changed`, `season_changed`,
+  `year_changed`, `period_changed`, `time_jumped`, `event_due`.
+- Stops with the scene tree (journal, menu), during dialogue, and for `pause(reason)`.
+  `advance_minutes`, `sleep_until`, `set_time`, `set_date`, `is_between(a, b)`.
+- Debug builds: `]` +1 hour, `[` +1 day, `\` cycle weather.
+
+### Day and night (Phase 2)
+- `EnvironmentController` (one per map, made in `MapBuilder3D._environment()`): samples sky,
+  ambient, sun, fill and fog colours from Gradients and energies, exposure and lamp state
+  from Curves, every frame from the continuous clock. One shadowed light is sun by day and
+  moon by night; it changes sides at dawn and dusk while its energy is zero.
+- Street lamps (`lamp_lights` group) are lit dusk to dawn and under heavy cloud.
+- `GameMap3D.indoor` / `controller.indoor` uses `indoor_look` and ignores sky and weather.
+
+### Weather (Phase 3)
+- `Weather` autoload: clear, cloudy, rain, heavy rain, fog, snow. Spells of 3 to 9 game
+  hours are planned a day ahead from per-season weights (`season_weights`); `forecast()`,
+  `set_weather(type, minutes)`, `clear_override()`, `lightning` signal for thunder.
+- Presentation blends over about 10 s: sun and sky dim and grey with cloud, fog density,
+  rain and splash density, snow particles, ground dries and puddles shrink
+  (`weather_wet`), snow settles on level ground (`weather_snow`); both are global shader
+  parameters read by `wet_ground.gdshader`. Lightning flashes the sky in heavy rain.
+- One set of particle emitters on the player is reused for all weather (`Rain3D`).
+
+### HUD and persistence (Phase 4)
+- `WorldClockHUD` top right: "AUTUMN 12 · THURSDAY" over "6:42 PM" with a weather glyph.
+  Hidden in dialogue and when `WorldTime.hud_hidden` is set.
+- Saves carry `world_time` (date, time, rate) and `weather` (current, schedule, override,
+  RNG state). Loading lights the world for its time at once (`snap()`), no replay.
+  Older saves without these start at the default date.
+
+### Testing (Phase 5)
+- Slice test 142/142: midnight, season and year rollover, long skips, sleeping, events,
+  pausing, forecast determinism, change frequency, overrides, seasonal tendencies, day and
+  night lighting, smoothness, weather blending, indoor override, save and load, sprint.
+- `tests/screenshot_3d` and `tests/perf_probe` are pinned to 21:30 rain so they stay
+  comparable. Desktop cost after this entry: 135-298 draw calls, 54-179k primitives,
+  4-5 ms per frame (the interface's antialiased lines account for most of the added draws).
+
+### Limits
+- Snow settles on terrain and paving only; roofs and props stay bare.
+- No audio, so thunder and ambience are signals only.
+- No interiors exist yet; the indoor override is tested by toggling it on the town.
+- Sunset and sunrise times are fixed (they do not vary by season).
+- Not run on an iPhone; the web and Mac builds in `export/` predate this entry.

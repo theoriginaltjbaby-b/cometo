@@ -29,8 +29,9 @@ func _ready() -> void:
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(box)
 	_speaker = Label.new()
-	_speaker.add_theme_color_override("font_color", UiTheme.AMBER)
-	_speaker.add_theme_font_size_override("font_size", 8)
+	_speaker.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_speaker.add_theme_font_override("font", UiTheme.caps_font())
+	_speaker.add_theme_font_size_override("font_size", 7)
 	box.add_child(_speaker)
 	_body = RichTextLabel.new()
 	_body.fit_content = true
@@ -43,7 +44,7 @@ func _ready() -> void:
 	_more = Label.new()
 	_more.text = "▾"
 	_more.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_more.add_theme_color_override("font_color", UiTheme.AMBER)
+	_more.add_theme_color_override("font_color", UiTheme.ACCENT)
 	_more.add_theme_font_size_override("font_size", 8)
 	box.add_child(_more)
 
@@ -100,7 +101,7 @@ func _on_line(speaker: String, text: String) -> void:
 	_clear_choices()
 	_speaker.text = speaker.to_upper()
 	_speaker.visible = speaker != ""
-	_body.add_theme_color_override("default_color", UiTheme.BONE if speaker != "" else Color(0.72, 0.76, 0.78))
+	_body.add_theme_color_override("default_color", UiTheme.BONE if speaker != "" else Color(0.68, 0.78, 0.84))
 	_body.text = text
 	_body.visible_characters = 0
 	_shown = 0.0

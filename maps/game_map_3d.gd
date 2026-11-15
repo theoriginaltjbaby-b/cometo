@@ -5,6 +5,8 @@ extends Node3D
 
 @export var map_id := ""
 @export var display_name := ""
+## Interiors ignore the sky, sun and weather (EnvironmentController.indoor_look).
+@export var indoor := false
 
 ## Set by Main once the player has been placed.
 var player: Node3D
