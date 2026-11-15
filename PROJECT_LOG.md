@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 4: 3D conversion, Milestone A).
+Last updated: 2026-11-14 (entry 5: mine yard in 3D).
 
 ## 1. What this is
 
@@ -121,6 +121,9 @@ All files were created 2026-11-14 unless noted.
 | `game/interaction/interactable_3d.gd`, `map_exit_3d.gd` | 3D twins of `Interactable` and `MapExit`. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
+| `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. |
+| `maps/anjabi/mine_3d.tscn`, `mine_3d.gd` | Map `anjabi_mine` in 3D (entry 5), replacing `mine.tscn` in `main.gd`'s registry: 6 m stairs down from the Estate landing, fenced inner yard with the welded mine door and stretchers, gate, guard hut, wash-house, sheds, spur rails, the washout as a real cut in the ground, cliff fence, path east. Driller and Gate guard as `Npc3D`; all seven interactables and both exits. |
+| `game/puzzle/ore_cart_3d.gd`, `track_switch_3d.gd` | 3D versions of the cart and points lever, same flags (`anjabi.cart`, `anjabi.spur_switch`) and dialogue. When bridged, the cart's upturned bed becomes a walkable deck and the washout blocker is removed. |
 | `tests/screenshot_3d.tscn`, `screenshot_3d.gd` | Windowed capture of the district (`docs/screens/3d_*.png`). |
 
 ### `tests/`
@@ -200,9 +203,10 @@ Three combat directions were proposed; none is chosen or implemented.
 - 3D (entry 4): geometry and characters are provisional primitives built in code, not
   authored meshes. No AnimationPlayer; the walk is procedural. No camera occlusion
   handling yet (nothing tall stands south of a walkable area so far). Only the
-  district is 3D; the mine yard and the town greybox are still the 2D maps, so the
-  investigation's NPCs (Driller, Gate guard) and the cart puzzle are still 2D.
-  The district's mine approach and the 2D mine yard both show a gate.
+  the town greybox (`anjabi_town`, reached by the path east from the mine) is still 2D.
+  The district's mine approach and the mine yard both show a gate.
+- Superseded 2D files still in the repo, no longer loaded: `maps/anjabi/mine.tscn`,
+  `mine_ground.gd`, `game/puzzle/ore_cart.gd`, `track_switch.gd`.
 - No inventory, equipment, stats, skill checks, reputation, combat or classes
   exist in the project; none were preserved or added.
 - iPhone performance has not been measured; no device or export was available.
@@ -257,4 +261,14 @@ mine approach; the district's gate leads into the mine yard. Slice test extended
 checks (28 for 3D: movement, diagonal, touch, camera follow, railings, walls, both
 stair flights, bridge, NPC dialogue, interactable, gate, save/load in 3D, travel both
 ways), all passing on Godot 4.7.2. Screenshots: `docs/screens/3d_*.png`.
+
+### 2026-11-14 — 5. Mine yard converted to 3D
+`anjabi_mine` now loads `maps/anjabi/mine_3d.tscn`, a 3D rebuild of the Collapsed Mine
+at 20 px = 1 m with real elevation (the Estate stairs drop 6 m) and the washout as a
+cut in the ground. Driller, Gate guard, notice, junction box, washout, cliff edge, mine
+door, the cart puzzle (both branches, haul back, bridge) and both exits work in 3D with
+the existing dialogue and flags; old saves on this map land at its default spawn.
+Shared building code moved from `district.gd` into `maps/map_builder_3d.gd`. Added
+`OreCart3D`, `TrackSwitch3D`. Slice test rewritten for the 3D mine: 89 checks, all
+passing. Screenshots `docs/screens/3d_10..15_*.png`.
 

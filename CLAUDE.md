@@ -1,7 +1,7 @@
 # COMETO
 
 Handheld sci-fi CRPG, converting from 2D to fixed-camera 3D. Godot 4.7, GDScript only, Mobile renderer, iPhone first (landscape).
-The game boots into the 3D district `maps/anjabi/district.tscn`; the 2D mine and town maps still work and are linked to it.
+The game boots into the 3D district `maps/anjabi/district.tscn`. The mine yard (`anjabi_mine`) is 3D too (`maps/anjabi/mine_3d.tscn`); only the town greybox is still 2D. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
 Separate from the older 3D project in `~/cometographia-2`; nothing is shared.
 
 ## Run and test
@@ -29,7 +29,7 @@ sh tools/package_review.sh                                   # export/COMETO_rev
 
 ## Anjabi layout
 
-`docs/reference/anjabi_greybox_01.png` (director's Greybox Study 01) is the canonical town layout; `anjabi_concept_map.png` is the look target. `maps/anjabi/town.tscn` shows the greybox at 2 world px per image px and walks on a mask derived from its colours (`tools/build_town_mask.gd`; check `docs/reference/town_walkable_debug.png` after rebuilding). `maps/anjabi/mine.tscn` is the detailed map of location 04 (stairs from the Estate, exit east to the airpad).
+`docs/reference/anjabi_greybox_01.png` (director's Greybox Study 01) is the canonical town layout; `anjabi_concept_map.png` is the look target. `maps/anjabi/town.tscn` shows the greybox at 2 world px per image px and walks on a mask derived from its colours (`tools/build_town_mask.gd`; check `docs/reference/town_walkable_debug.png` after rebuilding). `maps/anjabi/mine_3d.tscn` is the detailed 3D map of location 04 (stairs from the Estate, exit east to the airpad), built at 20 px = 1 m from the old 2D `mine.tscn`, which is kept for reference but no longer loaded.
 
 ## Rules
 

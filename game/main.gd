@@ -3,7 +3,7 @@ extends Node
 ## SaveManager captures and restores.
 
 const MAPS := {
-	"anjabi_mine": "res://maps/anjabi/mine.tscn",
+	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
 	"anjabi_town": "res://maps/anjabi/town.tscn",
 	"anjabi_district": "res://maps/anjabi/district.tscn",
 }

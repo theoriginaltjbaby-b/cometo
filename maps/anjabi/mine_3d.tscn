@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/mine_3d.gd" id="1"]
+
+[node name="Mine3D" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_mine"
+display_name = "ANJABI  ·  COLLAPSED MINE"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="default" type="Marker3D" parent="Spawns"]
+position = Vector3(8, 6.05, 1.2)
+
+[node name="east" type="Marker3D" parent="Spawns"]
+position = Vector3(43.3, 0.05, 32.2)
+
+[node name="Entities" type="Node3D" parent="."]

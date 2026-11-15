@@ -26,21 +26,26 @@ func _ready() -> void:
 
 func _run() -> void:
 	player = main.get("player")
-	var map: GameMap = main.get("map")
-	check(player != null and map != null, "main boots a map and a player")
+	var map = main.get("map")
+	check(player != null and map is GameMap3D and player is Player3D, "the mine yard is a 3D map with a 3D player")
 	check(Journal.quests.has("quiet_mine"), "new game opens the investigation")
-	check(player.global_position.distance_to(Vector2(160, 40)) < 1.0, "player starts at the spawn marker")
+	check(player.global_position.distance_to(Vector3(8, 6.05, 1.2)) < 0.3, "player starts at the top of the Estate stairs")
 
-	# movement
-	var y0: float = player.global_position.y
+	# movement, and the real 6 m stair down to the yard
+	var z0: float = player.global_position.z
 	Input.action_press(&"move_down")
 	await _frames(30)
 	Input.action_release(&"move_down")
-	check(player.global_position.y > y0 + 20.0, "keyboard movement moves the player (%.1f px)" % (player.global_position.y - y0))
+	check(player.global_position.z > z0 + 1.0, "keyboard movement moves the player (%.2f m)" % (player.global_position.z - z0))
 	Input.action_press(&"move_up")
 	await _frames(120)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 0.0, "the top of the stairs is closed off (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 0.0 and player.global_position.y > 5.8, "the top of the stairs is closed off (z=%.2f)" % player.global_position.z)
+	Input.action_press(&"move_down")
+	await _frames(240)
+	Input.action_release(&"move_down")
+	await _frames(10)
+	check(player.global_position.y < 0.2 and player.global_position.z > 12.6 and player.is_on_floor(), "the stairs lead down into the yard (y=%.2f z=%.2f)" % [player.global_position.y, player.global_position.z])
 
 	# touch stick
 	var ui: GameUi = main.get_node("UI")
@@ -48,84 +53,95 @@ func _run() -> void:
 	ui.touch.vector = Vector2.RIGHT
 	await _frames(20)
 	ui.touch.vector = Vector2.ZERO
-	check(player.global_position.x > x0 + 10.0, "touch stick vector moves the player")
+	check(player.global_position.x > x0 + 0.5, "touch stick vector moves the player")
 
 	# collision with the gate
-	await _place(Vector2(480, 290))
+	await _place3(Vector3(24, 0.05, 14.5))
 	Input.action_press(&"move_up")
 	await _frames(90)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 250.0, "the gate blocks the road (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 12.5, "the gate blocks the road (z=%.2f)" % player.global_position.z)
 
 	# notice
-	await _place(Vector2(425, 262))
+	await _place3(Vector3(21.25, 0.05, 13.1))
 	check(player.target != null and player.target.label == "Notice", "notice is targeted")
 	check(ui.hud.prompt_text().contains("Notice"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
 	check(player.try_interact() and Dialogue.active, "interacting opens dialogue")
+	var at: Vector3 = player.global_position
 	Input.action_press(&"move_down")
 	await _frames(10)
 	Input.action_release(&"move_down")
-	check(player.global_position.distance_to(Vector2(425, 262)) < 1.0, "player cannot walk during dialogue")
+	check(player.global_position.distance_to(at) < 0.05, "player cannot walk during dialogue")
 	await _talk([])
 	check(Journal.has_clue("closure_notice"), "notice records a clue")
 	check(Journal.objective_state("quiet_mine", "notice") == Journal.DONE, "notice objective done")
 
 	# guard before the driller: no way to press
-	await _place(Vector2(528, 280))
+	await _place3(Vector3(26.4, 0.05, 14.3))
+	check(player.target != null and player.target.label == "Gate guard", "gate guard is targeted")
 	player.try_interact()
-	check(not Dialogue.choice_texts().is_empty() or true, "guard dialogue starts")
+	check(Dialogue.active, "guard dialogue starts")
 	await _talk(["The crew was pulled"])
 	check(not Journal.has_clue("power_cut"), "guard cannot be pressed without the driller's account")
 
 	# driller
-	await _place(Vector2(336, 614))
+	await _place3(Vector3(16.8, 0.05, 31.0))
+	check(player.target != null and player.target.label == "Driller", "driller is targeted")
 	player.try_interact()
 	await _talk(["What happened at the mine", "Who gave"])
 	check(Journal.has_clue("early_recall"), "driller records a clue")
 
 	# guard again
-	await _place(Vector2(528, 280))
+	await _place3(Vector3(26.4, 0.05, 14.3))
 	player.try_interact()
 	await _talk(["The crew was pulled", "another way"])
 	check(Journal.has_clue("power_cut"), "pressing the guard records a clue")
 	check(Journal.objective_state("quiet_mine", "way_in") == Journal.ACTIVE, "guard reveals the hidden objective")
 
 	# puzzle: wrong branch first
-	var cart: OreCart = map.get_node("Entities/OreCart")
-	await _place(Vector2(800, 590))
+	var cart: OreCart3D = map.get_node("Entities/OreCart")
+	await _place3(Vector3(40, 0.05, 30.2))
 	check(player.target != null and player.target.label == "Ore cart", "cart is targeted")
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "buffer", "points at A: cart rolls to the buffer")
 	await _talk([])
-	await _place(Vector2(800, 356))
+	await _place3(Vector3(40, 0.05, 18.4))
 	Input.action_press(&"move_up")
 	await _frames(60)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 340.0, "washout blocks the spur (y=%.1f)" % player.global_position.y)
-	await _place(Vector2(868, 376))
+	check(player.global_position.z > 17.0 and player.global_position.y > -0.2, "washout blocks the spur (z=%.2f)" % player.global_position.z)
+	await _place3(Vector3(43.4, 0.05, 19.3))
+	check(player.target != null and player.target.label == "Ore cart", "cart at the buffer is targeted")
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "start", "cart can be hauled back")
 	# lever, then the right branch
-	await _place(Vector2(772, 460))
+	await _place3(Vector3(38.6, 0.05, 23.4))
 	check(player.target != null and player.target.label == "Points lever", "lever is targeted")
 	player.try_interact()
 	check(str(GameState.get_flag("anjabi.spur_switch")) == "b", "lever sets the points to B")
-	await _place(Vector2(800, 590))
+	await _place3(Vector3(40, 0.05, 30.2))
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "trench", "points at B: cart drops into the washout")
 	await _talk([])
 	check(Journal.objective_state("quiet_mine", "way_in") == Journal.DONE, "bridging completes the objective")
-	await _place(Vector2(800, 356))
+	await _place3(Vector3(40, 0.05, 18.4))
 	Input.action_press(&"move_up")
 	await _frames(80)
 	Input.action_release(&"move_up")
-	check(player.global_position.y < 300.0, "player can cross the cart bridge (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z < 14.8 and player.global_position.y > -0.2, "player can cross the cart bridge (z=%.2f y=%.2f)" % [player.global_position.z, player.global_position.y])
+	Input.action_press(&"move_up")
+	Input.action_press(&"move_left")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	Input.action_release(&"move_left")
+	check(player.global_position.z < 12.4, "the corridor behind the washout opens into the inner yard (z=%.2f)" % player.global_position.z)
 
 	# mine door
-	await _place(Vector2(480, 126))
+	await _place3(Vector3(24, 0.05, 6.6))
+	check(player.target != null and player.target.label == "Mine door", "mine door is targeted")
 	player.try_interact()
 	await _talk([])
 	check(Journal.has_clue("sealed_outside"), "mine door records the final clue")
@@ -138,7 +154,7 @@ func _run() -> void:
 	check(not get_tree().paused, "closing the journal resumes")
 
 	# save / load
-	await _place(Vector2(600, 180))
+	await _place3(Vector3(30, 0.05, 9))
 	check(SaveManager.save_game("test"), "save writes a file")
 	main.call("new_game")
 	await _frames(3)
@@ -149,16 +165,16 @@ func _run() -> void:
 	player = main.get("player")
 	map = main.get("map")
 	cart = map.get_node("Entities/OreCart")
-	check(player.global_position.distance_to(Vector2(600, 180)) < 1.0, "load restores the player position")
+	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(30, 0.05, 9)) < 0.3, "load restores the player position")
 	check(Journal.clues.size() == 4 and Journal.is_complete("quiet_mine"), "load restores the journal")
-	check(cart.state() == "trench" and cart.global_position.distance_to(Vector2(800, 340)) < 1.0, "load restores the puzzle state")
-	await _place(Vector2(800, 290))
+	check(cart.state() == "trench" and cart.global_position.distance_to(Vector3(40, 0, 16)) < 0.1, "load restores the puzzle state")
+	await _place3(Vector3(40, 0.05, 14.0))
 	Input.action_press(&"move_down")
 	await _frames(80)
 	Input.action_release(&"move_down")
-	check(player.global_position.y > 345.0, "bridge is still walkable after load (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 17.5 and player.global_position.y > -0.2, "bridge is still walkable after load (z=%.2f)" % player.global_position.z)
 	# follow-up dialogue reacts to state
-	await _place(Vector2(336, 614))
+	await _place3(Vector3(16.8, 0.05, 31.0))
 	player.try_interact()
 	await _talk([])
 	check(GameState.get_flag("driller.told_seal") == true, "driller reacts to the sealed door")
@@ -166,8 +182,8 @@ func _run() -> void:
 
 func _town() -> void:
 	# travel: mine -> town -> mine
-	await _place(Vector2(160, 30))
-	check(player.target is MapExit, "the Estate stairs are an exit")
+	await _place3(Vector3(8, 6.05, 1.0))
+	check(player.target is MapExit3D, "the Estate stairs are an exit")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
@@ -206,8 +222,8 @@ func _town() -> void:
 	await _frames(4)
 	player = main.get("player")
 	check(str(main.get("map_id")) == "anjabi_mine", "the mine yard in town leads back to the mine map")
-	await _place(Vector2(880, 646))
-	check(player.target is MapExit, "the airpad path is an exit")
+	await _place3(Vector3(43.6, 0.05, 32.2))
+	check(player.target is MapExit3D, "the airpad path is an exit")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
@@ -216,7 +232,7 @@ func _town() -> void:
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector2(866, 646)) < 1.0, "and returns to the east side of the mine")
+	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(43.3, 0.05, 32.2)) < 0.3, "and returns to the east side of the mine")
 
 
 func _district() -> void:
@@ -324,8 +340,8 @@ func _district() -> void:
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_mine" and player is Player, "the gate leads into the mine yard map")
-	await _place(Vector2(160, 30))
+	check(str(main.get("map_id")) == "anjabi_mine" and player is Player3D, "the gate leads into the 3D mine yard")
+	await _place3(Vector3(8, 6.05, 1.0))
 	player.try_interact()
 	await _frames(6)
 	player = main.get("player")
