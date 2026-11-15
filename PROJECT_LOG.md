@@ -406,3 +406,20 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
   0.1–3 m into the ground and the portal was offset 2.6 m).
 - Tests 96/96.
 
+### Pass 3 — set dressing, life, terrain and water shading
+- `game/actors/townsfolk.gd` (`Townsfolk`): non-solid background inhabitants that walk a
+  loop of points and pause, or stand. Seven in the town (Steps plaza, café, docks, pods).
+- `MapBuilder3D.scatter()` batches one model into a MultiMesh (one draw); used for ferns:
+  hundreds along town grass edges, the terrace foot and the mine yard edges.
+- Clutter: planters and barrels at every Quonset porch, crates and barrels on the docks,
+  planters, banners and crates on the Steps, barrels and crates in the mine yard; the
+  mine portal's lanterns now cast light.
+- Town terrain: smooth normals (no faceted cliffs); steep faces in `wet_ground` get rock
+  strata, crevices and lichen, matte and warm grey; gentler per-cell colour so sand and
+  grass show no checkerboard; docks are drawn as a timber boardwalk (shader plank mode,
+  vertex alpha 0.5).
+- `art/shaders/sea.gdshader`: drifting swell from three noise layers, glossy highlights,
+  whitecaps; used for the sea, the washout water and the mist plane.
+- Tram pylons rebuilt as slender four-leg lattice towers.
+- Tests 96/96.
+

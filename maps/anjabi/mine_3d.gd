@@ -27,6 +27,21 @@ func _ready() -> void:
 	_people()
 	_interactables()
 	reflection_probe(Vector3(25, 5, 18), Vector3(44, 16, 36))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	var ferns: Array[Transform3D] = []
+	for i in 60:
+		var side := rng.randi() % 3
+		var p := Vector3(rng.randf_range(10.5, 44.5), 0, 34.0 + rng.randf() * 0.4)
+		if side == 1:
+			p = Vector3(rng.randf_range(10.5, 21.0), 0, 5.6 + rng.randf() * 0.6)
+		elif side == 2:
+			p = Vector3(5.9 + rng.randf() * 0.4, 0, rng.randf_range(13, 33))
+		ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.4)))
+	scatter("fern", ferns)
+	for p: Vector3 in [Vector3(14.6, 0, 29.6), Vector3(31.0, 0, 20.4), Vector3(9.0, 0, 24.0)]:
+		model("barrel", p)
+	model("crate_stack", Vector3(16.5, 0, 25.6), 0.4)
 
 
 func _ground() -> void:
@@ -101,6 +116,8 @@ func _mine_door() -> void:
 	slab(Vector3(21.5, 0, z - 0.3), Vector3(26.5, 4.4, z), M.rock_dark, false)
 	# timber portal, barred gate and sign (director's key art) in front of the welded door
 	model("mine_portal", Vector3(24, 0, z + 0.55))
+	warm_light(Vector3(22.05, 3.5, z + 1.3), 1.0, 5.0)
+	warm_light(Vector3(25.95, 3.5, z + 1.3), 1.0, 5.0)
 	sign_text(Vector3(24, 5.75, z + 1.5), "ANJABI MINE", 0.0, 46, Color(0.9, 0.78, 0.55))
 	sign_text(Vector3(24, 5.25, z + 1.5), "LEVELS I–IV", 0.0, 28, Color(0.85, 0.72, 0.5))
 	sign_text(Vector3(24.75, 4.75, z + 1.62), "CLOSED", 0.0, 36, Color(1.0, 0.85, 0.75))

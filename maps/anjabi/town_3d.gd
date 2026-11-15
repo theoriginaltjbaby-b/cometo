@@ -40,6 +40,8 @@ const DISTRICTS := [
 	["RAINFOREST APPROACH", Rect2(1255, 220, 165, 150)],
 	["FOREST", Rect2(40, 40, 330, 215)],
 ]
+## Greybox-pixel rectangle drawn as timber boardwalk.
+const DOCKS := Rect2(1040, 360, 360, 215)
 ## Spawn points and exits, in greybox pixels (the 2D town's positions / 2).
 const SPAWNS := {"default": Vector2(880, 415), "mine": Vector2(212, 676), "airpad": Vector2(336, 746)}
 
@@ -63,6 +65,7 @@ func _ready() -> void:
 	_vegetation_and_lamps()
 	_spawns_and_exits()
 	reflection_probe(INSERT_AT + Vector3(-2, 6, -8), Vector3(70, 24, 60))
+	_dressing()
 
 
 # --- grid ------------------------------------------------------------------------
@@ -170,7 +173,7 @@ func _terrain() -> void:
 		for cx0 in range(0, w, CHUNK):
 			var st := SurfaceTool.new()
 			st.begin(Mesh.PRIMITIVE_TRIANGLES)
-			st.set_smooth_group(-1)
+			st.set_smooth_group(0)
 			var any := false
 			for z in range(cz0, mini(cz0 + CHUNK, h)):
 				for x in range(cx0, mini(cx0 + CHUNK, w)):
@@ -180,6 +183,8 @@ func _terrain() -> void:
 						continue
 					any = true
 					var col := _colour(t, rng.randf())
+					if t == PATH and hv[i] < -0.3 and DOCKS.has_point(Vector2(x + 0.5, z + 0.5) / PX + ORIGIN):
+						col = Color(0.5, 0.36, 0.24, 0.5)
 					var a := Vector3(x, vh[z * (w + 1) + x], z)
 					var b := Vector3(x + 1, vh[z * (w + 1) + x + 1], z)
 					var c := Vector3(x + 1, vh[(z + 1) * (w + 1) + x + 1], z + 1)
@@ -197,6 +202,7 @@ func _terrain() -> void:
 						_quad(st, Vector3(c.x, SEA, c.z), c, b, Vector3(b.x, SEA, b.z), dark)
 			if not any:
 				continue
+			st.index()
 			st.generate_normals()
 			var mi := MeshInstance3D.new()
 			mi.mesh = st.commit()
@@ -216,7 +222,7 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, col:
 
 func _colour(t: int, n: float) -> Color:
 	# rgb: sRGB colour; a: cobble amount for the wet-ground shader
-	var j := (n - 0.5) * 0.05
+	var j := (n - 0.5) * (0.04 if t == PATH or t == SLAB else 0.012)
 	match t:
 		PATH:
 			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
@@ -226,7 +232,7 @@ func _colour(t: int, n: float) -> Color:
 			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
 		SLAB:
 			return Color(0.6 + j, 0.59 + j, 0.56 + j, 1.0)
-	return Color(0.33 + j, 0.36 + j, 0.38 + j, 0.0)
+	return Color(0.36 + j, 0.35 + j, 0.33 + j, 0.0)
 
 
 func _collision() -> void:
@@ -346,7 +352,11 @@ func _landmarks() -> void:
 		model("gondola", g, atan2(along.x, along.z) + PI * 0.5)
 	for f in 7:
 		var p := north.lerp(deck, (f + 0.5) / 7.0)
-		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(1.0, p.y - SEA, 1.0), M.steel_dark, false)
+		for o: Vector3 in [Vector3(-0.45, 0, -0.45), Vector3(0.45, 0, 0.45), Vector3(-0.45, 0, 0.45), Vector3(0.45, 0, -0.45)]:
+			box(Vector3(p.x, (p.y + SEA) * 0.5, p.z) + o, Vector3(0.14, p.y - SEA, 0.14), M.steel_dark, false)
+		for k in 6:
+			var yk := SEA + (p.y - SEA) * (k + 0.5) / 6.0
+			box(Vector3(p.x, yk, p.z), Vector3(1.0, 0.08, 1.0), M.steel_dark, false, PI * 0.25 * (k % 2))
 		box(p + Vector3(0, 0.8, 0), Vector3(0.4, 0.3, 0.4), M.blue_light, false)
 	var it := Vector3(tower.x, SEA, tower.z)
 	model("imperial_tower", it)
@@ -445,3 +455,46 @@ func _process(delta: float) -> void:
 		_district = found
 		if found != "":
 			GameState.location_entered.emit("ANJABI  ·  " + found)
+
+
+## Pass 3 set dressing: ferns on grass by paths and cliff feet, clutter at porches,
+## shop and docks, and townsfolk going about the Steps, docks and pods.
+func _dressing() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var ferns: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != GRASS:
+				continue
+			var edge := false
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] == PATH or cls[nb] == CLIFF or cls[nb] == SLAB:
+					edge = true
+			if rng.randf() < (0.55 if edge else 0.12):
+				for k in 2:
+					var p := Vector3(x + rng.randf(), hv[i], z + rng.randf())
+					ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.5)))
+	scatter("fern", ferns)
+	# clutter by the Quonset porches, the shop and the docks
+	for p: Vector2 in [Vector2(530, 68), Vector2(622, 72), Vector2(508, 128), Vector2(660, 132), Vector2(546, 182)]:
+		var at := at_px(p)
+		model("planter", at + Vector3(-1.9, 0, 4.1))
+		model("barrel", at + Vector3(2.0, 0, 3.8))
+	for p: Vector2 in [Vector2(1080, 380), Vector2(1150, 380), Vector2(1240, 400), Vector2(1300, 470), Vector2(1250, 520)]:
+		var d := at_px(p)
+		model("crate_stack", d + Vector3(1.2, 0, 0.6), rng.randf() * TAU)
+		model("barrel", d + Vector3(-0.8, 0, 0.9))
+	# townsfolk
+	var O := INSERT_AT
+	var coats := [Color(0.24, 0.3, 0.34), Color(0.38, 0.3, 0.22), Color(0.3, 0.22, 0.28), Color(0.2, 0.27, 0.22)]
+	var skins := [Color(0.78, 0.6, 0.48), Color(0.55, 0.38, 0.28), Color(0.68, 0.5, 0.38)]
+	townsfolk([O + Vector3(-6, 0, 6), O + Vector3(10, 0, 6), O + Vector3(10, 0, -3)], coats[0], Color(0.7, 0.6, 0.4), skins[0], true)
+	townsfolk([O + Vector3(14, 0, 2), O + Vector3(-4, 0, 1)], coats[1], Color(0.5, 0.15, 0.12), skins[1])
+	townsfolk([O + Vector3(1.5, 0, -2.5), O + Vector3(4, 0, 4)], coats[2], Color(0.75, 0.65, 0.45), skins[2])
+	townsfolk([O + Vector3(-8.4, 3, -11.0)], coats[3], Color(0.6, 0.4, 0.2), skins[0], false, 160.0)
+	townsfolk([O + Vector3(-6.6, 3, -10.6)], coats[1], Color(0.3, 0.3, 0.3), skins[2], false, 210.0)
+	townsfolk([nearest_walk(Vector2(1120, 430)), nearest_walk(Vector2(1260, 430)), nearest_walk(Vector2(1230, 480))], coats[0], Color(0.8, 0.7, 0.3), skins[1], true)
+	townsfolk([nearest_walk(Vector2(600, 110)), nearest_walk(Vector2(640, 200))], coats[2], Color(0.5, 0.2, 0.15), skins[0])
+

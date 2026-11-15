@@ -89,7 +89,9 @@ func _materials() -> void:
 	M.lamp = _mat(Color(1.0, 0.8, 0.5), 0.3, 0.0, Color(1.0, 0.7, 0.35), 4.0)
 	M.warning = _mat(Color(0.8, 0.6, 0.12), 0.6)
 	M.sand = _mat(Color(0.55, 0.5, 0.42), 0.9)
-	M.sea = _mat(Color(0.05, 0.16, 0.2), 0.12, 0.3)
+	M.sea = ShaderMaterial.new()
+	M.sea.shader = preload("res://art/shaders/sea.gdshader")
+	M.sea.set_shader_parameter("noise_tex", detail_textures()[0])
 	M.foliage = _mat(Color(0.08, 0.2, 0.15), 0.9)
 	M.foliage_b = _mat(Color(0.11, 0.24, 0.16), 0.9)
 	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
@@ -165,6 +167,52 @@ static func weather_model(root: Node) -> void:
 			if m.emission_enabled or m.roughness < 0.55:
 				continue
 			add_detail(m, 0.6)
+
+
+static var _mesh_cache := {}
+
+
+## The first mesh of a model, for batching with scatter().
+static func model_mesh(model_name: String) -> Mesh:
+	if not _mesh_cache.has(model_name):
+		var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate()
+		weather_model(n)
+		var mi := n.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+		_mesh_cache[model_name] = mi.mesh
+		n.free()
+	return _mesh_cache[model_name]
+
+
+## Many copies of one model as a single MultiMesh draw (ferns, rocks, clutter).
+func scatter(model_name: String, xforms: Array[Transform3D], shadows := false) -> void:
+	if xforms.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = model_mesh(model_name)
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(mmi)
+
+
+static func xform(at: Vector3, yaw: float, s: float) -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), at)
+
+
+## A background inhabitant walking `points` (one point = standing).
+func townsfolk(points: Array, coat: Color, accent: Color, skin: Color, hood := false, yaw := 180.0) -> void:
+	var t := Townsfolk.new()
+	t.points = PackedVector3Array(points)
+	t.coat = coat
+	t.accent = accent
+	t.skin = skin
+	t.hood = hood
+	t.yaw_deg = yaw
+	entities.add_child(t)
 
 
 ## Invisible cylinder collider standing on `base`.

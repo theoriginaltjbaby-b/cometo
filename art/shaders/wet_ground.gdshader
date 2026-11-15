@@ -54,9 +54,12 @@ void fragment() {
 	float up = smoothstep(0.55, 0.85, wnrm.y);
 	vec3 col = base_color.rgb;
 	float amount = cobble;
+	float planks = 0.0;
 	if (use_vertex_color) {
 		col = pow(COLOR.rgb, vec3(2.2));
-		amount = COLOR.a;
+		// alpha: 1 = cobbles, ~0.5 = timber boardwalk, 0 = plain
+		planks = step(0.3, COLOR.a) * step(COLOR.a, 0.7);
+		amount = COLOR.a * (1.0 - planks);
 	}
 	amount *= up;
 	float n = texture(noise_tex, wpos.xz * 0.06).r;
@@ -71,7 +74,24 @@ void fragment() {
 	vec3 joint_col = mortar_color.rgb * (0.7 + 0.6 * n2);
 	vec3 paved = mix(joint_col, stone_col, stone);
 	vec3 plain = col * (0.7 + 0.5 * n2) * (0.85 + 0.3 * n);
+	// steep faces: layered rock with dark crevices and a little lichen
+	float steep = 1.0 - up;
+	float strata = texture(noise_tex, vec2((wpos.x + wpos.z) * 0.12, wpos.y * 0.9)).r;
+	float crack = smoothstep(0.42, 0.5, texture(noise_tex, vec2((wpos.x - wpos.z) * 0.35, wpos.y * 1.6)).r);
+	vec3 rock = col * vec3(1.0, 0.94, 0.86) * (0.35 + 0.95 * strata) * mix(0.35, 1.0, crack);
+	rock = mix(rock, vec3(0.16, 0.22, 0.12), smoothstep(0.62, 0.75, n2) * 0.5);
+	plain = mix(plain, rock, steep);
 	col = mix(plain, paved, amount);
+	// boardwalk: 0.28 m boards running east-west, staggered butt joints, dark gaps
+	float bw = wpos.z / 0.28;
+	float board = floor(bw);
+	float fb = fract(bw);
+	float along = fract((wpos.x + hash(vec2(board, 1.7)) * 5.0) / 2.6);
+	float gap = smoothstep(0.0, 0.07, min(fb, 1.0 - fb)) * smoothstep(0.0, 0.012, min(along, 1.0 - along));
+	vec3 wood = col * (0.7 + 0.5 * hash(vec2(board, 9.1))) * (0.85 + 0.3 * texture(noise_tex, vec2(wpos.x * 0.8, wpos.z * 6.0)).r);
+	col = mix(col, mix(wood * 0.25, wood, gap), planks * up);
+	stone = mix(stone, gap, planks * up);
+	amount = max(amount, planks * up * 0.6);
 
 	// puddles: low-frequency noise, pooling first in the joints
 	float pool = n + (1.0 - stone) * 0.1 * amount - (1.0 - up) * 2.0;
@@ -81,9 +101,10 @@ void fragment() {
 	ALBEDO = col * mix(1.0, 0.5, wet);
 	ALBEDO = mix(ALBEDO, ALBEDO * 0.3 + vec3(0.01, 0.015, 0.02), puddle);
 	float rough = mix(0.82, 0.3, wet);
+	rough = mix(rough, 0.92, steep);
 	rough = mix(rough, 0.95, (1.0 - stone) * amount * (1.0 - wet * 0.6));
 	ROUGHNESS = mix(rough, 0.03, puddle);
-	SPECULAR = 0.55;
+	SPECULAR = mix(0.55, 0.25, steep);
 
 	// bump: rounded stones, flattened under puddles
 	float h = dome * amount * (1.0 - puddle) * 0.03;

@@ -36,6 +36,7 @@ func _ready() -> void:
 		_shop()
 		_props(true)
 		_people()
+		_insert_dressing()
 		return
 	_materials()
 	_environment()
@@ -342,3 +343,23 @@ func _people() -> void:
 	keeper.position = Vector3(-7.2, TERRACE, -12.2)
 	keeper.yaw_deg = 180.0
 	entities.add_child(keeper)
+
+
+func _insert_dressing() -> void:
+	# ferns and flowers along the terrace wall foot and plaza edges; clutter by the shop
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12
+	var ferns: Array[Transform3D] = []
+	for i in 26:
+		ferns.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.4 + rng.randf() * 0.6), rng.randf() * TAU, rng.randf_range(0.8, 1.3)))
+	for i in 18:
+		ferns.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.4 + rng.randf() * 0.8), rng.randf() * TAU, rng.randf_range(0.9, 1.4)))
+	scatter("fern", ferns)
+	for p: Vector3 in [Vector3(-6, PLAZA, -9.2), Vector3(6.5, PLAZA, -9.2), Vector3(-11, PLAZA, 9.2), Vector3(18.5, PLAZA, 9.2)]:
+		model("planter", p)
+	model("crate_stack", Vector3(19, PLAZA, -1.6), 0.3)
+	model("barrel", Vector3(18.6, PLAZA, -3.4))
+	model("barrel", Vector3(19.3, PLAZA, -4.1))
+	for p: Vector3 in [Vector3(-11, PLAZA, -9.0), Vector3(19, PLAZA, -9.0)]:
+		model("banner", p)
+
