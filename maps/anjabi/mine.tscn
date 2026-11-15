@@ -455,8 +455,8 @@ dialogue_id = "anjabi/cliff_edge"
 position = Vector2(160, 12)
 script = ExtResource("10")
 prompt = "Climb"
-label = "Stairs to the Estate"
-target_map = "anjabi_town"
+label = "Stairs up to the Steps"
+target_map = "anjabi_district"
 target_spawn = "mine"
 
 [node name="PathToAirpad" type="Area2D" parent="Interactables"]

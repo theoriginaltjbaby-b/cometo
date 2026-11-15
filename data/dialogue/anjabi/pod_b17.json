@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "knock"}],
+	"nodes": {
+		"knock": {
+			"say": [
+				["", "Pod B-17. The door is a pressed steel panel with a number stencilled on it."],
+				["", "You knock. A light is on inside, but nobody answers."]
+			]
+		}
+	}
+}

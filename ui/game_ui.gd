@@ -36,7 +36,7 @@ func _ready() -> void:
 	menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
 
 
-func bind_player(p: Player) -> void:
+func bind_player(p: Node) -> void:
 	hud.bind_player(p)
 
 

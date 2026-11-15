@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14.
+Last updated: 2026-11-14 (entry 4: 3D conversion, Milestone A).
 
 ## 1. What this is
 
@@ -110,6 +110,19 @@ All files were created 2026-11-14 unless noted.
 | `rain.gd` | `Rain`. Screen-space rain streaks. |
 | `fog.gdshader` | Drifting mist and vignette. |
 
+### 3D conversion (added 2026-11-14, entry 4)
+| File | Purpose |
+|---|---|
+| `maps/game_map_3d.gd` | `GameMap3D`: 3D twin of `GameMap` (`map_id`, `display_name`, `Entities`, `Spawns/<Marker3D>`). |
+| `maps/anjabi/district.tscn`, `district.gd` | Map `anjabi_district`, the start map. The Steps plaza (y 0), tavern terrace (y 3), living pods with B-17 over a ravine (y 6, reached by raised stairs and a bridge), shop, mine approach (y -3) with gate and sealed door, beach, sea, docks, distant Imperial Tower and tram cable. All geometry built in code from boxes, cylinders and domes with real colliders. Stairs are visible steps plus an invisible ramp collider. Lighting: cool directional light with shadows, warm omni lights, depth fog. |
+| `game/player/player_3d.gd` | `Player3D` (CharacterBody3D): 8-direction movement with acceleration, gravity, floor snap for stairs, facing, interaction reach, owns the follow camera. Same interface as `Player`. |
+| `game/camera/follow_camera.gd` | `FollowCamera`: fixed-orientation orthographic Camera3D, pitch 50°, size 14 m, smoothed follow. |
+| `game/actors/npc_3d.gd` | `Npc3D`: 3D NPC with a dialogue id; turns to the speaker. |
+| `game/interaction/interactable_3d.gd`, `map_exit_3d.gd` | 3D twins of `Interactable` and `MapExit`. |
+| `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. |
+| `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
+| `tests/screenshot_3d.tscn`, `screenshot_3d.gd` | Windowed capture of the district (`docs/screens/3d_*.png`). |
+
 ### `tests/`
 | File | Purpose |
 |---|---|
@@ -184,6 +197,16 @@ Three combat directions were proposed; none is chosen or implemented.
 
 ## 8. Known limitations and untested areas
 
+- 3D (entry 4): geometry and characters are provisional primitives built in code, not
+  authored meshes. No AnimationPlayer; the walk is procedural. No camera occlusion
+  handling yet (nothing tall stands south of a walkable area so far). Only the
+  district is 3D; the mine yard and the town greybox are still the 2D maps, so the
+  investigation's NPCs (Driller, Gate guard) and the cart puzzle are still 2D.
+  The district's mine approach and the 2D mine yard both show a gate.
+- No inventory, equipment, stats, skill checks, reputation, combat or classes
+  exist in the project; none were preserved or added.
+- iPhone performance has not been measured; no device or export was available.
+
 - Touch: only the steering vector is tested. Real drag and tap gestures, the
   safe-area margins and gamepad input have never been tried on a device.
 - iOS export has not been attempted. JSON under `data/` must be added to the
@@ -217,3 +240,21 @@ three driller lines and the quest summary to the new geography. Town gained an
 `airpad` spawn and a second exit. Tests extended to 55 checks, all passing.
 Added this log, `tools/bundle_source.py` and `tools/package_review.sh`.
 On branch `mine-yard-relayout`; nothing committed yet.
+
+### 2026-11-14 — 4. 3D conversion, Milestone A
+Baseline committed first (`38ff398`, branch `mine-yard-relayout`); work on branch
+`3d-conversion`. Added a genuinely 3D map, `maps/anjabi/district.tscn` (`anjabi_district`),
+now the start map: the Steps plaza, tavern with copper dome on a terrace up a flight of
+stairs, raised stairs and a bridge over a ravine to the living pods and B-17, shop,
+mine approach down the west stairs with fence, gate, guard hut and the sealed No. 2
+Working door, cliffs, beach, sea, docks, and the Imperial Tower with its tram cable in
+the distance. Added `Player3D`, `FollowCamera`, `Npc3D`, `Interactable3D`, `MapExit3D`,
+`Figure3D`, `GameMap3D` and three placeholder dialogues (tavern keeper, B-17 door, sign).
+`game/main.gd` loads 2D or 3D maps and saves either kind (3D saves add `dim`, `z`, `fz`;
+old saves still load). `ui/hud.gd` and `ui/game_ui.gd` accept either player. The 2D mist
+overlay is hidden on 3D maps. The mine map's Estate stairs now lead up to the district's
+mine approach; the district's gate leads into the mine yard. Slice test extended to 83
+checks (28 for 3D: movement, diagonal, touch, camera follow, railings, walls, both
+stair flights, bridge, NPC dialogue, interactable, gate, save/load in 3D, travel both
+ways), all passing on Godot 4.7.2. Screenshots: `docs/screens/3d_*.png`.
+

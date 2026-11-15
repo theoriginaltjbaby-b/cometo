@@ -6,7 +6,8 @@ extends Control
 signal journal_pressed
 signal menu_pressed
 
-var player: Player
+## Player or Player3D.
+var player
 
 var _safe: Control
 var _prompt: Button
@@ -34,7 +35,7 @@ func _ready() -> void:
 
 	_prompt = _chip("", func() -> void:
 		if player != null:
-			player.try_interact())
+			player.call("try_interact"))
 	_prompt.add_theme_font_size_override("font_size", 10)
 	_safe.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -70,7 +71,7 @@ func _ready() -> void:
 	_apply_safe_area()
 
 
-func bind_player(p: Player) -> void:
+func bind_player(p: Node) -> void:
 	player = p
 
 
@@ -96,11 +97,11 @@ func prompt_text() -> String:
 
 
 func _process(_delta: float) -> void:
-	var t: Interactable = player.target if is_instance_valid(player) else null
+	var t = player.get("target") if is_instance_valid(player) else null
 	var show := t != null and not Dialogue.active
 	_prompt.visible = show
 	if show:
-		var text := t.prompt.to_upper()
+		var text: String = str(t.prompt).to_upper()
 		if t.label != "":
 			text += "  ·  " + t.label
 		if _prompt.text != text:

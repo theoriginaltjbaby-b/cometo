@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "read"}],
+	"nodes": {
+		"read": {
+			"say": [
+				["", "A concrete marker by the fence, painted over with fresh warning stripes."],
+				["", "DANGER. NO ENTRY BEYOND THIS POINT. The paint has run in the rain."]
+			]
+		}
+	}
+}

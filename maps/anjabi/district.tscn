@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/district.gd" id="1"]
+
+[node name="District" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_district"
+display_name = "ANJABI  ·  THE STEPS"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="default" type="Marker3D" parent="Spawns"]
+position = Vector3(2, 0.05, 5)
+
+[node name="mine" type="Marker3D" parent="Spawns"]
+position = Vector3(-34, -2.95, 2)
+
+[node name="Entities" type="Node3D" parent="."]

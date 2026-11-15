@@ -5,13 +5,15 @@ extends Node
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine.tscn",
 	"anjabi_town": "res://maps/anjabi/town.tscn",
+	"anjabi_district": "res://maps/anjabi/district.tscn",
 }
-const START_MAP := "anjabi_mine"
+const START_MAP := "anjabi_district"
 const START_QUEST := "quiet_mine"
 const PLAYER_SCENE := preload("res://game/player/player.tscn")
 
-var map: GameMap
-var player: Player
+## GameMap (2D) or GameMap3D. The player is Player or Player3D to match.
+var map
+var player
 var map_id := ""
 
 @onready var world: Node2D = $World
@@ -38,12 +40,15 @@ func new_game() -> void:
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
-	if player.walk_mask != null:
+	if player is Player and player.walk_mask != null:
 		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
 	player.camera.reset_smoothing()
 
 
 func capture_world() -> Dictionary:
+	if player is Player3D:
+		var p: Vector3 = player.global_position
+		return {"map": map_id, "dim": 3, "x": p.x, "y": p.y, "z": p.z, "fx": player.facing.x, "fz": player.facing.z}
 	return {
 		"map": map_id,
 		"x": player.global_position.x,
@@ -58,8 +63,17 @@ func restore_world(d: Dictionary) -> void:
 	if not MAPS.has(id):
 		id = START_MAP
 	_enter_map(id)
-	player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
-	player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
+	if player is Player3D:
+		if int(d.get("dim", 2)) == 3:
+			player.global_position = Vector3(float(d.get("x", 0.0)), float(d.get("y", 0.0)), float(d.get("z", 0.0)))
+			var f := Vector3(float(d.get("fx", 0.0)), 0.0, float(d.get("fz", 1.0)))
+			player.facing = f.normalized() if f.length() > 0.01 else Vector3(0, 0, 1)
+			player.face_now()
+		else:
+			player.global_position = map.spawn_position("default")
+	else:
+		player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
+		player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
 	player.camera.reset_smoothing()
 
 
@@ -70,14 +84,21 @@ func _enter_map(id: String) -> void:
 		world.remove_child(map)
 		map.queue_free()
 	map_id = id
-	map = (load(MAPS[id]) as PackedScene).instantiate() as GameMap
+	map = (load(MAPS[id]) as PackedScene).instantiate()
 	world.add_child(map)
-	player = PLAYER_SCENE.instantiate() as Player
-	map.entities.add_child(player)
-	player.setup(ui.touch, map.bounds)
-	player.walk_mask = map.get_node_or_null("WalkMask") as WalkMask
+	if map is GameMap3D:
+		player = Player3D.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch)
+	else:
+		player = PLAYER_SCENE.instantiate() as Player
+		map.entities.add_child(player)
+		player.setup(ui.touch, map.bounds)
+		player.walk_mask = map.get_node_or_null("WalkMask") as WalkMask
 	map.player = player
 	ui.bind_player(player)
+	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
+	$Weather/Fog.visible = not (map is GameMap3D)
 	ui.hud.show_location(map.display_name)
 
 
