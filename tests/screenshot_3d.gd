@@ -66,4 +66,21 @@ func _ready() -> void:
 	await get_tree().create_timer(0.8).timeout
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png(dir.path_join("3d_15_mine_bridge.png"))
+	# the whole town
+	main.call("load_map", "anjabi_town", "default")
+	await get_tree().create_timer(0.5).timeout
+	var town := {
+		"3d_20_town_steps": Vector2(880, 415), "3d_21_town_tavern": Vector2(760, 350),
+		"3d_22_town_pods": Vector2(600, 150), "3d_23_town_tion": Vector2(515, 465),
+		"3d_24_town_beach": Vector2(650, 600), "3d_25_town_docks": Vector2(1170, 460),
+		"3d_26_town_estate": Vector2(240, 590), "3d_27_town_guard": Vector2(945, 160),
+	}
+	for k: String in town:
+		var tp: Player3D = main.get("player")
+		tp.global_position = main.get("map").call("nearest_walk", town[k]) + Vector3(0, 0.1, 0)
+		tp.velocity = Vector3.ZERO
+		tp.camera.reset_smoothing()
+		await get_tree().create_timer(0.8).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
 	get_tree().quit()

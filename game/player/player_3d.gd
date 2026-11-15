@@ -25,7 +25,7 @@ func _init() -> void:
 	collision_layer = 2
 	collision_mask = 1
 	floor_snap_length = 0.45
-	floor_max_angle = deg_to_rad(48.0)
+	floor_max_angle = deg_to_rad(52.0)
 	floor_constant_speed = true
 	var cs := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()

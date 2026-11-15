@@ -189,35 +189,69 @@ func _town() -> void:
 	player = main.get("player")
 	check(str(main.get("map_id")) == "anjabi_district" and player is Player3D, "the mine stairs lead up into the 3D district")
 	main.call("load_map", "anjabi_town", "mine")
-	await _frames(3)
+	await _frames(10)
 	player = main.get("player")
-	var mask: WalkMask = player.walk_mask
-	check(mask != null and mask.is_walkable(player.global_position), "player arrives on walkable ground")
-	check(player.target is MapExit, "arrives beside the way back to the mine")
-	# the Steps: walk about, and be stopped by the sea
-	await _place(Vector2(1760, 830))
-	check(mask.is_walkable(player.global_position), "the Steps are walkable")
+	var town = main.get("map")
+	check(town is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
+	var meshes: int = town.find_children("*", "MeshInstance3D", true, false).size()
+	check(meshes > 300, "the town is built from real meshes (%d)" % meshes)
+	await _frames(20)
+	check(player.is_on_floor(), "player arrives standing on the town ground (y=%.2f)" % player.global_position.y)
+	check(player.target is MapExit3D, "arrives beside the way back to the mine")
+	# every landmark from the greybox is on solid, walkable ground
+	var landmarks := {"Steps": Vector2(880, 415), "Forest": Vector2(230, 110), "Garden": Vector2(200, 345),
+		"Estate": Vector2(240, 578), "Mine": Vector2(212, 700), "Airpad": Vector2(450, 800),
+		"Beach": Vector2(650, 640), "Tion Tower": Vector2(515, 465), "Tavern": Vector2(760, 350),
+		"Pods": Vector2(580, 70), "Guard Tower": Vector2(945, 130), "Docks": Vector2(1170, 460),
+		"Shop": Vector2(930, 385), "Tram": Vector2(970, 465), "Rainforest": Vector2(1380, 325)}
+	var bad := []
+	for k: String in landmarks:
+		var at: Vector3 = town.nearest_walk(landmarks[k])
+		await _place3(at + Vector3(0, 0.3, 0))
+		await _frames(10)
+		if not player.is_on_floor() or absf(player.global_position.y - at.y) > 0.6:
+			bad.append(k)
+	check(bad.is_empty(), "the player stands at all 15 landmarks %s" % ("" if bad.is_empty() else str(bad)))
+	# the Steps: district title, walking, real height differences across town
+	await _place3(town.nearest_walk(Vector2(880, 415)) + Vector3(0, 0.1, 0))
 	await _frames(20)
 	check(main.get_node("UI").hud._title.text.contains("THE STEPS"), "district title shows '%s'" % main.get_node("UI").hud._title.text)
 	var x0: float = player.global_position.x
 	Input.action_press(&"move_left")
 	await _frames(40)
 	Input.action_release(&"move_left")
-	check(player.global_position.x < x0 - 20.0, "player walks in town")
-	await _place(Vector2(1300, 1280))
+	check(player.global_position.x < x0 - 1.0, "player walks in town")
+	var hp: float = town.nearest_walk(Vector2(580, 70)).y
+	var hb: float = town.nearest_walk(Vector2(650, 640)).y
+	check(hp - hb > 10.0, "the pods stand %.1f m above the beach" % (hp - hb))
+	# walk from the Steps up toward the tavern: the ground rises under the player
+	await _place3(town.nearest_walk(Vector2(860, 400)) + Vector3(0, 0.1, 0))
+	var y0: float = player.global_position.y
+	Input.action_press(&"move_up")
+	Input.action_press(&"move_left")
+	await _frames(150)
+	Input.action_release(&"move_up")
+	Input.action_release(&"move_left")
+	check(player.global_position.y > y0 + 0.5 and player.is_on_floor(), "walkways climb from the Steps (%.2f -> %.2f m)" % [y0, player.global_position.y])
+	# the sea stops the player on the beach
+	await _place3(town.nearest_walk(Vector2(650, 640)) + Vector3(0, 0.1, 0))
 	Input.action_press(&"move_right")
+	Input.action_press(&"move_down")
 	await _frames(600)
 	Input.action_release(&"move_right")
-	check(mask.is_walkable(player.global_position) and player.global_position.x < 1700.0, "the sea stops the player on the beach (x=%.0f)" % player.global_position.x)
+	Input.action_release(&"move_down")
+	check(player.global_position.y > -6.6 and player.is_on_floor(), "the sea stops the player on the beach (y=%.2f)" % player.global_position.y)
+	await _place3(town.nearest_walk(Vector2(880, 415)) + Vector3(0, 0.1, 0))
 	check(SaveManager.save_game("test"), "save in town")
-	var at: Vector2 = player.global_position
+	var at_save: Vector3 = player.global_position
 	main.call("new_game")
 	await _frames(3)
 	check(SaveManager.load_game("test"), "load in town")
 	await _frames(3)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(at) < 1.0, "load restores map and position")
-	await _place(Vector2(424, 1380))
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(at_save) < 0.3, "load restores map and position")
+	town = main.get("map")
+	await _place3(town.nearest_walk(Vector2(212, 692)) + Vector3(0, 0.1, 0))
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
@@ -225,10 +259,10 @@ func _town() -> void:
 	await _place3(Vector3(43.6, 0.05, 32.2))
 	check(player.target is MapExit3D, "the airpad path is an exit")
 	player.try_interact()
-	await _frames(4)
+	await _frames(10)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_town" and player.walk_mask.is_walkable(player.global_position), "the airpad path arrives on walkable ground in town")
-	check(player.target is MapExit, "arrives beside the way back")
+	check(str(main.get("map_id")) == "anjabi_town" and player.is_on_floor(), "the airpad path arrives on the ground in town")
+	check(player.target is MapExit3D, "arrives beside the way back")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")

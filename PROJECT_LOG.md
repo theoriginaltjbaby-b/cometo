@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 5: mine yard in 3D).
+Last updated: 2026-11-14 (entry 6: whole town in 3D; every map is now 3D).
 
 ## 1. What this is
 
@@ -123,6 +123,9 @@ All files were created 2026-11-14 unless noted.
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. |
 | `maps/anjabi/mine_3d.tscn`, `mine_3d.gd` | Map `anjabi_mine` in 3D (entry 5), replacing `mine.tscn` in `main.gd`'s registry: 6 m stairs down from the Estate landing, fenced inner yard with the welded mine door and stretchers, gate, guard hut, wash-house, sheds, spur rails, the washout as a real cut in the ground, cliff fence, path east. Driller and Gate guard as `Npc3D`; all seven interactables and both exits. |
+| `maps/anjabi/town_3d.tscn`, `town_3d.gd` | Map `anjabi_town` in 3D (entry 6): the whole settlement. Terrain in 16 m chunks with vertex colours, one HeightMapShape3D collider, sea, skirts at the shoreline, and landmark buildings on their greybox footprints (tavern dome, shop, Tion Tower, Guard Tower, pods with B-17, estate, mine headframe, airpad and craft, tram station, tram line, Imperial Tower). Trees, lamps, district titles, spawns and both exits to the mine. |
+| `maps/anjabi/town_3d_cells.res` | Generated 166x109 grid (1 m cells): visual height, type, collision height. Do not edit; rebuild with `tools/build_town_3d.gd`. |
+| `tools/build_town_3d.gd` | Builds the grid from the greybox and `town_walk.res`: classifies cells by colour, interpolates walkway heights between 16 district anchors (Laplace), raises cliffs and slabs as walls. Prints the steepest walkable step; writes `docs/reference/town_3d_heights_debug.png`. |
 | `game/puzzle/ore_cart_3d.gd`, `track_switch_3d.gd` | 3D versions of the cart and points lever, same flags (`anjabi.cart`, `anjabi.spur_switch`) and dialogue. When bridged, the cart's upturned bed becomes a walkable deck and the washout blocker is removed. |
 | `tests/screenshot_3d.tscn`, `screenshot_3d.gd` | Windowed capture of the district (`docs/screens/3d_*.png`). |
 
@@ -203,10 +206,16 @@ Three combat directions were proposed; none is chosen or implemented.
 - 3D (entry 4): geometry and characters are provisional primitives built in code, not
   authored meshes. No AnimationPlayer; the walk is procedural. No camera occlusion
   handling yet (nothing tall stands south of a walkable area so far). Only the
-  the town greybox (`anjabi_town`, reached by the path east from the mine) is still 2D.
-  The district's mine approach and the mine yard both show a gate.
+  every map is 3D. The town is a 3D greybox: walkways are smooth slopes from the height
+  interpolation, not modelled stairs, and its buildings are not enterable. The district
+  and the town both contain the Steps, tavern and pods (the district is the detailed
+  version of the town's centre); they are not yet merged. The district's mine approach
+  and the mine yard both show a gate.
 - Superseded 2D files still in the repo, no longer loaded: `maps/anjabi/mine.tscn`,
-  `mine_ground.gd`, `game/puzzle/ore_cart.gd`, `track_switch.gd`.
+  `mine_ground.gd`, `game/puzzle/ore_cart.gd`, `track_switch.gd`, `maps/anjabi/town.tscn`,
+  `town.gd`, `town_greybox.png` (still read by the tools). With no 2D maps left,
+  `Player`, `Npc`, `Interactable`, `MapExit`, `GameMap`, `WalkMask`, `CharSprite`,
+  `ProvBlock`, `ProvRail` and the 2D branches in `main.gd` are unused at runtime.
 - No inventory, equipment, stats, skill checks, reputation, combat or classes
   exist in the project; none were preserved or added.
 - iPhone performance has not been measured; no device or export was available.
@@ -271,4 +280,18 @@ the existing dialogue and flags; old saves on this map land at its default spawn
 Shared building code moved from `district.gd` into `maps/map_builder_3d.gd`. Added
 `OreCart3D`, `TrackSwitch3D`. Slice test rewritten for the 3D mine: 89 checks, all
 passing. Screenshots `docs/screens/3d_10..15_*.png`.
+
+### 2026-11-14 — 6. Whole town converted to 3D
+`anjabi_town` now loads `maps/anjabi/town_3d.tscn`. New tool `tools/build_town_3d.gd`
+turns Greybox Study 01 and its walk mask into a 1 m grid with real elevation: walkways
+are interpolated between district heights (pods and forest 6 m, tavern, estate and
+garden 3 m, the Steps 0, docks and tram -1, mine and airpad -3, beach -6), so paths
+climb between levels; cliffs, buildings and water are walls in one HeightMapShape3D.
+Terrain is drawn in 16 m chunks (for the Mobile renderer's per-mesh light limit) with
+landmark buildings on their footprints. Spawns and exits match the 2D town, so travel
+to and from the mine is unchanged. Player slope limit raised to 52 degrees (steepest
+generated walkway step is 48). Slice test town section rewritten: 93 checks, all
+passing, including standing at all 15 landmarks, walkways climbing from the Steps, the
+sea stopping the player, save/load and travel both ways. Screenshots
+`docs/screens/3d_20..27_*.png`.
 

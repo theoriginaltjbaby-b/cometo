@@ -4,7 +4,7 @@ extends Node
 
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
-	"anjabi_town": "res://maps/anjabi/town.tscn",
+	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
 	"anjabi_district": "res://maps/anjabi/district.tscn",
 }
 const START_MAP := "anjabi_district"
