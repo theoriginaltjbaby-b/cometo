@@ -1,6 +1,7 @@
 COMETO - all source files. Index:
   project.godot
   art_provisional/char_sprite.gd
+  art_provisional/figure_3d.gd
   art_provisional/fog.gdshader
   art_provisional/prov_block.gd
   art_provisional/prov_rail.gd
@@ -18,7 +19,10 @@ COMETO - all source files. Index:
   data/dialogue/anjabi/driller.json
   data/dialogue/anjabi/guard.json
   data/dialogue/anjabi/junction.json
+  data/dialogue/anjabi/mine_approach_sign.json
   data/dialogue/anjabi/notice.json
+  data/dialogue/anjabi/pod_b17.json
+  data/dialogue/anjabi/tavern_keeper.json
   data/dialogue/anjabi/trench.json
   data/journal/clues.json
   data/journal/quests.json
@@ -26,24 +30,44 @@ COMETO - all source files. Index:
   game/main.tscn
   game/actors/npc.gd
   game/actors/npc.tscn
+  game/actors/npc_3d.gd
+  game/camera/follow_camera.gd
   game/interaction/interactable.gd
+  game/interaction/interactable_3d.gd
   game/interaction/map_exit.gd
+  game/interaction/map_exit_3d.gd
   game/player/player.gd
   game/player/player.tscn
+  game/player/player_3d.gd
   game/puzzle/ore_cart.gd
+  game/puzzle/ore_cart_3d.gd
   game/puzzle/track_switch.gd
+  game/puzzle/track_switch_3d.gd
   maps/game_map.gd
+  maps/game_map_3d.gd
+  maps/map_builder_3d.gd
   maps/walk_mask.gd
+  maps/anjabi/district.gd
+  maps/anjabi/district.tscn
   maps/anjabi/mine.tscn
+  maps/anjabi/mine_3d.gd
+  maps/anjabi/mine_3d.tscn
   maps/anjabi/mine_ground.gd
   maps/anjabi/town.gd
   maps/anjabi/town.tscn
+  maps/anjabi/town_3d.gd
+  maps/anjabi/town_3d.tscn
+  tests/perf_probe.gd
+  tests/perf_probe.tscn
   tests/screenshot.gd
   tests/screenshot.tscn
+  tests/screenshot_3d.gd
+  tests/screenshot_3d.tscn
   tests/screenshot_town.gd
   tests/screenshot_town.tscn
   tests/slice_test.gd
   tests/slice_test.tscn
+  tools/build_town_3d.gd
   tools/build_town_mask.gd
   tools/bundle_source.py
   tools/package_review.sh
@@ -67,6 +91,8 @@ config_version=5
 config/name="COMETO"
 run/main_scene="res://game/main.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
+config/icon="res://icon.png"
+boot_splash/bg_color=Color(0.04, 0.06, 0.08, 1)
 
 [autoload]
 
@@ -87,7 +113,15 @@ window/handheld/orientation=4
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
+scaling_3d/mode.ios=1
+scaling_3d/scale.ios=0.7
+lights_and_shadows/directional_shadow/size.ios=2048
+lights_and_shadows/directional_shadow/soft_shadow_filter_quality.ios=1
+anti_aliasing/quality/msaa_3d.ios=0
+
 renderer/rendering_method="mobile"
+renderer/rendering_method.web="gl_compatibility"
 textures/canvas_textures/default_texture_filter=0
 2d/snap/snap_2d_transforms_to_pixel=true
 environment/defaults/default_clear_color=Color(0.04, 0.06, 0.08, 1)
@@ -201,6 +235,202 @@ func _draw() -> void:
 		3:
 			draw_rect(Rect2(-4, -22 + bob, 4, 7), top)
 			draw_rect(Rect2(2, -18 + bob, 1, 1), eye)
+
+
+==============================================================================
+== art_provisional/figure_3d.gd
+==============================================================================
+class_name Figure3D
+extends Node3D
+## PROVISIONAL ART. A person built from primitive meshes, about 1.65 m and four
+## heads tall, facing -Z. Procedural walk and idle animation through limb pivots.
+## Keep set_motion() as the interface when an authored, rigged model replaces it.
+
+var coat := Color(0.35, 0.4, 0.45)
+var accent := Color(0.7, 0.45, 0.2)
+var skin := Color(0.78, 0.6, 0.48)
+var hood := false
+## Draw a faint silhouette wherever the figure is hidden behind scenery (player only).
+var xray := false
+
+
+var _hips: Node3D
+var _leg_l: Node3D
+var _leg_r: Node3D
+var _arm_l: Node3D
+var _arm_r: Node3D
+var _torso: Node3D
+var _phase := 0.0
+var _amount := 0.0
+var _speed := 0.0
+var _t := 0.0
+
+
+func _ready() -> void:
+	var coat_m := _mat(coat, 0.85)
+	var dark_m := _mat(coat.darkened(0.3), 0.9)
+	var skin_m := _mat(skin, 0.7)
+	var boot_m := _mat(Color(0.1, 0.09, 0.09), 0.6)
+	var accent_m := _mat(accent, 0.6, 0.3)
+	_hips = Node3D.new()
+	_hips.position.y = 0.82
+	add_child(_hips)
+	_leg_l = _limb(_hips, Vector3(-0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
+	_leg_r = _limb(_hips, Vector3(0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
+	_torso = Node3D.new()
+	_hips.add_child(_torso)
+	# coat skirt, chest, belt
+	var skirt := CylinderMesh.new()
+	skirt.top_radius = 0.19
+	skirt.bottom_radius = 0.27
+	skirt.height = 0.5
+	skirt.radial_segments = 12
+	_part(_torso, skirt, coat_m, Vector3(0, -0.05, 0.01), Vector3(1, 1, 0.85))
+	var hem := CylinderMesh.new()
+	hem.top_radius = 0.272
+	hem.bottom_radius = 0.272
+	hem.height = 0.04
+	hem.radial_segments = 12
+	_part(_torso, hem, dark_m, Vector3(0, -0.29, 0.01), Vector3(1, 1, 0.85))
+	var chest := CapsuleMesh.new()
+	chest.radius = 0.19
+	chest.height = 0.6
+	_part(_torso, chest, coat_m, Vector3(0, 0.36, 0), Vector3(1, 1, 0.78))
+	var belt := CylinderMesh.new()
+	belt.top_radius = 0.2
+	belt.bottom_radius = 0.2
+	belt.height = 0.05
+	_part(_torso, belt, accent_m, Vector3(0, 0.18, 0))
+	var collar := CylinderMesh.new()
+	collar.top_radius = 0.11
+	collar.bottom_radius = 0.17
+	collar.height = 0.1
+	_part(_torso, collar, accent_m, Vector3(0, 0.6, 0))
+	# shoulders, scarf, satchel and strap
+	var sh := SphereMesh.new()
+	sh.radius = 0.1
+	sh.height = 0.16
+	_part(_torso, sh, coat_m, Vector3(-0.21, 0.55, 0))
+	_part(_torso, sh, coat_m, Vector3(0.21, 0.55, 0))
+	var scarf := BoxMesh.new()
+	scarf.size = Vector3(0.09, 0.26, 0.04)
+	_part(_torso, scarf, accent_m, Vector3(0.06, 0.45, -0.165), Vector3.ONE).rotation.z = 0.12
+	var bag_m := _mat(Color(0.3, 0.2, 0.13), 0.8)
+	var bag := BoxMesh.new()
+	bag.size = Vector3(0.08, 0.2, 0.24)
+	_part(_torso, bag, bag_m, Vector3(0.27, 0.06, 0.02))
+	var strap := BoxMesh.new()
+	strap.size = Vector3(0.04, 0.62, 0.02)
+	var st := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, -0.155))
+	st.rotation.z = -0.62
+	var st2 := _part(_torso, strap, bag_m, Vector3(0.03, 0.35, 0.155))
+	st2.rotation.z = -0.62
+	_arm_l = _limb(_torso, Vector3(-0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
+	_arm_r = _limb(_torso, Vector3(0.25, 0.53, 0), 0.06, 0.56, coat_m, skin_m)
+	# head
+	var head := SphereMesh.new()
+	head.radius = 0.19
+	head.height = 0.4
+	_part(_torso, head, skin_m, Vector3(0, 0.81, 0))
+	var eye := BoxMesh.new()
+	eye.size = Vector3(0.035, 0.035, 0.02)
+	var eye_m := _mat(Color(0.06, 0.05, 0.06), 0.5)
+	_part(_torso, eye, eye_m, Vector3(-0.065, 0.83, -0.175))
+	_part(_torso, eye, eye_m, Vector3(0.065, 0.83, -0.175))
+	if hood:
+		var h := SphereMesh.new()
+		h.radius = 0.22
+		h.height = 0.46
+		_part(_torso, h, coat_m, Vector3(0, 0.84, 0.035), Vector3(1, 1, 0.95))
+		var face := SphereMesh.new()
+		face.radius = 0.17
+		face.height = 0.34
+		_part(_torso, face, skin_m, Vector3(0, 0.8, -0.05))
+		var peak := BoxMesh.new()
+		peak.size = Vector3(0.36, 0.05, 0.1)
+		_part(_torso, peak, coat_m, Vector3(0, 0.98, -0.17)).rotation.x = 0.35
+	else:
+		var hair := SphereMesh.new()
+		hair.radius = 0.2
+		hair.height = 0.26
+		hair.is_hemisphere = true
+		_part(_torso, hair, _mat(Color(0.12, 0.09, 0.08), 0.8), Vector3(0, 0.85, 0.02))
+
+
+func set_motion(moving: bool, speed_ratio: float = 1.0) -> void:
+	_speed = clampf(speed_ratio, 0.0, 1.2) if moving else 0.0
+
+
+func _process(delta: float) -> void:
+	_t += delta
+	_amount = move_toward(_amount, 1.0 if _speed > 0.05 else 0.0, delta * 6.0)
+	_phase += delta * 10.0 * maxf(_speed, 0.4) * _amount
+	var s := sin(_phase) * _amount
+	_leg_l.rotation.x = s * 0.6
+	_leg_r.rotation.x = -s * 0.6
+	_arm_l.rotation.x = -s * 0.5
+	_arm_r.rotation.x = s * 0.5
+	_arm_l.rotation.z = -0.08
+	_arm_r.rotation.z = 0.08
+	var breathe := sin(_t * 2.0) * 0.012 * (1.0 - _amount)
+	_hips.position.y = 0.82 + absf(cos(_phase)) * 0.04 * _amount
+	_torso.rotation.x = -0.08 * _amount
+	_torso.scale = Vector3(1.0, 1.0 + breathe, 1.0)
+
+
+func _limb(parent: Node3D, at: Vector3, r: float, length: float, m: Material, end_m: Material) -> Node3D:
+	var pivot := Node3D.new()
+	pivot.position = at
+	parent.add_child(pivot)
+	var c := CylinderMesh.new()
+	c.top_radius = r * 1.15
+	c.bottom_radius = r * 0.85
+	c.height = length - r
+	c.radial_segments = 8
+	_part(pivot, c, m, Vector3(0, -length * 0.5 + r * 0.25, 0))
+	var joint := SphereMesh.new()
+	joint.radius = r * 1.15
+	joint.height = r * 2.3
+	_part(pivot, joint, m, Vector3.ZERO)
+	if end_m.get_meta("boot", false):
+		var b := BoxMesh.new()
+		b.size = Vector3(r * 2.2, r * 1.4, r * 3.6)
+		_part(pivot, b, end_m, Vector3(0, -length + r * 0.5, -r * 0.7))
+		var cuff := CylinderMesh.new()
+		cuff.top_radius = r * 1.25
+		cuff.bottom_radius = r * 1.15
+		cuff.height = r * 2.6
+		cuff.radial_segments = 8
+		_part(pivot, cuff, end_m, Vector3(0, -length + r * 1.9, 0))
+	else:
+		var sp := SphereMesh.new()
+		sp.radius = r * 1.05
+		sp.height = r * 2.1
+		_part(pivot, sp, end_m, Vector3(0, -length + r * 0.6, 0))
+	return pivot
+
+
+func _part(parent: Node3D, mesh: Mesh, m: Material, at: Vector3, s: Vector3 = Vector3.ONE) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = m
+	mi.position = at
+	mi.scale = s
+	parent.add_child(mi)
+	return mi
+
+
+func _mat(c: Color, rough: float, metal: float = 0.0) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c
+	m.roughness = rough
+	m.metallic = metal
+	if xray:
+		m.stencil_mode = BaseMaterial3D.STENCIL_MODE_XRAY
+		m.stencil_color = Color(1.0, 0.72, 0.35, 0.5)
+	if c.v < 0.12:
+		m.set_meta("boot", true)
+	return m
 
 
 ==============================================================================
@@ -1305,6 +1535,22 @@ func _notification(what: int) -> void:
 
 
 ==============================================================================
+== data/dialogue/anjabi/mine_approach_sign.json
+==============================================================================
+{
+	"entry": [{"goto": "read"}],
+	"nodes": {
+		"read": {
+			"say": [
+				["", "A concrete marker by the fence, painted over with fresh warning stripes."],
+				["", "DANGER. NO ENTRY BEYOND THIS POINT. The paint has run in the rain."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
 == data/dialogue/anjabi/notice.json
 ==============================================================================
 {
@@ -1317,6 +1563,65 @@ func _notification(what: int) -> void:
 				["", "Underneath, someone has scratched two words into the plastic with a nail: NOTIFIED WHEN?"]
 			],
 			"then": [{"clue": "closure_notice"}, {"objective": "quiet_mine.notice"}]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/pod_b17.json
+==============================================================================
+{
+	"entry": [{"goto": "knock"}],
+	"nodes": {
+		"knock": {
+			"say": [
+				["", "Pod B-17. The door is a pressed steel panel with a number stencilled on it."],
+				["", "You knock. A light is on inside, but nobody answers."]
+			]
+		}
+	}
+}
+
+
+==============================================================================
+== data/dialogue/anjabi/tavern_keeper.json
+==============================================================================
+{
+	"entry": [
+		{"if": {"flag": "tavern_keeper.met"}, "goto": "again"},
+		{"goto": "first"}
+	],
+	"nodes": {
+		"first": {
+			"do": [{"set": {"tavern_keeper.met": true}}],
+			"say": [
+				["", "Someone in a stained apron is wiping rain off the outside tables, which will not stay dry."],
+				["Tavern keeper", "Full inside. Stand under the awning if you like, nobody charges for that."]
+			],
+			"goto": "menu"
+		},
+		"again": {
+			"say": [["Tavern keeper", "Still raining. Still full."]],
+			"goto": "menu"
+		},
+		"menu": {
+			"choices": [
+				{"text": "What are people saying about the mine?", "goto": "mine"},
+				{"text": "Where's the mine from here?", "goto": "where"},
+				{"text": "Nothing. Thanks.", "goto": "end"}
+			]
+		},
+		"mine": {
+			"say": [
+				["Tavern keeper", "Depends who's buying. You'll hear it a different way at every table."],
+				["Tavern keeper", "The ones who worked it don't come up here much now."]
+			],
+			"goto": "menu"
+		},
+		"where": {
+			"say": [["Tavern keeper", "Down the west stairs off the Steps. Follow the rails till the fence stops you."]],
+			"goto": "menu"
 		}
 	}
 }
@@ -1386,15 +1691,16 @@ extends Node
 ## SaveManager captures and restores.
 
 const MAPS := {
-	"anjabi_mine": "res://maps/anjabi/mine.tscn",
-	"anjabi_town": "res://maps/anjabi/town.tscn",
+	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
+	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
 }
-const START_MAP := "anjabi_mine"
+const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
 const PLAYER_SCENE := preload("res://game/player/player.tscn")
 
-var map: GameMap
-var player: Player
+## GameMap (2D) or GameMap3D. The player is Player or Player3D to match.
+var map
+var player
 var map_id := ""
 
 @onready var world: Node2D = $World
@@ -1421,12 +1727,15 @@ func new_game() -> void:
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
-	if player.walk_mask != null:
+	if player is Player and player.walk_mask != null:
 		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
 	player.camera.reset_smoothing()
 
 
 func capture_world() -> Dictionary:
+	if player is Player3D:
+		var p: Vector3 = player.global_position
+		return {"map": map_id, "dim": 3, "x": p.x, "y": p.y, "z": p.z, "fx": player.facing.x, "fz": player.facing.z}
 	return {
 		"map": map_id,
 		"x": player.global_position.x,
@@ -1438,11 +1747,22 @@ func capture_world() -> Dictionary:
 
 func restore_world(d: Dictionary) -> void:
 	var id := str(d.get("map", START_MAP))
-	if not MAPS.has(id):
+	var known := MAPS.has(id)
+	if not known:
+		# e.g. saves from the retired separate district map: resume at the Steps
 		id = START_MAP
 	_enter_map(id)
-	player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
-	player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
+	if player is Player3D:
+		if known and int(d.get("dim", 2)) == 3:
+			player.global_position = Vector3(float(d.get("x", 0.0)), float(d.get("y", 0.0)), float(d.get("z", 0.0)))
+			var f := Vector3(float(d.get("fx", 0.0)), 0.0, float(d.get("fz", 1.0)))
+			player.facing = f.normalized() if f.length() > 0.01 else Vector3(0, 0, 1)
+			player.face_now()
+		else:
+			player.global_position = map.spawn_position("default")
+	else:
+		player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
+		player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
 	player.camera.reset_smoothing()
 
 
@@ -1453,14 +1773,21 @@ func _enter_map(id: String) -> void:
 		world.remove_child(map)
 		map.queue_free()
 	map_id = id
-	map = (load(MAPS[id]) as PackedScene).instantiate() as GameMap
+	map = (load(MAPS[id]) as PackedScene).instantiate()
 	world.add_child(map)
-	player = PLAYER_SCENE.instantiate() as Player
-	map.entities.add_child(player)
-	player.setup(ui.touch, map.bounds)
-	player.walk_mask = map.get_node_or_null("WalkMask") as WalkMask
+	if map is GameMap3D:
+		player = Player3D.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch)
+	else:
+		player = PLAYER_SCENE.instantiate() as Player
+		map.entities.add_child(player)
+		player.setup(ui.touch, map.bounds)
+		player.walk_mask = map.get_node_or_null("WalkMask") as WalkMask
 	map.player = player
 	ui.bind_player(player)
+	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
+	$Weather/Fog.visible = not (map is GameMap3D)
 	ui.hud.show_location(map.display_name)
 
 
@@ -1586,6 +1913,107 @@ script = ExtResource("3")
 
 
 ==============================================================================
+== game/actors/npc_3d.gd
+==============================================================================
+class_name Npc3D
+extends StaticBody3D
+## A person standing in a 3D map who can be talked to. Same data as Npc
+## (display_name, dialogue_id, colours); turns to face whoever speaks to them.
+
+@export var display_name := "Someone"
+@export var dialogue_id := ""
+@export var coat := Color(0.35, 0.4, 0.45)
+@export var accent := Color(0.7, 0.45, 0.2)
+@export var skin := Color(0.78, 0.6, 0.48)
+@export var hood := false
+## Facing in degrees around Y; 0 faces north, 180 faces south (toward the camera).
+@export var yaw_deg := 180.0
+
+var figure: Figure3D
+var interactable: Interactable3D
+
+
+func _ready() -> void:
+	collision_layer = 1
+	collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.3
+	cap.height = 1.6
+	cs.shape = cap
+	cs.position.y = 0.8
+	add_child(cs)
+	figure = Figure3D.new()
+	figure.coat = coat
+	figure.accent = accent
+	figure.skin = skin
+	figure.hood = hood
+	figure.rotation.y = deg_to_rad(yaw_deg)
+	add_child(figure)
+	interactable = Interactable3D.new()
+	interactable.label = display_name
+	interactable.prompt = "Talk"
+	interactable.dialogue_id = dialogue_id
+	interactable.radius = 1.0
+	interactable.position.y = 0.8
+	add_child(interactable)
+	interactable.interacted.connect(_on_interacted)
+
+
+func _on_interacted(by: Node3D) -> void:
+	var d := by.global_position - global_position
+	d.y = 0.0
+	if d.length() > 0.01:
+		create_tween().tween_property(figure, "rotation:y", atan2(-d.x, -d.z), 0.2)
+
+
+==============================================================================
+== game/camera/follow_camera.gd
+==============================================================================
+class_name FollowCamera
+extends Camera3D
+## Fixed-orientation elevated RPG camera. Never rotates: north is always up the
+## screen. Orthographic by default; `size` is the visible height in metres.
+
+@export var pitch_deg := 50.0
+@export var distance := 40.0
+@export var ortho_size := 14.0
+@export var follow_speed := 6.0
+## Aim slightly ahead of the feet so the player sits a little below centre.
+@export var look_height := 1.0
+
+var target: Node3D
+
+
+func _ready() -> void:
+	top_level = true
+	projection = PROJECTION_ORTHOGONAL
+	size = ortho_size
+	near = 0.5
+	far = 160.0
+	rotation_degrees = Vector3(-pitch_deg, 0, 0)
+	current = true
+	reset_smoothing()
+
+
+func _offset() -> Vector3:
+	var p := deg_to_rad(pitch_deg)
+	return Vector3(0, sin(p), cos(p)) * distance + Vector3(0, look_height, 0)
+
+
+func reset_smoothing() -> void:
+	if target != null and target.is_inside_tree():
+		global_position = target.global_position + _offset()
+
+
+func _physics_process(delta: float) -> void:
+	if target == null:
+		return
+	var want := target.global_position + _offset()
+	global_position = global_position.lerp(want, 1.0 - exp(-follow_speed * delta))
+
+
+==============================================================================
 == game/interaction/interactable.gd
 ==============================================================================
 class_name Interactable
@@ -1629,6 +2057,48 @@ func interact(by: Node2D) -> void:
 
 
 ==============================================================================
+== game/interaction/interactable_3d.gd
+==============================================================================
+class_name Interactable3D
+extends Area3D
+## 3D twin of Interactable: same fields, same API (prompt, label, dialogue_id,
+## enabled_if, is_available, interact), so the HUD and Dialogue treat both alike.
+
+signal interacted(by: Node3D)
+
+@export var prompt := "Look"
+@export var label := ""
+@export var dialogue_id := ""
+@export var radius := 1.2
+## GameState condition; the interactable is ignored while it is false.
+@export var enabled_if: Dictionary = {}
+
+var enabled := true
+
+
+func _ready() -> void:
+	collision_layer = 4
+	collision_mask = 0
+	monitoring = false
+	if get_child_count() == 0:
+		var shape := SphereShape3D.new()
+		shape.radius = radius
+		var cs := CollisionShape3D.new()
+		cs.shape = shape
+		add_child(cs)
+
+
+func is_available() -> bool:
+	return enabled and GameState.check(enabled_if)
+
+
+func interact(by: Node3D) -> void:
+	interacted.emit(by)
+	if dialogue_id != "":
+		Dialogue.start(dialogue_id)
+
+
+==============================================================================
 == game/interaction/map_exit.gd
 ==============================================================================
 class_name MapExit
@@ -1640,6 +2110,22 @@ extends Interactable
 
 
 func interact(by: Node2D) -> void:
+	interacted.emit(by)
+	GameState.travel_requested.emit(target_map, target_spawn)
+
+
+==============================================================================
+== game/interaction/map_exit_3d.gd
+==============================================================================
+class_name MapExit3D
+extends Interactable3D
+## An interactable that travels to another map (2D or 3D).
+
+@export var target_map := ""
+@export var target_spawn := "default"
+
+
+func interact(by: Node3D) -> void:
 	interacted.emit(by)
 	GameState.travel_requested.emit(target_map, target_spawn)
 
@@ -1779,6 +2265,137 @@ shape = SubResource("reach")
 position = Vector2(0, -10)
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0
+
+
+==============================================================================
+== game/player/player_3d.gd
+==============================================================================
+class_name Player3D
+extends CharacterBody3D
+## The player in 3D maps. Same outward interface as Player (target, facing,
+## try_interact, setup, camera.reset_smoothing) so main, HUD and tests can drive
+## either. Screen-up is north (-Z); the camera never rotates.
+
+signal target_changed(target: Interactable3D)
+
+@export var walk_speed := 4.2
+@export var accel := 28.0
+@export var decel := 36.0
+@export var gravity := 22.0
+
+var touch: TouchControls
+var facing := Vector3(0, 0, 1)
+var target: Interactable3D
+## Not used in 3D; kept so code written for 2D maps can test it safely.
+var walk_mask: Variant = null
+var figure: Figure3D
+var reach: Area3D
+var camera: FollowCamera
+## Last place the player stood; used if they ever fall out of the world.
+var _safe := Vector3.ZERO
+var _has_safe := false
+
+
+func _init() -> void:
+	collision_layer = 2
+	collision_mask = 1
+	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(52.0)
+	floor_constant_speed = true
+	var cs := CollisionShape3D.new()
+	var cap := CapsuleShape3D.new()
+	cap.radius = 0.28
+	cap.height = 1.6
+	cs.shape = cap
+	cs.position.y = 0.8
+	add_child(cs)
+	figure = Figure3D.new()
+	figure.coat = Color(0.86, 0.62, 0.2)
+	figure.accent = Color(0.2, 0.24, 0.28)
+	figure.hood = true
+	figure.xray = true
+	add_child(figure)
+	reach = Area3D.new()
+	reach.collision_layer = 0
+	reach.collision_mask = 4
+	reach.monitorable = false
+	var rs := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = 1.4
+	rs.shape = sphere
+	rs.position = Vector3(0, 0.8, 0)
+	reach.add_child(rs)
+	add_child(reach)
+	camera = FollowCamera.new()
+	camera.target = self
+	add_child(camera)
+
+
+func setup(touch_controls: TouchControls, _bounds: Variant = null) -> void:
+	touch = touch_controls
+	camera.reset_smoothing()
+
+
+func _physics_process(delta: float) -> void:
+	var dir := Vector2.ZERO
+	if not Dialogue.active:
+		dir = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+		if dir == Vector2.ZERO and touch != null:
+			dir = touch.vector
+	var moving := dir.length() > 0.1
+	var want := Vector3(dir.x, 0, dir.y).limit_length(1.0) * walk_speed if moving else Vector3.ZERO
+	var h := Vector3(velocity.x, 0, velocity.z).move_toward(want, (accel if moving else decel) * delta)
+	velocity.x = h.x
+	velocity.z = h.z
+	if is_on_floor():
+		velocity.y = 0.0
+	else:
+		velocity.y -= gravity * delta
+	move_and_slide()
+	if is_on_floor():
+		_safe = global_position
+		_has_safe = true
+	elif global_position.y < -40.0 and _has_safe:
+		global_position = _safe + Vector3(0, 0.3, 0)
+		velocity = Vector3.ZERO
+	if moving:
+		facing = Vector3(dir.x, 0, dir.y).normalized()
+	var yaw := atan2(-facing.x, -facing.z)
+	figure.rotation.y = lerp_angle(figure.rotation.y, yaw, 1.0 - exp(-14.0 * delta))
+	figure.set_motion(h.length() > 0.3, h.length() / walk_speed)
+	_update_target()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"interact") and try_interact():
+		get_viewport().set_input_as_handled()
+
+
+func try_interact() -> bool:
+	if Dialogue.active or target == null or not target.is_available():
+		return false
+	target.interact(self)
+	return true
+
+
+func face_now() -> void:
+	figure.rotation.y = atan2(-facing.x, -facing.z)
+
+
+func _update_target() -> void:
+	var best: Interactable3D = null
+	var best_d := INF
+	for a in reach.get_overlapping_areas():
+		var it := a as Interactable3D
+		if it == null or not it.is_available():
+			continue
+		var d := global_position.distance_squared_to(it.global_position)
+		if d < best_d:
+			best_d = d
+			best = it
+	if best != target:
+		target = best
+		target_changed.emit(target)
 
 
 ==============================================================================
@@ -1929,6 +2546,200 @@ func _draw() -> void:
 
 
 ==============================================================================
+== game/puzzle/ore_cart_3d.gd
+==============================================================================
+class_name OreCart3D
+extends Node3D
+## 3D version of OreCart, same rules and the same GameState keys. Pushed from its
+## start it rolls to the junction and takes whichever branch the points are set to:
+## branch A ends at a buffer (haul it back), branch B ends in the washout, where the
+## cart wedges bed-up and becomes a bridge. PROVISIONAL ART (primitives).
+
+@export var state_key := "anjabi.cart"
+@export var switch_key := "anjabi.spur_switch"
+@export var roll_speed := 3.5
+@export var dialogue_buffer := ""
+@export var dialogue_bridge := ""
+@export var on_bridged: Array[Dictionary] = []
+
+## Rail polylines in world space, set by the map before the cart enters the tree.
+var rail_main := PackedVector3Array()
+var rail_a := PackedVector3Array()
+var rail_b := PackedVector3Array()
+var bridge_position := Vector3.ZERO
+## Invisible wall across the washout; removed once the cart bridges it.
+var gap_blocker: CollisionShape3D
+
+var moving := false
+
+var _body: StaticBody3D
+var _shape: CollisionShape3D
+var _deck_body: StaticBody3D
+var _deck_shape: CollisionShape3D
+var _visual: Node3D
+var _deck_visual: Node3D
+var _interactable: Interactable3D
+
+
+func _ready() -> void:
+	var rust := StandardMaterial3D.new()
+	rust.albedo_color = Color(0.5, 0.29, 0.18)
+	rust.roughness = 0.65
+	rust.metallic = 0.5
+	var dark := StandardMaterial3D.new()
+	dark.albedo_color = Color(0.1, 0.1, 0.11)
+	dark.roughness = 0.5
+	dark.metallic = 0.6
+	_body = StaticBody3D.new()
+	_body.collision_layer = 1
+	_body.collision_mask = 0
+	add_child(_body)
+	_shape = CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(1.3, 1.0, 2.2)
+	_shape.shape = bs
+	_shape.position.y = 0.5
+	_body.add_child(_shape)
+	_visual = Node3D.new()
+	add_child(_visual)
+	_mesh(_visual, Vector3(1.2, 0.75, 2.1), rust, Vector3(0, 0.62, 0))
+	_mesh(_visual, Vector3(1.0, 0.05, 1.9), dark, Vector3(0, 1.0, 0))
+	_mesh(_visual, Vector3(1.3, 0.08, 2.2), rust, Vector3(0, 1.0, 0))
+	for x: float in [-0.5, 0.5]:
+		for z: float in [-0.65, 0.65]:
+			var w := MeshInstance3D.new()
+			var cm := CylinderMesh.new()
+			cm.top_radius = 0.2
+			cm.bottom_radius = 0.2
+			cm.height = 0.1
+			w.mesh = cm
+			w.material_override = dark
+			w.position = Vector3(x, 0.2, z)
+			w.rotation.z = PI * 0.5
+			_visual.add_child(w)
+	# wedged in the washout: the tub upside down, its bed level with the ground
+	_deck_body = StaticBody3D.new()
+	_deck_body.collision_layer = 1
+	_deck_body.collision_mask = 0
+	_deck_body.top_level = true
+	add_child(_deck_body)
+	_deck_shape = CollisionShape3D.new()
+	var ds := BoxShape3D.new()
+	ds.size = Vector3(1.6, 0.3, 2.6)
+	_deck_shape.shape = ds
+	_deck_shape.position.y = -0.15
+	_deck_body.add_child(_deck_shape)
+	_deck_visual = Node3D.new()
+	_deck_body.add_child(_deck_visual)
+	_mesh(_deck_visual, Vector3(1.3, 0.85, 2.4), rust, Vector3(0, -0.45, 0))
+	_mesh(_deck_visual, Vector3(1.32, 0.04, 2.42), rust.duplicate(), Vector3(0, -0.01, 0))
+	for i in 5:
+		_mesh(_deck_visual, Vector3(1.32, 0.03, 0.06), dark, Vector3(0, 0.01, -1.0 + i * 0.5))
+	_interactable = Interactable3D.new()
+	_interactable.label = "Ore cart"
+	_interactable.radius = 1.3
+	_interactable.position = Vector3(0, 0.6, 0)
+	add_child(_interactable)
+	_interactable.interacted.connect(_on_interacted)
+	_apply_state()
+
+
+func state() -> String:
+	return str(GameState.get_flag(state_key, "start"))
+
+
+func _apply_state() -> void:
+	var s := state()
+	var bridged := s == "trench"
+	match s:
+		"buffer":
+			global_position = rail_a[rail_a.size() - 1]
+		"trench":
+			global_position = bridge_position
+		_:
+			global_position = rail_main[0]
+	_deck_body.global_position = bridge_position
+	_shape.set_deferred("disabled", bridged)
+	_deck_shape.set_deferred("disabled", not bridged)
+	_visual.visible = not bridged
+	_deck_visual.visible = bridged
+	_interactable.enabled = not bridged
+	_interactable.prompt = "Haul back" if s == "buffer" else "Push"
+	if gap_blocker != null:
+		gap_blocker.set_deferred("disabled", bridged)
+
+
+func _on_interacted(_by: Node3D) -> void:
+	if moving:
+		return
+	var route := PackedVector3Array()
+	var next := "start"
+	if state() == "start":
+		var to_trench := str(GameState.get_flag(switch_key, "a")) == "b"
+		route.append_array(rail_main.slice(1))
+		route.append_array((rail_b if to_trench else rail_a).slice(1))
+		if to_trench:
+			route.append(bridge_position)
+		next = "trench" if to_trench else "buffer"
+	elif state() == "buffer":
+		var a := rail_a.duplicate()
+		a.reverse()
+		route.append_array(a.slice(1))
+		var m := rail_main.duplicate()
+		m.reverse()
+		route.append_array(m.slice(1))
+	else:
+		return
+	_roll(route, next)
+
+
+func _roll(route: PackedVector3Array, next: String) -> void:
+	moving = true
+	_interactable.enabled = false
+	var tween := create_tween()
+	var from := global_position
+	for i in route.size():
+		var t := from.distance_to(route[i]) / roll_speed
+		var step := tween.tween_property(self, "global_position", route[i], maxf(t, 0.05))
+		if i == 0:
+			step.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		from = route[i]
+	if next == "trench":
+		tween.tween_property(self, "global_position", bridge_position + Vector3(0, -0.9, 0), 0.25)
+	await tween.finished
+	moving = false
+	GameState.set_flag(state_key, next)
+	_apply_state()
+	if next == "trench":
+		GameState.apply(on_bridged)
+		if dialogue_bridge != "":
+			Dialogue.start(dialogue_bridge)
+	elif next == "buffer" and dialogue_buffer != "":
+		Dialogue.start(dialogue_buffer)
+
+
+func _process(_delta: float) -> void:
+	if moving:
+		var d := Vector3.ZERO
+		# face the direction of travel along the rails
+		d = global_position - get_meta("last", global_position)
+		set_meta("last", global_position)
+		d.y = 0.0
+		if d.length() > 0.001:
+			_visual.rotation.y = atan2(d.x, d.z)
+
+
+func _mesh(parent: Node3D, size: Vector3, m: Material, at: Vector3) -> void:
+	var mi := MeshInstance3D.new()
+	var b := BoxMesh.new()
+	b.size = size
+	mi.mesh = b
+	mi.material_override = m
+	mi.position = at
+	parent.add_child(mi)
+
+
+==============================================================================
 == game/puzzle/track_switch.gd
 ==============================================================================
 class_name TrackSwitch
@@ -1982,6 +2793,104 @@ func _draw() -> void:
 
 
 ==============================================================================
+== game/puzzle/track_switch_3d.gd
+==============================================================================
+class_name TrackSwitch3D
+extends StaticBody3D
+## 3D points lever. Flips a GameState flag between "a" and "b"; anything on the
+## rails reads that flag. PROVISIONAL ART (primitives).
+
+@export var switch_key := "anjabi.spur_switch"
+@export var notify_a := "The points grind across, toward the buffer."
+@export var notify_b := "The points grind across, toward the washout."
+
+var _lever: Node3D
+var _knob: MeshInstance3D
+var _knob_a: StandardMaterial3D
+var _knob_b: StandardMaterial3D
+
+
+func _ready() -> void:
+	collision_layer = 1
+	collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var s := BoxShape3D.new()
+	s.size = Vector3(0.6, 0.5, 0.4)
+	cs.shape = s
+	cs.position.y = 0.25
+	add_child(cs)
+	var base_m := StandardMaterial3D.new()
+	base_m.albedo_color = Color(0.2, 0.2, 0.22)
+	base_m.metallic = 0.6
+	base_m.roughness = 0.5
+	var arm_m := StandardMaterial3D.new()
+	arm_m.albedo_color = Color(0.55, 0.3, 0.2)
+	arm_m.metallic = 0.4
+	_knob_a = StandardMaterial3D.new()
+	_knob_a.albedo_color = Color(0.85, 0.82, 0.7)
+	_knob_b = StandardMaterial3D.new()
+	_knob_b.albedo_color = Color(0.85, 0.3, 0.2)
+	_knob_b.emission_enabled = true
+	_knob_b.emission = Color(0.8, 0.2, 0.1)
+	var base := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.6, 0.35, 0.4)
+	base.mesh = bm
+	base.material_override = base_m
+	base.position.y = 0.17
+	add_child(base)
+	_lever = Node3D.new()
+	_lever.position.y = 0.3
+	add_child(_lever)
+	var arm := MeshInstance3D.new()
+	var am := CylinderMesh.new()
+	am.top_radius = 0.035
+	am.bottom_radius = 0.045
+	am.height = 1.0
+	arm.mesh = am
+	arm.material_override = arm_m
+	arm.position.y = 0.5
+	_lever.add_child(arm)
+	_knob = MeshInstance3D.new()
+	var km := SphereMesh.new()
+	km.radius = 0.08
+	km.height = 0.16
+	_knob.mesh = km
+	_knob.position.y = 1.02
+	_lever.add_child(_knob)
+	var it := Interactable3D.new()
+	it.prompt = "Throw"
+	it.label = "Points lever"
+	it.radius = 1.0
+	it.position.y = 0.6
+	add_child(it)
+	it.interacted.connect(_on_interacted)
+	GameState.flag_changed.connect(_on_flag_changed)
+	_show()
+
+
+func branch() -> String:
+	return str(GameState.get_flag(switch_key, "a"))
+
+
+func _on_interacted(_by: Node3D) -> void:
+	var next := "b" if branch() == "a" else "a"
+	GameState.set_flag(switch_key, next)
+	GameState.notify(notify_b if next == "b" else notify_a)
+
+
+func _on_flag_changed(key: String, _value: Variant) -> void:
+	if key == switch_key:
+		_show()
+
+
+func _show() -> void:
+	var b := branch() == "b"
+	_lever.rotation.z = 0.5 if b else -0.5
+	_knob.material_override = _knob_b if b else _knob_a
+
+
+==============================================================================
 == maps/game_map.gd
 ==============================================================================
 class_name GameMap
@@ -2004,6 +2913,387 @@ func spawn_position(spawn: String) -> Vector2:
 	if m == null:
 		m = get_node_or_null("Spawns/default") as Node2D
 	return m.global_position if m != null else bounds.get_center()
+
+
+==============================================================================
+== maps/game_map_3d.gd
+==============================================================================
+class_name GameMap3D
+extends Node3D
+## Base for 3D locations. Mirrors GameMap: needs an "Entities" child (the player
+## is added there) and Marker3D spawn points under "Spawns".
+
+@export var map_id := ""
+@export var display_name := ""
+
+## Set by Main once the player has been placed.
+var player: Node3D
+
+@onready var entities: Node3D = $Entities
+
+
+func spawn_position(spawn: String) -> Vector3:
+	var m := get_node_or_null("Spawns/" + spawn) as Node3D
+	if m == null:
+		m = get_node_or_null("Spawns/default") as Node3D
+	return m.global_position if m != null else Vector3.ZERO
+
+
+==============================================================================
+== maps/map_builder_3d.gd
+==============================================================================
+class_name MapBuilder3D
+extends GameMap3D
+## Shared toolkit for 3D maps built in code: the material palette `M`, primitives
+## (box, slab, cyl, dome, beam, stairs, railing, fence, lamp, tree, sign_text) and the
+## Anjabi night-rain environment. PROVISIONAL: authored meshes replace the pieces,
+## the footprints and colliders stay.
+
+var M := {}
+
+static var _detail: NoiseTexture2D
+static var _detail_n: NoiseTexture2D
+
+
+## Shared surface detail: a seamless noise for albedo variation and a matching
+## normal map, applied world-space triplanar so every box and slab lines up.
+static func detail_textures() -> Array:
+	if _detail == null:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		n.frequency = 0.03
+		n.fractal_octaves = 5
+		n.fractal_gain = 0.55
+		var g := Gradient.new()
+		g.set_color(0, Color(0.6, 0.6, 0.6))
+		g.set_color(1, Color(1.05, 1.05, 1.05))
+		_detail = NoiseTexture2D.new()
+		_detail.width = 256
+		_detail.height = 256
+		_detail.seamless = true
+		_detail.noise = n
+		_detail.color_ramp = g
+		_detail_n = NoiseTexture2D.new()
+		_detail_n.width = 256
+		_detail_n.height = 256
+		_detail_n.seamless = true
+		_detail_n.as_normal_map = true
+		_detail_n.bump_strength = 4.0
+		_detail_n.noise = n
+	return [_detail, _detail_n]
+
+
+static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
+	var t := detail_textures()
+	m.albedo_texture = t[0]
+	m.normal_enabled = true
+	m.normal_texture = t[1]
+	m.normal_scale = 0.8
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3(scale, scale, scale)
+
+
+# --- materials ------------------------------------------------------------------
+
+func _materials() -> void:
+	M.paving = _mat(Color(0.3, 0.32, 0.35), 0.38)
+	M.paving_light = _mat(Color(0.42, 0.42, 0.42), 0.45)
+	M.stone = _mat(Color(0.36, 0.35, 0.33), 0.8)
+	M.rock = _mat(Color(0.2, 0.23, 0.25), 0.95)
+	M.rock_dark = _mat(Color(0.13, 0.15, 0.17), 0.95)
+	M.moss = _mat(Color(0.14, 0.24, 0.18), 0.95)
+	M.concrete = _mat(Color(0.47, 0.47, 0.44), 0.85)
+	M.steel = _mat(Color(0.33, 0.35, 0.37), 0.45, 0.6)
+	M.steel_dark = _mat(Color(0.17, 0.18, 0.2), 0.5, 0.6)
+	M.copper = _mat(Color(0.3, 0.5, 0.45), 0.5, 0.55)
+	M.copper_raw = _mat(Color(0.62, 0.36, 0.22), 0.4, 0.75)
+	M.panel = _mat(Color(0.42, 0.45, 0.42), 0.7, 0.2)
+	M.panel_violet = _mat(Color(0.33, 0.29, 0.36), 0.75, 0.15)
+	M.timber = _mat(Color(0.22, 0.15, 0.11), 0.85)
+	M.canvas = _mat(Color(0.45, 0.17, 0.17), 0.95)
+	M.canvas_teal = _mat(Color(0.2, 0.33, 0.33), 0.95)
+	M.window = _mat(Color(1.0, 0.72, 0.38), 0.3, 0.0, Color(1.0, 0.62, 0.28), 2.2)
+	M.lamp = _mat(Color(1.0, 0.8, 0.5), 0.3, 0.0, Color(1.0, 0.7, 0.35), 4.0)
+	M.warning = _mat(Color(0.8, 0.6, 0.12), 0.6)
+	M.sand = _mat(Color(0.55, 0.5, 0.42), 0.9)
+	M.sea = _mat(Color(0.05, 0.16, 0.2), 0.12, 0.3)
+	M.foliage = _mat(Color(0.08, 0.2, 0.15), 0.9)
+	M.foliage_b = _mat(Color(0.11, 0.24, 0.16), 0.9)
+	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
+	M.mesh_fence = _mat(Color(0.25, 0.27, 0.3, 0.45), 0.6, 0.4)
+	M.mesh_fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	M.mud = _mat(Color(0.27, 0.24, 0.21), 0.45)
+	M.gravel = _mat(Color(0.33, 0.34, 0.35), 0.9)
+	M.rust = _mat(Color(0.48, 0.27, 0.17), 0.7, 0.5)
+	M.blue_light = _mat(Color(0.4, 0.6, 1.0), 0.3, 0.0, Color(0.35, 0.55, 1.0), 3.0)
+
+
+func _mat(c: Color, rough: float, metal: float = 0.0, emit: Color = Color.BLACK, emit_e: float = 0.0) -> StandardMaterial3D:
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c
+	m.roughness = rough
+	m.metallic = metal
+	if emit_e > 0.0:
+		m.emission_enabled = true
+		m.emission = emit
+		m.emission_energy_multiplier = emit_e
+	elif rough >= 0.6 and c.a >= 0.99:
+		add_detail(m)
+	return m
+
+
+# --- primitives -------------------------------------------------------------------
+
+func _body() -> StaticBody3D:
+	var b := StaticBody3D.new()
+	b.collision_layer = 1
+	b.collision_mask = 0
+	return b
+
+
+## An authored model from res://art/models (exported from art/source/*.blend).
+## Models face +Z (south, toward the camera). Visual only; add colliders separately.
+func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
+	var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
+	n.position = at
+	n.rotation.y = yaw
+	n.scale = s if s is Vector3 else Vector3(s, s, s)
+	add_child(n)
+	return n
+
+
+## The shed model (native 4 m wide, 3 m tall, 3 m deep) stretched to `size`
+## (width, height, depth), standing on `base`, door and window facing +Z, with a box collider.
+func shed(base: Vector3, size: Vector3, yaw := 0.0, solid := true) -> Node3D:
+	var n := model("shed", base, yaw, Vector3(size.x / 4.0, size.y / 3.0, size.z / 3.0))
+	if solid:
+		box(base + Vector3(0, size.y * 0.5, 0), size, null, true, yaw)
+	return n
+
+
+## Invisible cylinder collider standing on `base`.
+func collider_cyl(base: Vector3, r: float, h: float) -> void:
+	var b := _body()
+	b.position = base + Vector3(0, h * 0.5, 0)
+	var cs := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = r
+	shape.height = h
+	cs.shape = shape
+	b.add_child(cs)
+	add_child(b)
+
+
+## Box by centre and size. solid adds a matching collider.
+func box(center: Vector3, size: Vector3, m: Material, solid := true, yaw := 0.0, parent: Node3D = self) -> Node3D:
+	var root: Node3D = _body() if solid else Node3D.new()
+	root.position = center
+	root.rotation.y = yaw
+	parent.add_child(root)
+	if m != null:
+		var mesh := BoxMesh.new()
+		mesh.size = size
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.material_override = m
+		root.add_child(mi)
+	if solid:
+		var cs := CollisionShape3D.new()
+		var s := BoxShape3D.new()
+		s.size = size
+		cs.shape = s
+		root.add_child(cs)
+	return root
+
+
+## Box spanning min..max corners.
+func slab(a: Vector3, b: Vector3, m: Material, solid := true) -> Node3D:
+	var lo := Vector3(minf(a.x, b.x), minf(a.y, b.y), minf(a.z, b.z))
+	var hi := Vector3(maxf(a.x, b.x), maxf(a.y, b.y), maxf(a.z, b.z))
+	return box((lo + hi) * 0.5, hi - lo, m, solid)
+
+
+func cyl(base: Vector3, r_top: float, r_bot: float, h: float, m: Material, solid := true, sides := 16) -> Node3D:
+	var root: Node3D = _body() if solid else Node3D.new()
+	root.position = base + Vector3(0, h * 0.5, 0)
+	add_child(root)
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = r_top
+	mesh.bottom_radius = r_bot
+	mesh.height = h
+	mesh.radial_segments = sides
+	mesh.rings = 1
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = m
+	root.add_child(mi)
+	if solid:
+		var cs := CollisionShape3D.new()
+		var s := CylinderShape3D.new()
+		s.radius = maxf(r_top, r_bot)
+		s.height = h
+		cs.shape = s
+		root.add_child(cs)
+	return root
+
+
+func dome(center: Vector3, r: float, m: Material, squash := 1.0) -> MeshInstance3D:
+	var mesh := SphereMesh.new()
+	mesh.radius = r
+	mesh.height = r
+	mesh.is_hemisphere = true
+	mesh.radial_segments = 24
+	mesh.rings = 8
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = m
+	mi.position = center
+	mi.scale = Vector3(1, squash, 1)
+	add_child(mi)
+	return mi
+
+
+## Thin oriented box from a to b (walls, beams, rails). Height measured up from a.y.
+func beam(a: Vector3, b: Vector3, h: float, t: float, m: Material, solid := false) -> Node3D:
+	var d := b - a
+	var flat := Vector3(d.x, 0, d.z)
+	var n := box((a + b) * 0.5 + Vector3(0, h * 0.5, 0), Vector3(t, h, flat.length()), m, solid, atan2(d.x, d.z))
+	return n
+
+
+## Stairs: bottom front-centre `start`, climbing along `dir` by `rise` over `run`.
+## Visible solid steps plus one smooth invisible ramp collider for traversal.
+func stairs(start: Vector3, dir: Vector3, rise: float, run: float, width: float, m: Material) -> void:
+	dir = dir.normalized()
+	var n := maxi(2, int(round(absf(rise) / 0.2)))
+	var step_h := rise / n
+	var step_d := run / n
+	var yaw := atan2(dir.x, dir.z)
+	for i in n:
+		var top := start.y + step_h * (i + 1)
+		var c := start + dir * step_d * (i + 0.5)
+		var depth := top - (start.y - 0.4)
+		box(Vector3(c.x, top - depth * 0.5, c.z), Vector3(width, depth, step_d + 0.01), m, false, yaw)
+	# ramp collider whose surface runs through the step nosings
+	var fwd := (dir * run + Vector3.UP * rise).normalized()
+	var side := dir.cross(Vector3.UP).normalized()
+	var up := side.cross(fwd).normalized()
+	var length := Vector3(run, rise, 0).length() + 0.6
+	var thick := 0.3
+	var body := _body()
+	# surface runs exactly from the bottom edge to the top edge; extra length only below
+	body.transform = Transform3D(Basis(side, up, -fwd), start + dir * run * 0.5 + Vector3.UP * rise * 0.5 - fwd * 0.3 - up * thick * 0.5)
+	var cs := CollisionShape3D.new()
+	var s := BoxShape3D.new()
+	s.size = Vector3(width, thick, length)
+	cs.shape = s
+	body.add_child(cs)
+	add_child(body)
+
+
+## Railing from a to b (feet level): posts, top rail, and an invisible 1.3 m wall.
+func railing(a: Vector3, b: Vector3, m: Material = null) -> void:
+	if m == null:
+		m = M.steel_dark
+	var len := a.distance_to(b)
+	var posts := maxi(1, int(len / 1.6))
+	for i in posts + 1:
+		var p := a.lerp(b, float(i) / posts)
+		box(p + Vector3(0, 0.5, 0), Vector3(0.08, 1.0, 0.08), m, false)
+	beam(a + Vector3(0, 0.95, 0), b + Vector3(0, 0.95, 0), 0.06, 0.07, m)
+	beam(a + Vector3(0, 0.5, 0), b + Vector3(0, 0.5, 0), 0.04, 0.05, m)
+	beam(a, b, 1.3, 0.12, null, true)
+
+
+func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
+	model("lamp", at)
+	collider_cyl(at, 0.12, 2.6)
+	if with_light:
+		var l := OmniLight3D.new()
+		l.position = at + Vector3(0, 2.3, 0.55)
+		l.light_color = Color(1.0, 0.68, 0.38)
+		l.light_energy = 1.6
+		l.omni_range = 7.0
+		l.omni_attenuation = 1.3
+		add_child(l)
+
+
+func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
+	var l := OmniLight3D.new()
+	l.position = at
+	l.light_color = Color(1.0, 0.64, 0.34)
+	l.light_energy = energy
+	l.omni_range = rng
+	add_child(l)
+
+
+func tree(at: Vector3, s := 1.0) -> void:
+	cyl(at, 0.12 * s, 0.18 * s, 1.4 * s, M.trunk, false, 6)
+	for i in 3:
+		cyl(at + Vector3(0, (1.0 + i * 1.1) * s, 0), 0.05, (1.5 - i * 0.35) * s, 2.0 * s, M.foliage if i % 2 == 0 else M.foliage_b, false, 7)
+
+
+func sign_text(at: Vector3, text: String, yaw := 0.0, px := 48, col := Color(0.95, 0.8, 0.55)) -> Label3D:
+	var l := Label3D.new()
+	l.text = text
+	l.position = at
+	l.rotation.y = yaw
+	l.pixel_size = 0.01
+	l.font_size = px
+	l.modulate = col
+	l.outline_size = 8
+	l.outline_modulate = Color(0.05, 0.05, 0.06)
+	add_child(l)
+	return l
+
+
+# --- world ----------------------------------------------------------------------
+
+func _environment() -> void:
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.1, 0.13, 0.17)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.42, 0.5, 0.62)
+	env.ambient_light_energy = 0.55
+	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	env.tonemap_exposure = 1.05
+	env.glow_enabled = true
+	env.glow_intensity = 0.5
+	env.glow_bloom = 0.05
+	env.glow_hdr_threshold = 1.2
+	env.fog_enabled = true
+	env.fog_light_color = Color(0.3, 0.37, 0.45)
+	env.fog_density = 0.0025
+	env.fog_sky_affect = 0.0
+	var we := WorldEnvironment.new()
+	we.environment = env
+	add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55, -35, 0)
+	sun.light_color = Color(0.62, 0.72, 0.9)
+	sun.light_energy = 0.75
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 60.0
+	add_child(sun)
+
+
+## Chain-link fence from a to b: posts, rails, a dark mesh panel, a 2 m invisible wall.
+func fence(a: Vector3, b: Vector3, h := 1.8) -> void:
+	var len := a.distance_to(b)
+	var posts := maxi(1, int(len / 2.0))
+	for i in posts + 1:
+		var p := a.lerp(b, float(i) / posts)
+		box(p + Vector3(0, h * 0.5, 0), Vector3(0.1, h, 0.1), M.steel_dark, false)
+	beam(a + Vector3(0, h - 0.05, 0), b + Vector3(0, h - 0.05, 0), 0.06, 0.08, M.steel)
+	beam(a + Vector3(0, 0.15, 0), b + Vector3(0, 0.15, 0), h - 0.25, 0.03, M.mesh_fence)
+	beam(a, b, 2.0, 0.14, null, true)
+
+
+## Invisible collider spanning min..max corners.
+func blocker(a: Vector3, b: Vector3) -> StaticBody3D:
+	return slab(a, b, null, true) as StaticBody3D
 
 
 ==============================================================================
@@ -2039,6 +3329,371 @@ func nearest_walkable(world: Vector2, max_radius: float = 240.0) -> Vector2:
 				return p
 		r += pixel_size
 	return world
+
+
+==============================================================================
+== maps/anjabi/district.gd
+==============================================================================
+extends MapBuilder3D
+## Anjabi central district in 3D, built in code from reusable pieces (PROVISIONAL
+## geometry and materials, to be replaced by authored meshes on the same footprints).
+##
+## Units are metres. +X east, -Z north, +Y up. Levels:
+##   pods 6  ·  tavern terrace 3  ·  the Steps plaza 0  ·  mine approach -3  ·  beach -6  ·  sea -7
+## Layout follows Greybox Study 01 around the Steps: tavern up and to the north-west,
+## living pods further north over a ravine (reached by a raised walkway), shop to the
+## east, the drop to the beach and sea south, the way to the mine going down west.
+
+const PLAZA := 0.0
+const TERRACE := 3.0
+const PODS := 6.0
+const MINE := -3.0
+const BEACH := -6.0
+const SEA := -7.0
+
+
+
+## When true this is the detailed Steps insert inside the town map: only the plaza,
+## the tavern terrace, their stairs, buildings, props and people are built.
+@export var insert := false
+
+
+func _ready() -> void:
+	if insert:
+		_materials()
+		slab(Vector3(-12, -12, -10), Vector3(20, PLAZA, 10), M.paving)
+		_plaza_feature()
+		slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
+		slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
+		stairs(Vector3(0, PLAZA, -4), Vector3(0, 0, -1), TERRACE - PLAZA, 6.0, 4.0, M.stone)
+		railing(Vector3(-11.5, TERRACE, -10.2), Vector3(-2, TERRACE, -10.2))
+		railing(Vector3(2, TERRACE, -10.2), Vector3(12, TERRACE, -10.2))
+		_tavern()
+		_shop()
+		_props(true)
+		_people()
+		return
+	_materials()
+	_environment()
+	_ground()
+	_stairs_and_walkways()
+	_railings()
+	_tavern()
+	_shop()
+	_pods()
+	_mine_approach()
+	_coast()
+	_backdrop()
+	_props()
+	_people()
+
+
+func _ground() -> void:
+	# the Steps plaza
+	slab(Vector3(-12, -12, -10), Vector3(20, PLAZA, 10), M.paving)
+	_plaza_feature()
+	# tavern terrace, retaining wall faces the plaza
+	slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
+	slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
+	# pod level beyond the ravine
+	slab(Vector3(-20, -12, -50), Vector3(16, PODS, -34), M.stone)
+	slab(Vector3(-20, PODS - 0.02, -50), Vector3(16, PODS + 0.01, -34), M.moss, false)
+	# ravine floor
+	slab(Vector3(-24, -12, -34), Vector3(16, -4, -28), M.rock_dark)
+	# mine approach, a shelf below the plaza
+	slab(Vector3(-44, -14, -8), Vector3(-12, MINE, 12), M.concrete)
+	# beach
+	slab(Vector3(-14, -14, 16), Vector3(40, BEACH, 36), M.sand)
+	# cliff face below the plaza
+	slab(Vector3(-12, -14, 10), Vector3(22, -1.5, 16), M.rock)
+
+
+func _plaza_feature() -> void:
+	var ring := CylinderMesh.new()
+	ring.top_radius = 4.5
+	ring.bottom_radius = 4.5
+	ring.height = 0.04
+	ring.radial_segments = 32
+	var rm := MeshInstance3D.new()
+	rm.mesh = ring
+	rm.material_override = M.paving_light
+	rm.position = Vector3(2, 0.02, 1)
+	add_child(rm)
+	cyl(Vector3(2, 0, 1), 1.2, 1.4, 0.5, M.stone, true, 12)  # plinth
+	cyl(Vector3(2, 0.5, 1), 0.25, 0.3, 2.2, M.copper, true, 10)  # beacon column
+	box(Vector3(2, 2.85, 1), Vector3(0.6, 0.3, 0.6), M.lamp, false)
+	warm_light(Vector3(2, 3.2, 1), 1.8, 9.0)
+
+
+func _stairs_and_walkways() -> void:
+	# plaza -> tavern terrace (north)
+	stairs(Vector3(0, PLAZA, -4), Vector3(0, 0, -1), TERRACE - PLAZA, 6.0, 4.0, M.stone)
+	# terrace -> raised walkway (north), then the bridge over the ravine to the pods
+	stairs(Vector3(8.5, TERRACE, -20), Vector3(0, 0, -1), PODS - TERRACE, 6.0, 3.0, M.stone)
+	slab(Vector3(7, PODS - 0.4, -34.2), Vector3(10, PODS, -26.0), M.steel)
+	for z: float in [-27.0, -30.5, -33.5]:
+		box(Vector3(8.5, (PODS + -4) * 0.5 - 0.2, z), Vector3(0.5, PODS + 4 - 0.4, 0.5), M.steel_dark, false)
+	# plaza -> mine approach (down to the west)
+	stairs(Vector3(-18, MINE, 2), Vector3(1, 0, 0), PLAZA - MINE, 6.0, 4.0, M.stone)
+	slab(Vector3(-18, -14, -8), Vector3(-12, MINE, 12), M.concrete)
+
+
+func _railings() -> void:
+	var P := PLAZA
+	# plaza: south over the cliff, east end, west edge (gap for the mine stairs)
+	railing(Vector3(-12, P, 9.8), Vector3(20, P, 9.8))
+	railing(Vector3(19.8, P, -10), Vector3(19.8, P, 10))
+	railing(Vector3(-11.8, P, -10), Vector3(-11.8, P, 0))
+	railing(Vector3(-11.8, P, 4), Vector3(-11.8, P, 10))
+	# terrace: south edge (gap for the plaza stairs), north edge, east edge
+	var T := TERRACE
+	railing(Vector3(-24, T, -10.2), Vector3(-2, T, -10.2))
+	railing(Vector3(2, T, -10.2), Vector3(12, T, -10.2))
+	railing(Vector3(-24, T, -27.8), Vector3(12, T, -27.8))
+	railing(Vector3(11.8, T, -28), Vector3(11.8, T, -10))
+	# raised stair sides and bridge
+	railing(Vector3(7, T, -20), Vector3(7, PODS, -26))
+	railing(Vector3(10, T, -20), Vector3(10, PODS, -26))
+	railing(Vector3(7, PODS, -26), Vector3(7, PODS, -34))
+	railing(Vector3(10, PODS, -26), Vector3(10, PODS, -34))
+	# pods: south edge (gap for the bridge), east and west
+	railing(Vector3(-20, PODS, -34.2), Vector3(7, PODS, -34.2))
+	railing(Vector3(10, PODS, -34.2), Vector3(16, PODS, -34.2))
+	railing(Vector3(15.8, PODS, -50), Vector3(15.8, PODS, -34))
+	railing(Vector3(-19.8, PODS, -50), Vector3(-19.8, PODS, -34))
+	# mine approach: south over the drop, north under the plaza wall
+	railing(Vector3(-44, MINE, 11.8), Vector3(-12, MINE, 11.8))
+	# west of the terrace: rock wall
+	slab(Vector3(-30, -12, -28), Vector3(-24, 9, -10), M.rock)
+	# walls the player must not walk off: plaza north beside stairs is the terrace face (solid)
+	slab(Vector3(-44, MINE, -10), Vector3(-12, PLAZA + 0.0, -8), M.rock)
+
+
+func _tavern() -> void:
+	var c := Vector3(-10, TERRACE, -19)
+	model("tavern", c)
+	collider_cyl(c, 6.2, 5.0)
+	blocker(c + Vector3(5.25, 0, -2.0), c + Vector3(9.75, 3.6, 4.0))  # annex
+	var door := c + Vector3(0, 0, 6.1)
+	sign_text(door + Vector3(0, 4.3, 0.75), "TAVERN", 0.0, 64)
+	warm_light(door + Vector3(0, 2.2, 1.6), 2.2, 8.0)
+	lamp(door + Vector3(-3.6, 0, 2.0))
+	lamp(door + Vector3(3.6, 0, 2.0), false)
+	# outside seating
+	for p: Vector3 in [Vector3(-4.6, 0, 7.4), Vector3(4.8, 0, 7.2)]:
+		cyl(c + p, 0.6, 0.6, 0.75, M.timber, true, 10)
+		box(c + p + Vector3(0, 0.25, 0.9), Vector3(1.4, 0.5, 0.35), M.timber, true)
+
+
+func _shop() -> void:
+	var c := Vector3(15, PLAZA, -5)
+	model("shop", c)
+	box(c + Vector3(0, 2.0, 0), Vector3(7, 4, 6), null)
+	sign_text(c + Vector3(0, 3.35, 3.2), "SHOP", 0.0, 56)
+	warm_light(c + Vector3(0, 2.0, 4.2), 1.6, 6.0)
+	for i in 3:
+		box(c + Vector3(-2.8 + i * 0.7, 0.35, 4.4), Vector3(0.6, 0.7, 0.6), M.timber, true)
+
+
+func _pod(at: Vector3, tag := "", _lit := true) -> void:
+	model("pod", at, PI if tag == "" and int(at.x) % 2 == 0 else 0.0)
+	collider_cyl(at, 2.25, 3.4)
+	if tag != "":
+		sign_text(at + Vector3(0, 3.0, 2.3), tag, 0.0, 40)
+
+
+func _pods() -> void:
+	var y := PODS
+	_pod(Vector3(4, y, -39.5), "B-17")
+	_pod(Vector3(-3, y, -41), "", true)
+	_pod(Vector3(-10, y, -39), "", false)
+	_pod(Vector3(-15, y, -45.5), "", true)
+	_pod(Vector3(11, y, -45), "", true)
+	_pod(Vector3(2, y, -47), "", false)
+	lamp(Vector3(6.6, y, -36))
+	lamp(Vector3(-6.5, y, -36), false)
+	# walkway paving from the bridge to B-17's door
+	slab(Vector3(3.2, y, -38), Vector3(9.8, y + 0.03, -34.2), M.paving, false)
+	# B-17 door interactable
+	var door := Interactable3D.new()
+	door.prompt = "Knock"
+	door.label = "Pod B-17"
+	door.dialogue_id = "anjabi/pod_b17"
+	door.radius = 1.3
+	door.position = Vector3(4, y + 0.9, -36.9)
+	add_child(door)
+
+
+func _mine_approach() -> void:
+	var y := MINE
+	# cliff wall with the mine mouth cut into it
+	slab(Vector3(-56, -14, -12), Vector3(-44, 12, 16), M.rock)
+	slab(Vector3(-44.01, y, -1.6), Vector3(-43.6, y + 3.6, 5.6), M.rock_dark, false)
+	# timber headframe and steel door
+	for z: float in [-1.4, 5.4]:
+		box(Vector3(-43.4, y + 1.9, z), Vector3(0.4, 3.8, 0.4), M.timber, true)
+	box(Vector3(-43.4, y + 3.9, 2), Vector3(0.5, 0.4, 7.4), M.timber, false)
+	box(Vector3(-43.75, y + 1.6, 2), Vector3(0.12, 3.2, 6.2), M.steel, true)
+	for z: float in [-1.0, 0.6, 2.2, 3.8, 5.0]:
+		box(Vector3(-43.66, y + 1.6, z), Vector3(0.06, 3.2, 0.08), M.steel_dark, false)
+	# warning stripes across the door
+	for i in 6:
+		box(Vector3(-43.64, y + 2.1, -0.6 + i * 1.1), Vector3(0.05, 0.3, 0.5), M.warning if i % 2 == 0 else M.steel_dark, false)
+	sign_text(Vector3(-43.5, y + 4.5, 2), "NO. 2 WORKING", PI * 0.5, 44)
+	# rails running into the mine
+	for z: float in [1.3, 2.7]:
+		beam(Vector3(-43.6, y, z), Vector3(-30, y, z), 0.08, 0.08, M.steel)
+	for i in 14:
+		box(Vector3(-43 + i, y + 0.02, 2), Vector3(0.25, 0.05, 2.0), M.timber, false)
+	# fence and gate across the approach
+	railing(Vector3(-38, y, -8), Vector3(-38, y, 0.0), M.steel)
+	railing(Vector3(-38, y, 4.0), Vector3(-38, y, 12), M.steel)
+	box(Vector3(-38, y + 1.0, 2), Vector3(0.12, 2.0, 4.0), M.steel_dark, true)
+	for i in 5:
+		box(Vector3(-37.92, y + 1.2, 0.4 + i * 0.8), Vector3(0.05, 0.25, 0.4), M.warning if i % 2 == 0 else M.steel_dark, false)
+	sign_text(Vector3(-37.85, y + 2.4, 2), "DANGER  ·  NO ENTRY", PI * 0.5, 36, Color(0.95, 0.75, 0.3))
+	# guard hut
+	shed(Vector3(-33, y, -5), Vector3(3.0, 2.8, 2.6))
+	warm_light(Vector3(-33, y + 2.0, -3.0), 1.2, 5.0)
+	lamp(Vector3(-36.5, y, 5.5))
+	lamp(Vector3(-24, y, 9.5))
+	# crates and a winch
+	box(Vector3(-28, y + 0.45, -6), Vector3(1.2, 0.9, 1.2), M.timber)
+	box(Vector3(-26.7, y + 0.35, -6.2), Vector3(0.9, 0.7, 0.9), M.timber)
+	cyl(Vector3(-30, y, 9), 0.6, 0.6, 1.2, M.copper_raw, true, 10)
+	# notice and the way through to the mine yard
+	var notice := Interactable3D.new()
+	notice.prompt = "Read"
+	notice.label = "Warning sign"
+	notice.dialogue_id = "anjabi/mine_approach_sign"
+	notice.position = Vector3(-37, y + 1.0, -1.2)
+	add_child(notice)
+	box(Vector3(-37.85, y + 1.3, -1.2), Vector3(0.05, 0.6, 0.8), M.concrete, false)
+	var exit := MapExit3D.new()
+	exit.prompt = "Enter"
+	exit.label = "Mine yard"
+	exit.radius = 1.4
+	exit.target_map = "anjabi_mine"
+	exit.target_spawn = "default"
+	exit.position = Vector3(-36.6, y + 1.0, 2)
+	add_child(exit)
+
+
+func _coast() -> void:
+	var sea := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(500, 500)
+	sea.mesh = pm
+	sea.material_override = M.sea
+	sea.position = Vector3(40, SEA, 80)
+	add_child(sea)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	for i in 14:
+		var p := Vector3(rng.randf_range(-6, 46), SEA - 0.5, rng.randf_range(30, 60))
+		var s := rng.randf_range(1.0, 3.2)
+		var r := box(p + Vector3(0, s * 0.4, 0), Vector3(s, s * 1.3, s * 0.9), M.rock, false, rng.randf() * TAU)
+		r.rotation.x = rng.randf_range(-0.2, 0.2)
+	# headland and the cliffs east of the cove
+	slab(Vector3(-60, -14, 12), Vector3(-14, -2, 40), M.rock)
+	slab(Vector3(40, -14, -20), Vector3(70, 4, 20), M.rock)
+	# docks boardwalk east of the plaza, below it
+	slab(Vector3(22, -1.4, -6), Vector3(40, -1.0, 6), M.timber, false)
+	for x in range(23, 40, 3):
+		for z: float in [-5.5, 5.5]:
+			box(Vector3(x, -4.2, z), Vector3(0.3, 6.2, 0.3), M.timber, false)
+	# Imperial Tower far to the south-east, and its tram line
+	var t := Vector3(64, SEA, 82)
+	cyl(t, 6, 8, 3, M.concrete, false, 16)
+	cyl(t + Vector3(0, 3, 0), 3.2, 4.0, 44, M.steel_dark, false, 12)
+	for i in 6:
+		box(t + Vector3(0, 8 + i * 6.5, 3.6), Vector3(1.6, 0.4, 0.2), M.blue_light, false)
+	cyl(t + Vector3(0, 47, 0), 4.6, 3.2, 3, M.steel, false, 12)
+	box(t + Vector3(0, 51, 0), Vector3(1, 3, 1), M.blue_light, false)
+	var top := Vector3(24, 9, -8)
+	beam(top, t + Vector3(0, 40, 0), 0.12, 0.12, M.steel_dark)
+	beam(top + Vector3(0, -0.6, 0), t + Vector3(0, 39.4, 0), 0.08, 0.08, M.steel_dark)
+	for f: float in [0.3, 0.6]:
+		var p := top.lerp(t + Vector3(0, 40, 0), f)
+		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(0.8, p.y - SEA, 0.8), M.steel_dark, false)
+		box(p + Vector3(0, 0.3, 0), Vector3(0.4, 0.3, 0.4), M.blue_light, false)
+	cyl(Vector3(24, -1.0, -8), 0.5, 0.7, 10.0, M.steel, false, 8)  # tram pylon at the docks
+
+
+func _backdrop() -> void:
+	# forested hill north of the pods, and the west ridge
+	slab(Vector3(-70, -14, -90), Vector3(60, 12, -50), M.rock)
+	slab(Vector3(-70, 12, -90), Vector3(60, 12.1, -52), M.moss, false)
+	slab(Vector3(-70, -14, -50), Vector3(-20, 9, -28), M.rock)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	for i in 40:
+		tree(Vector3(rng.randf_range(-60, 55), 12, rng.randf_range(-80, -53)), rng.randf_range(1.2, 2.0))
+	for i in 10:
+		tree(Vector3(rng.randf_range(-60, -24), 9, rng.randf_range(-48, -30)), rng.randf_range(1.0, 1.6))
+	# watchtower silhouette north-east (guard tower direction)
+	cyl(Vector3(30, 4, -46), 4, 5, 9, M.concrete, false, 8)
+	cyl(Vector3(30, 13, -46), 4.6, 4.2, 2, M.panel_violet, false, 8)
+	box(Vector3(30, 13.5, -41.7), Vector3(3, 0.8, 0.2), M.window, false)
+
+
+func _props(core_only := false) -> void:
+	# plaza lamps, benches, planters, crates
+	for p: Vector3 in [Vector3(-8, 0, 8), Vector3(12, 0, 8), Vector3(-8, 0, -8), Vector3(8, 0, -3)]:
+		lamp(p)
+	for p: Vector3 in [Vector3(-4, 0, 7), Vector3(8, 0, 7)]:
+		box(p + Vector3(0, 0.25, 0), Vector3(2.2, 0.5, 0.6), M.timber)
+	for p: Vector3 in [Vector3(-10, 0, -6), Vector3(17, 0, 6)]:
+		box(p + Vector3(0, 0.4, 0), Vector3(1.8, 0.8, 1.8), M.stone)
+		tree(p + Vector3(0, 0.8, 0), 0.7)
+	box(Vector3(10.5, 0.4, 4), Vector3(0.9, 0.8, 0.9), M.timber)
+	box(Vector3(11.3, 0.3, 4.6), Vector3(0.7, 0.6, 0.7), M.timber)
+	cyl(Vector3(-6, 0, 3), 0.45, 0.45, 1.0, M.copper_raw, true, 10)
+	# terrace lamps, planters
+	lamp(Vector3(5, TERRACE, -12.5))
+	lamp(Vector3(-20, TERRACE, -12.5), false)
+	tree(Vector3(-21, TERRACE, -25), 1.0)
+	tree(Vector3(2, TERRACE, -25.5), 0.9)
+	if core_only:
+		return
+	# coastal vegetation along the plaza's southern lip
+	tree(Vector3(-10.8, -1.5, 13), 1.0)
+	tree(Vector3(18, -1.5, 14), 1.2)
+
+
+func _people() -> void:
+	var keeper := Npc3D.new()
+	keeper.display_name = "Tavern keeper"
+	keeper.dialogue_id = "anjabi/tavern_keeper"
+	keeper.coat = Color(0.4, 0.22, 0.2)
+	keeper.accent = Color(0.85, 0.7, 0.4)
+	keeper.skin = Color(0.6, 0.43, 0.33)
+	keeper.position = Vector3(-7.2, TERRACE, -12.2)
+	keeper.yaw_deg = 180.0
+	entities.add_child(keeper)
+
+
+==============================================================================
+== maps/anjabi/district.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/district.gd" id="1"]
+
+[node name="District" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_district"
+display_name = "ANJABI  ·  THE STEPS"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="default" type="Marker3D" parent="Spawns"]
+position = Vector3(2, 0.05, 5)
+
+[node name="mine" type="Marker3D" parent="Spawns"]
+position = Vector3(-34, -2.95, 2)
+
+[node name="Entities" type="Node3D" parent="."]
 
 
 ==============================================================================
@@ -2501,8 +4156,8 @@ dialogue_id = "anjabi/cliff_edge"
 position = Vector2(160, 12)
 script = ExtResource("10")
 prompt = "Climb"
-label = "Stairs to the Estate"
-target_map = "anjabi_town"
+label = "Stairs up to the Steps"
+target_map = "anjabi_district"
 target_spawn = "mine"
 
 [node name="PathToAirpad" type="Area2D" parent="Interactables"]
@@ -2512,6 +4167,303 @@ prompt = "Walk"
 label = "Path to the airpad"
 target_map = "anjabi_town"
 target_spawn = "airpad"
+
+
+==============================================================================
+== maps/anjabi/mine_3d.gd
+==============================================================================
+extends MapBuilder3D
+## Anjabi / Collapsed Mine (location 04) in 3D. Replaces the 2D mine.tscn with the
+## same layout at 20 px = 1 m: stairs down from the Estate in the north-west (6 m
+## drop), a fenced inner yard under the cliff holding the sealed mine door, an outer
+## yard with wash-house and sheds, the old spur line and its washout to the east,
+## the path east toward the airpad, and the cliff drop to the south.
+## Units: metres, +X east, -Z north (2D y -> Z), ground at y 0.
+
+const TOP := 6.0
+const TRENCH_FLOOR := -2.5
+## Washout: x range and z range of the cut in the ground.
+const TR_X0 := 37.2
+const TR_X1 := 44.8
+const TR_Z0 := 15.0
+const TR_Z1 := 17.0
+
+
+func _ready() -> void:
+	_materials()
+	_environment()
+	_ground()
+	_walls_and_fences()
+	_mine_door()
+	_buildings()
+	_rails_and_puzzle()
+	_props()
+	_people()
+	_interactables()
+
+
+func _ground() -> void:
+	# yard floor, with the washout cut out of it
+	slab(Vector3(5.6, -1, 0), Vector3(45, 0, TR_Z0), M.gravel)
+	slab(Vector3(5.6, -1, TR_Z1), Vector3(45, 0, 35.2), M.paving)
+	slab(Vector3(5.6, -1, TR_Z0), Vector3(TR_X0, 0, TR_Z1), M.paving)
+	slab(Vector3(TR_X1, -1, TR_Z0), Vector3(45, 0, TR_Z1), M.paving)
+	# the washout itself
+	slab(Vector3(TR_X0, TRENCH_FLOOR - 1, TR_Z0), Vector3(TR_X1, TRENCH_FLOOR, TR_Z1), M.rock_dark)
+	slab(Vector3(TR_X0, TRENCH_FLOOR, TR_Z0 - 0.05), Vector3(TR_X1, 0, TR_Z0), M.rock, false)
+	slab(Vector3(TR_X0, TRENCH_FLOOR, TR_Z1), Vector3(TR_X1, 0, TR_Z1 + 0.05), M.rock, false)
+	var water := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(TR_X1 - TR_X0, TR_Z1 - TR_Z0)
+	water.mesh = pm
+	water.material_override = M.sea
+	water.position = Vector3((TR_X0 + TR_X1) * 0.5, TRENCH_FLOOR + 0.3, (TR_Z0 + TR_Z1) * 0.5)
+	add_child(water)
+	# mud paths: haul road, wash-house apron, path east, stair foot
+	slab(Vector3(22.7, 0, 12.5), Vector3(25.3, 0.02, 34.5), M.mud, false)
+	slab(Vector3(22.8, 0, 5.3), Vector3(25.2, 0.02, 12.5), M.mud, false)
+	slab(Vector3(7.5, 0, 29.2), Vector3(22.6, 0.02, 31.2), M.mud, false)
+	slab(Vector3(25.4, 0, 31.3), Vector3(45, 0.02, 33.1), M.mud, false)
+	slab(Vector3(5.8, 0, 12.5), Vector3(22.6, 0.02, 14.6), M.mud, false)
+	# the cliff drop beyond the south fence, and mist below
+	slab(Vector3(0, -30, 35.2), Vector3(50, -0.5, 36.5), M.rock_dark)
+	var mist := MeshInstance3D.new()
+	var mp := PlaneMesh.new()
+	mp.size = Vector2(300, 200)
+	mist.mesh = mp
+	mist.material_override = M.sea
+	mist.position = Vector3(24, -24, 120)
+	add_child(mist)
+
+
+func _walls_and_fences() -> void:
+	# rock: north cliff over the yard, west wall, the Estate ledge and stair cut
+	slab(Vector3(-10, -1, -6), Vector3(60, 12, 0), M.rock)
+	slab(Vector3(10, -1, 0), Vector3(60, 9, 5.3), M.rock)
+	slab(Vector3(-10, -1, 0), Vector3(6.1, 10, 12.6), M.rock)
+	slab(Vector3(-10, -1, 12.6), Vector3(5.6, 8, 36), M.rock)
+	slab(Vector3(45, -1, 5.3), Vector3(60, 8, 36), M.rock)
+	slab(Vector3(45, 8, 5.3), Vector3(60, 8.1, 36), M.moss, false)
+	slab(Vector3(-10, 10, 0), Vector3(6.1, 10.1, 12.6), M.moss, false)
+	# the Estate landing at the top of the stairs, then the stairs down
+	slab(Vector3(6.1, -1, 0), Vector3(9.95, TOP, 2.0), M.stone)
+	stairs(Vector3(8.0, 0, 12.6), Vector3(0, 0, -1), TOP, 10.6, 3.85, M.stone)
+	slab(Vector3(9.95, -1, 2.0), Vector3(10.2, TOP + 1.0, 5.3), M.rock)
+	blocker(Vector3(9.95, 0, 5.3), Vector3(10.05, TOP + 2.0, 12.6))
+	# inner yard fence: west side, front with the gate, east to the corner
+	fence(Vector3(10.1, 0, 5.3), Vector3(10.1, 0, 12.5))
+	fence(Vector3(10.1, 0, 12.5), Vector3(22.5, 0, 12.5))
+	fence(Vector3(25.5, 0, 12.5), Vector3(37.0, 0, 12.5))
+	fence(Vector3(37.0, 0, 12.5), Vector3(37.0, 0, 15.0))
+	# the gate: closed, solid
+	box(Vector3(24, 1.0, 12.5), Vector3(3.0, 2.0, 0.14), M.steel_dark, true)
+	for i in 6:
+		box(Vector3(22.75 + i * 0.5, 1.15, 12.42), Vector3(0.5, 0.28, 0.04), M.warning if i % 2 == 0 else M.steel_dark, false)
+	for x: float in [22.4, 25.6]:
+		box(Vector3(x, 1.2, 12.5), Vector3(0.2, 2.4, 0.2), M.steel, false)
+	# south fence at the cliff edge, east wall
+	railing(Vector3(5.6, 0, 34.5), Vector3(45, 0, 34.5), M.timber)
+	# washout: blockers so nobody walks into it; the middle one goes when bridged
+	blocker(Vector3(36.9, 0, TR_Z0), Vector3(39.2, 2.0, TR_Z1))
+	blocker(Vector3(40.8, 0, TR_Z0), Vector3(TR_X1, 2.0, TR_Z1))
+
+
+func _mine_door() -> void:
+	# timber frame set into the cliff face, steel door welded shut
+	var z := 5.3
+	slab(Vector3(21.5, 0, z - 0.3), Vector3(26.5, 4.4, z), M.rock_dark, false)
+	for x: float in [21.8, 26.2]:
+		box(Vector3(x, 2.0, z + 0.2), Vector3(0.45, 4.0, 0.45), M.timber, true)
+	box(Vector3(24, 4.2, z + 0.2), Vector3(5.2, 0.45, 0.5), M.timber, false)
+	box(Vector3(24, 1.8, z + 0.05), Vector3(4.0, 3.6, 0.12), M.steel, true)
+	box(Vector3(24, 1.8, z + 0.12), Vector3(0.05, 3.6, 0.04), M.steel_dark, false)
+	# the bright weld bead round the frame
+	var weld := _mat(Color(0.9, 0.85, 0.7), 0.3, 0.8, Color(0.6, 0.55, 0.4), 0.4)
+	box(Vector3(24, 3.62, z + 0.13), Vector3(4.0, 0.05, 0.03), weld, false)
+	box(Vector3(24, 0.05, z + 0.13), Vector3(4.0, 0.05, 0.03), weld, false)
+	for x: float in [22.02, 25.98]:
+		box(Vector3(x, 1.8, z + 0.13), Vector3(0.05, 3.6, 0.03), weld, false)
+	sign_text(Vector3(24, 4.75, z + 0.5), "NO. 2 WORKING", 0.0, 44)
+	# stacked rescue stretchers, still wrapped
+	var wrap := _mat(Color(0.82, 0.8, 0.72), 0.7)
+	for i in 3:
+		box(Vector3(26.9, 0.12 + i * 0.16, 6.2), Vector3(0.7, 0.14, 2.0), wrap, i == 0, 0.08 * i)
+
+
+func _shed(center: Vector3, size: Vector3, _m: Material, lit := false, _door_side := 1.0) -> void:
+	shed(center, size)
+	if lit:
+		warm_light(Vector3(center.x + size.x * 0.22, size.y * 0.6, center.z + size.z * 0.5 + 1.0), 1.3, 6.0)
+
+
+func _buildings() -> void:
+	_shed(Vector3(11.5, 0, 27.4), Vector3(6.0, 3.0, 3.6), M.panel, true)  # wash-house
+	box(Vector3(11.5, 2.6, 30.0), Vector3(6.4, 0.08, 1.8), M.canvas_teal, false)  # awning
+	for x: float in [8.6, 14.4]:
+		box(Vector3(x, 1.3, 30.8), Vector3(0.08, 2.6, 0.08), M.steel_dark, false)
+	_shed(Vector3(10.0, 0, 21.0), Vector3(3.0, 2.6, 3.0), M.panel_violet)  # store shed
+	_shed(Vector3(32.0, 0, 22.4), Vector3(2.8, 2.6, 3.0), M.panel_violet)  # winch house
+	cyl(Vector3(33.8, 0, 22.4), 0.5, 0.5, 1.0, M.rust, true, 10)
+	_shed(Vector3(29.5, 0, 14.4), Vector3(2.5, 2.7, 2.6), M.panel, true)  # guard hut
+	_shed(Vector3(12.5, 0, 9.0), Vector3(2.6, 2.6, 2.6), M.concrete)  # pump shed
+	# junction box on the pump shed's east side, breaker pulled
+	box(Vector3(13.86, 1.3, 10.0), Vector3(0.12, 0.7, 0.5), M.steel, false)
+	box(Vector3(13.95, 1.35, 10.0), Vector3(0.05, 0.12, 0.2), M.warning, false)
+
+
+func _rail_line(points: PackedVector3Array) -> void:
+	for i in points.size() - 1:
+		var a := points[i]
+		var b := points[i + 1]
+		var d := (b - a)
+		var side := d.cross(Vector3.UP).normalized() * 0.35
+		beam(a + side + Vector3(0, 0.02, 0), b + side + Vector3(0, 0.02, 0), 0.08, 0.07, M.steel)
+		beam(a - side + Vector3(0, 0.02, 0), b - side + Vector3(0, 0.02, 0), 0.08, 0.07, M.steel)
+		var n := int(a.distance_to(b) / 0.6)
+		for j in n:
+			var p := a.lerp(b, (j + 0.5) / n)
+			box(p + Vector3(0, 0.02, 0), Vector3(1.1, 0.05, 0.22), M.timber, false, atan2(d.x, d.z))
+
+
+func _rails_and_puzzle() -> void:
+	var main := PackedVector3Array([Vector3(40, 0, 28.75), Vector3(40, 0, 22)])
+	var a := PackedVector3Array([Vector3(40, 0, 22), Vector3(41.3, 0, 20.6), Vector3(43.4, 0, 19.2), Vector3(43.4, 0, 18.1)])
+	var b := PackedVector3Array([Vector3(40, 0, 22), Vector3(40, 0, TR_Z1 + 0.1)])
+	_rail_line(main)
+	_rail_line(a)
+	_rail_line(b)
+	# rails still reach a little way out over the gap from the north side
+	_rail_line(PackedVector3Array([Vector3(40, 0, TR_Z0 - 0.2), Vector3(40, 0, 12.6)]))
+	for p: Vector3 in [Vector3(40, 0, 29.9), Vector3(43.4, 0, 17.4)]:
+		box(p + Vector3(0, 0.35, 0), Vector3(1.2, 0.3, 0.25), M.canvas, true)  # buffers
+	var gap := blocker(Vector3(39.2, 0, TR_Z0), Vector3(40.8, 2.0, TR_Z1))
+	var lever := TrackSwitch3D.new()
+	lever.name = "Lever"
+	lever.position = Vector3(38.6, 0, 22.4)
+	entities.add_child(lever)
+	var cart := OreCart3D.new()
+	cart.name = "OreCart"
+	cart.rail_main = main
+	cart.rail_a = a
+	cart.rail_b = b
+	cart.bridge_position = Vector3(40, 0, (TR_Z0 + TR_Z1) * 0.5)
+	cart.gap_blocker = gap.get_child(0) as CollisionShape3D
+	cart.dialogue_buffer = "anjabi/cart_buffer"
+	cart.dialogue_bridge = "anjabi/cart_bridge"
+	cart.on_bridged = [{"objective": "quiet_mine.way_in"}, {"reveal": "quiet_mine.door"}]
+	entities.add_child(cart)
+
+
+func _props() -> void:
+	lamp(Vector3(21.9, 0, 13.4))  # gate
+	lamp(Vector3(18.5, 0, 29.8))  # wash-house
+	lamp(Vector3(10.6, 0, 13.6))  # stair foot
+	lamp(Vector3(19.6, 0, 8.8), false)  # yard lamp, dark since the power cut
+	lamp(Vector3(42.0, 0, 31.0))  # path east
+	for p: Vector3 in [Vector3(28.0, 0, 29.7), Vector3(15.0, 0, 23.2), Vector3(33.0, 0, 7.2)]:
+		box(p + Vector3(0, 0.4, 0), Vector3(1.1, 0.8, 1.1), M.timber)
+		box(p + Vector3(0.9, 0.3, 0.2), Vector3(0.7, 0.6, 0.7), M.timber)
+	# puddles
+	var water := _mat(Color(0.2, 0.27, 0.33), 0.05, 0.4)
+	for p: Vector3 in [Vector3(23.6, 0, 23.5), Vector3(24.6, 0, 18), Vector3(23.5, 0, 31), Vector3(32, 0, 32.2),
+			Vector3(16.5, 0, 30.3), Vector3(15, 0, 8.5), Vector3(32, 0, 10), Vector3(41, 0, 13.5), Vector3(8, 0, 13.6)]:
+		var mi := MeshInstance3D.new()
+		var cm := CylinderMesh.new()
+		cm.top_radius = 0.6
+		cm.bottom_radius = 0.6
+		cm.height = 0.02
+		mi.mesh = cm
+		mi.material_override = water
+		mi.position = p + Vector3(0, 0.03, 0)
+		mi.scale = Vector3(1.0, 1.0, 0.6)
+		add_child(mi)
+	for p: Vector3 in [Vector3(7.5, 0, 21), Vector3(6.8, 0, 33), Vector3(30, 0, 20.2), Vector3(35, 0, 19.2),
+			Vector3(36, 0, 29.8), Vector3(42.8, 0, 30.3), Vector3(46, 8, 7.5), Vector3(46.5, 8, 11.2),
+			Vector3(46, 8, 15), Vector3(47.2, 8, 19), Vector3(46, 8, 22.6), Vector3(47, 8, 26.2),
+			Vector3(46, 8, 30), Vector3(47.2, 8, 33.6), Vector3(2, 10, 4), Vector3(3, 10, 9), Vector3(1, 8, 20), Vector3(2.5, 8, 28)]:
+		tree(p, 1.1 if p.y == 0 else 1.4)
+		if p.y == 0:
+			blocker(p + Vector3(-0.2, 0, -0.2), p + Vector3(0.2, 1.5, 0.2))
+
+
+func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: Color, hood := false) -> void:
+	var npc := Npc3D.new()
+	npc.name = n.replace(" ", "")
+	npc.display_name = n
+	npc.dialogue_id = d
+	npc.coat = coat
+	npc.accent = accent
+	npc.skin = skin
+	npc.hood = hood
+	npc.position = at
+	npc.yaw_deg = 180.0
+	entities.add_child(npc)
+
+
+func _people() -> void:
+	_npc("Driller", "anjabi/driller", Vector3(16.8, 0, 30.0), Color(0.42, 0.33, 0.27), Color(0.8, 0.5, 0.18), Color(0.62, 0.45, 0.36))
+	_npc("Gate guard", "anjabi/guard", Vector3(26.4, 0, 13.3), Color(0.24, 0.3, 0.36), Color(0.75, 0.75, 0.7), Color(0.8, 0.64, 0.52), true)
+
+
+func _look(n: String, prompt: String, label: String, dialogue: String, at: Vector3, enabled_if := {}) -> Interactable3D:
+	var it := Interactable3D.new()
+	it.name = n
+	it.prompt = prompt
+	it.label = label
+	it.dialogue_id = dialogue
+	it.enabled_if = enabled_if
+	it.position = at
+	add_child(it)
+	return it
+
+
+func _interactables() -> void:
+	# the closure notice, cable-tied to the fence by the gate
+	box(Vector3(21.25, 1.2, 12.42), Vector3(0.7, 0.5, 0.03), M.concrete, false)
+	_look("Notice", "Read", "Notice", "anjabi/notice", Vector3(21.25, 1.0, 12.9))
+	_look("MineDoor", "Examine", "Mine door", "anjabi/door", Vector3(24, 1.0, 5.9))
+	_look("JunctionBox", "Examine", "Junction box", "anjabi/junction", Vector3(14.3, 1.0, 10.0))
+	_look("Trench", "Look", "Washout", "anjabi/trench", Vector3(40, 0.6, 17.6), {"not": {"flag": "anjabi.cart", "eq": "trench"}})
+	_look("CliffEdge", "Look", "Cliff edge", "anjabi/cliff_edge", Vector3(24, 1.0, 34.1))
+	var up := MapExit3D.new()
+	up.name = "StairsToSteps"
+	up.prompt = "Climb"
+	up.label = "Stairs up to the Steps"
+	up.target_map = "anjabi_town"
+	up.target_spawn = "mine"
+	up.position = Vector3(8, TOP + 0.8, 0.6)
+	add_child(up)
+	var east := MapExit3D.new()
+	east.name = "PathToAirpad"
+	east.prompt = "Walk"
+	east.label = "Path to the airpad"
+	east.target_map = "anjabi_town"
+	east.target_spawn = "airpad"
+	east.position = Vector3(44.4, 0.8, 32.2)
+	add_child(east)
+
+
+==============================================================================
+== maps/anjabi/mine_3d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/mine_3d.gd" id="1"]
+
+[node name="Mine3D" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_mine"
+display_name = "ANJABI  ·  COLLAPSED MINE"
+
+[node name="Spawns" type="Node3D" parent="."]
+
+[node name="default" type="Marker3D" parent="Spawns"]
+position = Vector3(8, 6.05, 1.2)
+
+[node name="east" type="Marker3D" parent="Spawns"]
+position = Vector3(43.3, 0.05, 32.2)
+
+[node name="Entities" type="Node3D" parent="."]
 
 
 ==============================================================================
@@ -2699,6 +4651,532 @@ target_spawn = "east"
 
 
 ==============================================================================
+== maps/anjabi/town_3d.gd
+==============================================================================
+extends MapBuilder3D
+## Anjabi, the whole settlement, in 3D. Terrain, cliffs, water and colliders come
+## from maps/anjabi/town_3d_cells.res (built from Greybox Study 01 by
+## tools/build_town_3d.gd): one cell per metre, walkway heights interpolated between
+## the districts so the paths climb and fall between levels. Landmark buildings are
+## placed on their greybox footprints. Announces the district the player is in.
+## Greybox pixel p maps to world (p - ORIGIN) * PX metres.
+
+const CELLS := "res://maps/anjabi/town_3d_cells.res"
+const ORIGIN := Vector2(34, 34)
+const PX := 0.12
+const SEA := -7.0
+const CHUNK := 16
+const WATER := 0
+const PATH := 1
+const GRASS := 2
+const SAND := 3
+const SLAB := 4
+const CLIFF := 5
+const INSERT := 6
+## Where the detailed Steps insert (district.tscn) sits; matches tools/build_town_3d.gd.
+const INSERT_AT := Vector3(101.52, 0, 45.72)
+const INSERT_SCENE := preload("res://maps/anjabi/district.tscn")
+
+## Greybox-pixel rectangles; first match wins (same as the 2D town).
+const DISTRICTS := [
+	["THE STEPS", Rect2(820, 370, 125, 75)],
+	["TRAM STATION", Rect2(940, 440, 180, 210)],
+	["SHOPS", Rect2(890, 220, 170, 160)],
+	["MAIN TAVERN", Rect2(670, 190, 215, 175)],
+	["TION TOWER", Rect2(425, 300, 180, 175)],
+	["GUARD TOWER", Rect2(930, 40, 210, 165)],
+	["WORKER PODS", Rect2(440, 40, 325, 205)],
+	["ESTATE GARDENS", Rect2(95, 320, 215, 100)],
+	["ESTATE", Rect2(120, 420, 290, 165)],
+	["COLLAPSED MINE", Rect2(60, 630, 250, 180)],
+	["PRIVATE AIRPAD", Rect2(320, 735, 200, 130)],
+	["BEACH", Rect2(500, 560, 430, 175)],
+	["DOCKS AND BOARDWALK", Rect2(1060, 360, 320, 215)],
+	["RAINFOREST APPROACH", Rect2(1255, 220, 165, 150)],
+	["FOREST", Rect2(40, 40, 330, 215)],
+]
+## Spawn points and exits, in greybox pixels (the 2D town's positions / 2).
+const SPAWNS := {"default": Vector2(880, 415), "mine": Vector2(212, 676), "airpad": Vector2(336, 746)}
+
+var w := 0
+var h := 0
+var cls := PackedByteArray()
+var hv := PackedFloat32Array()
+var hc := PackedFloat32Array()
+var _district := ""
+var _acc := 0.0
+
+
+func _ready() -> void:
+	_load_cells()
+	_materials()
+	_environment()
+	_terrain()
+	_collision()
+	_sea()
+	_landmarks()
+	_vegetation_and_lamps()
+	_spawns_and_exits()
+
+
+# --- grid ------------------------------------------------------------------------
+
+func _load_cells() -> void:
+	var img: Image = load(CELLS)
+	w = img.get_width()
+	h = img.get_height()
+	cls.resize(w * h)
+	hv.resize(w * h)
+	hc.resize(w * h)
+	for z in h:
+		for x in w:
+			var c := img.get_pixel(x, z)
+			var i := z * w + x
+			hv[i] = c.r
+			cls[i] = int(round(c.g))
+			hc[i] = c.b
+
+
+static func walkable(t: int) -> bool:
+	return t == PATH or t == GRASS or t == SAND or t == INSERT
+
+
+## World position of a greybox pixel, on the ground.
+func at_px(p: Vector2) -> Vector3:
+	var m := (p - ORIGIN) * PX
+	return Vector3(m.x, ground(m.x, m.y), m.y)
+
+
+func px_of(world: Vector3) -> Vector2:
+	return Vector2(world.x, world.z) / PX + ORIGIN
+
+
+## Visual height of the cell under (x, z).
+func ground(x: float, z: float) -> float:
+	var cx := clampi(int(x), 0, w - 1)
+	var cz := clampi(int(z), 0, h - 1)
+	return hv[cz * w + cx]
+
+
+func nearest_walk(p: Vector2) -> Vector3:
+	var m := (p - ORIGIN) * PX
+	var c := Vector2i(int(m.x), int(m.y))
+	for r in 12:
+		for dz in range(-r, r + 1):
+			for dx in range(-r, r + 1):
+				if maxi(absi(dx), absi(dz)) != r:
+					continue
+				var q := c + Vector2i(dx, dz)
+				if q.x < 0 or q.y < 0 or q.x >= w or q.y >= h:
+					continue
+				var i := q.y * w + q.x
+				if walkable(cls[i]):
+					return Vector3(q.x + 0.5, hv[i], q.y + 0.5)
+	return Vector3(m.x, ground(m.x, m.y), m.y)
+
+
+## Vertex heights: a vertex touching any walkable cell takes their mean, so walk
+## surfaces stay exactly where the collider puts them; walls rise inside their cells.
+func _vertex(x: int, z: int, collide: bool) -> float:
+	var ws := 0.0
+	var wn := 0
+	var os := 0.0
+	var on := 0
+	var top := -INF
+	for dz in [-1, 0]:
+		for dx in [-1, 0]:
+			var cx: int = x + dx
+			var cz: int = z + dz
+			if cx < 0 or cz < 0 or cx >= w or cz >= h:
+				continue
+			var i := cz * w + cx
+			if cls[i] == INSERT:
+				if collide:
+					top = maxf(top, -30.0)
+					continue
+				os += hv[i] - 0.5
+				on += 1
+			elif walkable(cls[i]):
+				ws += hv[i]
+				wn += 1
+			elif collide:
+				top = maxf(top, hc[i])
+			elif cls[i] != WATER:
+				os += hv[i]
+				on += 1
+	if wn > 0:
+		return ws / wn
+	if collide:
+		return top if top > -INF else 0.0
+	return os / on if on > 0 else SEA
+
+
+func _terrain() -> void:
+	var vh := PackedFloat32Array()
+	vh.resize((w + 1) * (h + 1))
+	for z in h + 1:
+		for x in w + 1:
+			vh[z * (w + 1) + x] = _vertex(x, z, false)
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.vertex_color_is_srgb = true
+	add_detail(mat, 0.3)
+	mat.roughness = 0.72
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 21
+	for cz0 in range(0, h, CHUNK):
+		for cx0 in range(0, w, CHUNK):
+			var st := SurfaceTool.new()
+			st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			st.set_smooth_group(-1)
+			var any := false
+			for z in range(cz0, mini(cz0 + CHUNK, h)):
+				for x in range(cx0, mini(cx0 + CHUNK, w)):
+					var i := z * w + x
+					var t := cls[i]
+					if t == WATER or t == INSERT:
+						continue
+					any = true
+					var col := _colour(t, rng.randf())
+					var a := Vector3(x, vh[z * (w + 1) + x], z)
+					var b := Vector3(x + 1, vh[z * (w + 1) + x + 1], z)
+					var c := Vector3(x + 1, vh[(z + 1) * (w + 1) + x + 1], z + 1)
+					var d := Vector3(x, vh[(z + 1) * (w + 1) + x], z + 1)
+					_quad(st, a, b, c, d, col)
+					# skirts down to the sea where this cell borders water
+					var dark := col.darkened(0.35)
+					if z > 0 and cls[i - w] == WATER:
+						_quad(st, Vector3(b.x, SEA, b.z), b, a, Vector3(a.x, SEA, a.z), dark)
+					if z < h - 1 and cls[i + w] == WATER:
+						_quad(st, Vector3(d.x, SEA, d.z), d, c, Vector3(c.x, SEA, c.z), dark)
+					if x > 0 and cls[i - 1] == WATER:
+						_quad(st, Vector3(a.x, SEA, a.z), a, d, Vector3(d.x, SEA, d.z), dark)
+					if x < w - 1 and cls[i + 1] == WATER:
+						_quad(st, Vector3(c.x, SEA, c.z), c, b, Vector3(b.x, SEA, b.z), dark)
+			if not any:
+				continue
+			st.generate_normals()
+			var mi := MeshInstance3D.new()
+			mi.mesh = st.commit()
+			mi.material_override = mat
+			add_child(mi)
+
+
+func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, col: Color) -> void:
+	st.set_color(col)
+	st.add_vertex(a)
+	st.add_vertex(b)
+	st.add_vertex(c)
+	st.add_vertex(a)
+	st.add_vertex(c)
+	st.add_vertex(d)
+
+
+func _colour(t: int, n: float) -> Color:
+	var j := (n - 0.5) * 0.05
+	match t:
+		PATH:
+			return Color(0.4 + j, 0.39 + j, 0.37 + j)
+		GRASS:
+			return Color(0.15 + j, 0.25 + j * 1.5, 0.18 + j)
+		SAND:
+			return Color(0.56 + j, 0.5 + j, 0.41 + j)
+		SLAB:
+			return Color(0.44 + j, 0.44 + j, 0.42 + j)
+	return Color(0.21 + j, 0.24 + j, 0.26 + j)
+
+
+func _collision() -> void:
+	var data := PackedFloat32Array()
+	data.resize((w + 1) * (h + 1))
+	for z in h + 1:
+		for x in w + 1:
+			data[z * (w + 1) + x] = _vertex(x, z, true)
+	var shape := HeightMapShape3D.new()
+	shape.map_width = w + 1
+	shape.map_depth = h + 1
+	shape.map_data = data
+	var body := _body()
+	var cs := CollisionShape3D.new()
+	cs.shape = shape
+	cs.position = Vector3(w * 0.5, 0, h * 0.5)
+	body.add_child(cs)
+	add_child(body)
+	# frame the map so nothing walks off its edge
+	blocker(Vector3(-2, -10, -2), Vector3(0, 20, h + 2))
+	blocker(Vector3(w, -10, -2), Vector3(w + 2, 20, h + 2))
+	blocker(Vector3(-2, -10, -2), Vector3(w + 2, 20, 0))
+	blocker(Vector3(-2, -10, h), Vector3(w + 2, 20, h + 2))
+
+
+func _sea() -> void:
+	var sea := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(600, 500)
+	sea.mesh = pm
+	sea.material_override = M.sea
+	sea.position = Vector3(w * 0.5, SEA + 0.4, h * 0.5)
+	add_child(sea)
+
+
+# --- buildings ---------------------------------------------------------------------
+
+func _pod(p: Vector2, tag := "", _lit := true) -> void:
+	var at := at_px(p)
+	model("pod", at, 0.0, 1.1)
+	if tag != "":
+		sign_text(at + Vector3(0, 3.3, 2.55), tag, 0.0, 40)
+
+
+## Shed model filling a greybox footprint (visual only; the grid already blocks it).
+func _shed_px(a: Vector2, b: Vector2, h_m: float) -> void:
+	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
+	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
+	var base := Vector3((lo.x + hi.x) * 0.5, minf(lo.y, hi.y), (lo.z + hi.z) * 0.5)
+	shed(base, Vector3(hi.x - lo.x, h_m, hi.z - lo.z), 0.0, false)
+
+
+func _block(a: Vector2, b: Vector2, h_m: float, m: Material, roof: Material = null, lit := true) -> void:
+	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
+	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
+	var base := minf(lo.y, hi.y)
+	var size := Vector3(hi.x - lo.x, h_m, hi.z - lo.z)
+	var c := Vector3((lo.x + hi.x) * 0.5, base + h_m * 0.5, (lo.z + hi.z) * 0.5)
+	box(c, size, m, false)
+	box(c + Vector3(0, h_m * 0.5 + 0.12, 0), size + Vector3(0.5, 0.24, 0.5), roof if roof != null else M.steel_dark, false)
+	if lit:
+		for i in maxi(1, int(size.x / 4.0)):
+			box(Vector3(lo.x + 2.0 + i * 4.0, base + h_m * 0.55, hi.z + 0.04), Vector3(1.2, 0.8, 0.08), M.window, false)
+
+
+func _landmarks() -> void:
+	# 08 Main Tavern and 12 Shop are part of the Steps insert
+	var steps := INSERT_SCENE.instantiate()
+	steps.set("insert", true)
+	steps.position = INSERT_AT
+	add_child(steps)
+	# 07 Tion Tower
+	var tion := at_px(Vector2(515, 390))
+	model("tion_tower", tion)
+	# 10 Guard Tower
+	var gt := at_px(Vector2(1035, 118))
+	model("guard_tower", gt)
+	warm_light(gt + Vector3(0, 13.5, 7.0), 2.0, 10.0)
+	# 09 Living pods
+	_pod(Vector2(530, 68), "", true)
+	_pod(Vector2(622, 72), "", false)
+	_pod(Vector2(508, 128), "", true)
+	_pod(Vector2(660, 132), "B-17", true)
+	_pod(Vector2(546, 182), "", true)
+	for b: Array in [[Vector2(480, 95), Vector2(505, 118)], [Vector2(690, 75), Vector2(730, 108)], [Vector2(718, 112), Vector2(745, 135)],
+			[Vector2(592, 272), Vector2(622, 296)]]:
+		_shed_px(b[0], b[1], 3.0)
+	# 03 Estate and its walls
+	model("estate", at_px(Vector2(240, 480)), 0.0, 0.85)
+	# 04 Mine yard: headframe over the slab
+	var mine := at_px(Vector2(215, 700))
+	model("headframe", mine + Vector3(0, 0, -6))
+	_shed_px(Vector2(150, 760), Vector2(205, 790), 3.0)
+	_shed_px(Vector2(255, 640), Vector2(300, 668), 3.0)
+	# 05 Private airpad: pad ring and a parked craft
+	var pad := at_px(Vector2(382, 782))
+	cyl(pad + Vector3(0, 0.02, 0), 3.6, 3.6, 0.05, M.warning, false, 24)
+	cyl(pad + Vector3(0, 0.04, 0), 3.2, 3.2, 0.05, M.concrete, false, 24)
+	var craft := at_px(Vector2(450, 790))
+	box(craft + Vector3(0, 1.2, 0), Vector3(3.0, 1.6, 7.0), M.steel, false)
+	box(craft + Vector3(0, 1.4, 0), Vector3(9.0, 0.25, 2.4), M.steel_dark, false)
+	box(craft + Vector3(0, 2.1, -2.2), Vector3(2.0, 0.6, 1.6), M.blue_light, false)
+	# 13 Tram / subway station, angled toward the docks
+	var tram := at_px(Vector2(1030, 505))
+	model("tram_station", tram, deg_to_rad(-33), 0.8)
+	warm_light(tram + Vector3(-3, 3, 6), 1.6, 8.0)
+	# tram line north-south, and 16 Imperial Tower
+	var north := at_px(Vector2(1160, 10)) + Vector3(0, 0, 0)
+	var tower := at_px(Vector2(1195, 880))
+	north.y = 9.0
+	var deck := tower + Vector3(0, 0, 0)
+	deck.y = 9.0
+	beam(north, deck, 0.15, 0.15, M.steel_dark)
+	beam(north + Vector3(0.6, -0.4, 0), deck + Vector3(0.6, -0.4, 0), 0.1, 0.1, M.steel_dark)
+	for f in 7:
+		var p := north.lerp(deck, (f + 0.5) / 7.0)
+		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(1.0, p.y - SEA, 1.0), M.steel_dark, false)
+		box(p + Vector3(0, 0.8, 0), Vector3(0.4, 0.3, 0.4), M.blue_light, false)
+	var it := Vector3(tower.x, SEA, tower.z)
+	model("imperial_tower", it)
+	# docks: posts and crates on the boardwalk
+	for p: Vector2 in [Vector2(1080, 380), Vector2(1150, 380), Vector2(1240, 400), Vector2(1300, 470), Vector2(1250, 520)]:
+		box(at_px(p) + Vector3(0, 0.45, 0), Vector3(1.0, 0.9, 1.0), M.timber, true)
+
+
+func _vegetation_and_lamps() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 33
+	var lamps := 0
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			var t := cls[i]
+			var r := rng.randf()
+			if t == CLIFF and r < 0.03 and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
+					and cls[i - w] == CLIFF and cls[i + w] == CLIFF and cls[i - 2 * w] == CLIFF:
+				tree(Vector3(x + 0.5, hv[i], z + 0.5), rng.randf_range(0.7, 1.1))
+			elif t == GRASS and r < 0.012:
+				var clear := true
+				for n: int in [i - 1, i + 1, i - w, i + w, i - 2, i + 2, i - 2 * w, i + 2 * w]:
+					if n < 0 or n >= w * h or cls[n] != GRASS:
+						clear = false
+				if clear:
+					var p := Vector3(x + 0.5, hv[i], z + 0.5)
+					tree(p, rng.randf_range(0.9, 1.4))
+					blocker(p + Vector3(-0.25, 0, -0.25), p + Vector3(0.25, 1.6, 0.25))
+			elif t == PATH and r < 0.03 and lamps < 48:
+				# lamps stand at path edges, against a wall
+				var edge := false
+				for n: int in [i - 1, i + 1, i - w, i + w]:
+					if cls[n] == CLIFF or cls[n] == SLAB:
+						edge = true
+				if edge:
+					lamps += 1
+					lamp(Vector3(x + 0.5, hv[i], z + 0.5), lamps % 2 == 0)
+
+
+func _spawns_and_exits() -> void:
+	var spawns := Node3D.new()
+	spawns.name = "Spawns"
+	add_child(spawns)
+	for k: String in SPAWNS:
+		var m := Marker3D.new()
+		m.name = k
+		m.position = nearest_walk(SPAWNS[k]) + Vector3(0, 0.1, 0)
+		if k == "default":
+			m.position = INSERT_AT + Vector3(2, 0.05, 5)
+		spawns.add_child(m)
+	var door := Interactable3D.new()
+	door.name = "PodB17Door"
+	door.prompt = "Knock"
+	door.label = "Pod B-17"
+	door.dialogue_id = "anjabi/pod_b17"
+	door.radius = 1.4
+	door.position = at_px(Vector2(660, 132)) + Vector3(0, 0.9, 3.4)
+	add_child(door)
+	var sign := Interactable3D.new()
+	sign.name = "MineSign"
+	sign.prompt = "Read"
+	sign.label = "Warning sign"
+	sign.dialogue_id = "anjabi/mine_approach_sign"
+	sign.position = nearest_walk(Vector2(232, 676)) + Vector3(0, 0.9, 0)
+	add_child(sign)
+	box(sign.position + Vector3(0, 0.2, -0.4), Vector3(0.8, 0.6, 0.06), M.concrete, false)
+	_exit("ToMineRoad", "Enter", "Mine yard", Vector2(212, 692), "anjabi_mine", "default")
+	_exit("ToMineFromAirpad", "Walk", "Mine yard", Vector2(322, 745), "anjabi_mine", "east")
+
+
+func _exit(n: String, prompt: String, label: String, p: Vector2, target: String, spawn: String) -> void:
+	var e := MapExit3D.new()
+	e.name = n
+	e.prompt = prompt
+	e.label = label
+	e.radius = 1.6
+	e.target_map = target
+	e.target_spawn = spawn
+	e.position = nearest_walk(p) + Vector3(0, 0.8, 0)
+	add_child(e)
+
+
+func _process(delta: float) -> void:
+	_acc += delta
+	if _acc < 0.25 or player == null:
+		return
+	_acc = 0.0
+	var p := px_of(player.global_position)
+	var found := ""
+	for d: Array in DISTRICTS:
+		if (d[1] as Rect2).has_point(p):
+			found = d[0]
+			break
+	if found != _district:
+		_district = found
+		if found != "":
+			GameState.location_entered.emit("ANJABI  ·  " + found)
+
+
+==============================================================================
+== maps/anjabi/town_3d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/town_3d.gd" id="1"]
+
+[node name="Town3D" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_town"
+display_name = "ANJABI"
+
+[node name="Entities" type="Node3D" parent="."]
+
+
+==============================================================================
+== tests/perf_probe.gd
+==============================================================================
+extends Node
+## Windowed render-cost probe. Prints draw calls, primitives, objects and frame time
+## at representative spots. A desktop proxy only; it is not an iPhone measurement.
+##   Godot --path . res://tests/perf_probe.tscn
+
+const O := Vector3(101.52, 0, 45.72)
+
+
+func _ready() -> void:
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await get_tree().create_timer(1.0).timeout
+	print("spot                 draws   prims(k)  objects  frame ms")
+	var town_spots := {"steps": O + Vector3(2, 0.05, 5), "tavern terrace": O + Vector3(-6, 3.05, -11.5),
+		"pods": Vector2(600, 150), "docks": Vector2(1170, 460), "beach": Vector2(650, 600), "estate": Vector2(240, 590)}
+	for k: String in town_spots:
+		await _measure(main, k, town_spots[k])
+	main.call("load_map", "anjabi_mine", "default")
+	await get_tree().create_timer(0.5).timeout
+	for k: String in {"mine stairs": Vector3(8, 3.0, 7.5), "mine yard": Vector3(24, 0.05, 15.5), "mine spur": Vector3(39.5, 0.05, 21.5)}:
+		await _measure(main, k, {"mine stairs": Vector3(8, 3.0, 7.5), "mine yard": Vector3(24, 0.05, 15.5), "mine spur": Vector3(39.5, 0.05, 21.5)}[k])
+	get_tree().quit()
+
+
+func _measure(main: Node, label: String, where: Variant) -> void:
+	var p: Player3D = main.get("player")
+	if where is Vector2:
+		p.global_position = main.get("map").call("nearest_walk", where) + Vector3(0, 0.1, 0)
+	else:
+		p.global_position = where
+	p.velocity = Vector3.ZERO
+	p.camera.reset_smoothing()
+	await get_tree().create_timer(1.0).timeout
+	var t0 := Time.get_ticks_usec()
+	var n := 60
+	for i in n:
+		await RenderingServer.frame_post_draw
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0 / n
+	var draws := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+	var prims := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	var objs := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
+	print("%-20s %6d   %7.1f   %6d   %6.2f" % [label, draws, prims / 1000.0, objs, ms])
+
+
+==============================================================================
+== tests/perf_probe.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/perf_probe.gd" id="1"]
+
+[node name="PerfProbe" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
 == tests/screenshot.gd
 ==============================================================================
 extends Node
@@ -2778,6 +5256,107 @@ script = ExtResource("1")
 
 
 ==============================================================================
+== tests/screenshot_3d.gd
+==============================================================================
+extends Node
+## Windowed visual check of the 3D district. Usage as tests/screenshot.gd:
+##   Godot --path . res://tests/screenshot_3d.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	await get_tree().create_timer(1.0).timeout
+	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
+	var shots := {
+		"3d_01_steps": o + Vector3(2, 0.05, 5),
+		"3d_02_tavern": o + Vector3(-6, 3.05, -11.5),
+		"3d_03_steps_east": o + Vector3(21, 0.05, 1),
+		"3d_04_terrace_west": o + Vector3(-22, 3.05, -18),
+	}
+	for k: String in shots:
+		var player: Player3D = main.get("player")
+		player.global_position = shots[k]
+		player.velocity = Vector3.ZERO
+		player.camera.reset_smoothing()
+		await get_tree().create_timer(0.8).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
+	# walking pose and a conversation
+	var p: Player3D = main.get("player")
+	p.global_position = o + Vector3(-5.6, 3.05, -10.9)
+	p.camera.reset_smoothing()
+	Input.action_press(&"move_left")
+	await get_tree().create_timer(0.3).timeout
+	Input.action_release(&"move_left")
+	await get_tree().create_timer(0.5).timeout
+	p.try_interact()
+	await get_tree().create_timer(1.2).timeout
+	Dialogue.advance()
+	await get_tree().create_timer(1.2).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("3d_07_dialogue.png"))
+	Dialogue.cancel()
+	# the mine yard
+	main.call("load_map", "anjabi_mine", "default")
+	await get_tree().create_timer(0.5).timeout
+	var mine := {
+		"3d_10_mine_stairs": Vector3(8, 3.0, 7.5),
+		"3d_11_mine_gate": Vector3(24, 0.05, 15.5),
+		"3d_12_mine_washhouse": Vector3(16, 0.05, 31.5),
+		"3d_13_mine_spur": Vector3(39.5, 0.05, 21.5),
+		"3d_14_mine_door": Vector3(24, 0.05, 8.5),
+	}
+	for k: String in mine:
+		var mp: Player3D = main.get("player")
+		mp.global_position = mine[k]
+		mp.velocity = Vector3.ZERO
+		mp.camera.reset_smoothing()
+		await get_tree().create_timer(0.8).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
+	GameState.set_flag("anjabi.cart", "trench")
+	main.call("restore_world", {"map": "anjabi_mine", "dim": 3, "x": 40.0, "y": 0.05, "z": 18.6, "fx": 0.0, "fz": -1.0})
+	await get_tree().create_timer(0.8).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("3d_15_mine_bridge.png"))
+	# the whole town
+	main.call("load_map", "anjabi_town", "default")
+	await get_tree().create_timer(0.5).timeout
+	var town := {
+		"3d_20_town_steps": Vector2(880, 415), "3d_21_town_tavern": Vector2(760, 350),
+		"3d_22_town_pods": Vector2(600, 150), "3d_23_town_tion": Vector2(515, 465),
+		"3d_24_town_beach": Vector2(650, 600), "3d_25_town_docks": Vector2(1170, 460),
+		"3d_26_town_estate": Vector2(240, 590), "3d_27_town_guard": Vector2(945, 160),
+	}
+	for k: String in town:
+		var tp: Player3D = main.get("player")
+		tp.global_position = main.get("map").call("nearest_walk", town[k]) + Vector3(0, 0.1, 0)
+		tp.velocity = Vector3.ZERO
+		tp.camera.reset_smoothing()
+		await get_tree().create_timer(0.8).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(k + ".png"))
+	get_tree().quit()
+
+
+==============================================================================
+== tests/screenshot_3d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_3d.gd" id="1"]
+
+[node name="Screenshot3D" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
 == tests/screenshot_town.gd
 ==============================================================================
 extends Node
@@ -2826,7 +5405,7 @@ extends Node
 var _fails := 0
 var _checks := 0
 var main: Node
-var player: Player
+var player
 
 
 func _ready() -> void:
@@ -2834,6 +5413,9 @@ func _ready() -> void:
 	SaveManager.boot_from_autosave = false
 	main = (load("res://game/main.tscn") as PackedScene).instantiate()
 	add_child(main)
+	await _frames(3)
+	await _district()
+	main.call("load_map", "anjabi_mine", "default")
 	await _frames(3)
 	await _run()
 	await _town()
@@ -2844,106 +5426,122 @@ func _ready() -> void:
 
 func _run() -> void:
 	player = main.get("player")
-	var map: GameMap = main.get("map")
-	check(player != null and map != null, "main boots a map and a player")
+	var map = main.get("map")
+	check(player != null and map is GameMap3D and player is Player3D, "the mine yard is a 3D map with a 3D player")
 	check(Journal.quests.has("quiet_mine"), "new game opens the investigation")
-	check(player.global_position.distance_to(Vector2(160, 40)) < 1.0, "player starts at the spawn marker")
+	check(player.global_position.distance_to(Vector3(8, 6.05, 1.2)) < 0.3, "player starts at the top of the Estate stairs")
 
-	# movement
-	var y0 := player.global_position.y
+	# movement, and the real 6 m stair down to the yard
+	var z0: float = player.global_position.z
 	Input.action_press(&"move_down")
 	await _frames(30)
 	Input.action_release(&"move_down")
-	check(player.global_position.y > y0 + 20.0, "keyboard movement moves the player (%.1f px)" % (player.global_position.y - y0))
+	check(player.global_position.z > z0 + 1.0, "keyboard movement moves the player (%.2f m)" % (player.global_position.z - z0))
 	Input.action_press(&"move_up")
 	await _frames(120)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 0.0, "the top of the stairs is closed off (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 0.0 and player.global_position.y > 5.8, "the top of the stairs is closed off (z=%.2f)" % player.global_position.z)
+	Input.action_press(&"move_down")
+	await _frames(240)
+	Input.action_release(&"move_down")
+	await _frames(10)
+	check(player.global_position.y < 0.2 and player.global_position.z > 12.6 and player.is_on_floor(), "the stairs lead down into the yard (y=%.2f z=%.2f)" % [player.global_position.y, player.global_position.z])
 
 	# touch stick
 	var ui: GameUi = main.get_node("UI")
-	var x0 := player.global_position.x
+	var x0: float = player.global_position.x
 	ui.touch.vector = Vector2.RIGHT
 	await _frames(20)
 	ui.touch.vector = Vector2.ZERO
-	check(player.global_position.x > x0 + 10.0, "touch stick vector moves the player")
+	check(player.global_position.x > x0 + 0.5, "touch stick vector moves the player")
 
 	# collision with the gate
-	await _place(Vector2(480, 290))
+	await _place3(Vector3(24, 0.05, 14.5))
 	Input.action_press(&"move_up")
 	await _frames(90)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 250.0, "the gate blocks the road (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 12.5, "the gate blocks the road (z=%.2f)" % player.global_position.z)
 
 	# notice
-	await _place(Vector2(425, 262))
+	await _place3(Vector3(21.25, 0.05, 13.1))
 	check(player.target != null and player.target.label == "Notice", "notice is targeted")
 	check(ui.hud.prompt_text().contains("Notice"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
 	check(player.try_interact() and Dialogue.active, "interacting opens dialogue")
+	var at: Vector3 = player.global_position
 	Input.action_press(&"move_down")
 	await _frames(10)
 	Input.action_release(&"move_down")
-	check(player.global_position.distance_to(Vector2(425, 262)) < 1.0, "player cannot walk during dialogue")
+	check(player.global_position.distance_to(at) < 0.05, "player cannot walk during dialogue")
 	await _talk([])
 	check(Journal.has_clue("closure_notice"), "notice records a clue")
 	check(Journal.objective_state("quiet_mine", "notice") == Journal.DONE, "notice objective done")
 
 	# guard before the driller: no way to press
-	await _place(Vector2(528, 280))
+	await _place3(Vector3(26.4, 0.05, 14.3))
+	check(player.target != null and player.target.label == "Gate guard", "gate guard is targeted")
 	player.try_interact()
-	check(not Dialogue.choice_texts().is_empty() or true, "guard dialogue starts")
+	check(Dialogue.active, "guard dialogue starts")
 	await _talk(["The crew was pulled"])
 	check(not Journal.has_clue("power_cut"), "guard cannot be pressed without the driller's account")
 
 	# driller
-	await _place(Vector2(336, 614))
+	await _place3(Vector3(16.8, 0.05, 31.0))
+	check(player.target != null and player.target.label == "Driller", "driller is targeted")
 	player.try_interact()
 	await _talk(["What happened at the mine", "Who gave"])
 	check(Journal.has_clue("early_recall"), "driller records a clue")
 
 	# guard again
-	await _place(Vector2(528, 280))
+	await _place3(Vector3(26.4, 0.05, 14.3))
 	player.try_interact()
 	await _talk(["The crew was pulled", "another way"])
 	check(Journal.has_clue("power_cut"), "pressing the guard records a clue")
 	check(Journal.objective_state("quiet_mine", "way_in") == Journal.ACTIVE, "guard reveals the hidden objective")
 
 	# puzzle: wrong branch first
-	var cart: OreCart = map.get_node("Entities/OreCart")
-	await _place(Vector2(800, 590))
+	var cart: OreCart3D = map.get_node("Entities/OreCart")
+	await _place3(Vector3(40, 0.05, 30.2))
 	check(player.target != null and player.target.label == "Ore cart", "cart is targeted")
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "buffer", "points at A: cart rolls to the buffer")
 	await _talk([])
-	await _place(Vector2(800, 356))
+	await _place3(Vector3(40, 0.05, 18.4))
 	Input.action_press(&"move_up")
 	await _frames(60)
 	Input.action_release(&"move_up")
-	check(player.global_position.y > 340.0, "washout blocks the spur (y=%.1f)" % player.global_position.y)
-	await _place(Vector2(868, 376))
+	check(player.global_position.z > 17.0 and player.global_position.y > -0.2, "washout blocks the spur (z=%.2f)" % player.global_position.z)
+	await _place3(Vector3(43.4, 0.05, 19.3))
+	check(player.target != null and player.target.label == "Ore cart", "cart at the buffer is targeted")
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "start", "cart can be hauled back")
 	# lever, then the right branch
-	await _place(Vector2(772, 460))
+	await _place3(Vector3(38.6, 0.05, 23.4))
 	check(player.target != null and player.target.label == "Points lever", "lever is targeted")
 	player.try_interact()
 	check(str(GameState.get_flag("anjabi.spur_switch")) == "b", "lever sets the points to B")
-	await _place(Vector2(800, 590))
+	await _place3(Vector3(40, 0.05, 30.2))
 	player.try_interact()
 	await _until(func() -> bool: return not cart.moving)
 	check(cart.state() == "trench", "points at B: cart drops into the washout")
 	await _talk([])
 	check(Journal.objective_state("quiet_mine", "way_in") == Journal.DONE, "bridging completes the objective")
-	await _place(Vector2(800, 356))
+	await _place3(Vector3(40, 0.05, 18.4))
 	Input.action_press(&"move_up")
 	await _frames(80)
 	Input.action_release(&"move_up")
-	check(player.global_position.y < 300.0, "player can cross the cart bridge (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z < 14.8 and player.global_position.y > -0.2, "player can cross the cart bridge (z=%.2f y=%.2f)" % [player.global_position.z, player.global_position.y])
+	Input.action_press(&"move_up")
+	Input.action_press(&"move_left")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	Input.action_release(&"move_left")
+	check(player.global_position.z < 12.4, "the corridor behind the washout opens into the inner yard (z=%.2f)" % player.global_position.z)
 
 	# mine door
-	await _place(Vector2(480, 126))
+	await _place3(Vector3(24, 0.05, 6.6))
+	check(player.target != null and player.target.label == "Mine door", "mine door is targeted")
 	player.try_interact()
 	await _talk([])
 	check(Journal.has_clue("sealed_outside"), "mine door records the final clue")
@@ -2956,7 +5554,7 @@ func _run() -> void:
 	check(not get_tree().paused, "closing the journal resumes")
 
 	# save / load
-	await _place(Vector2(600, 180))
+	await _place3(Vector3(30, 0.05, 9))
 	check(SaveManager.save_game("test"), "save writes a file")
 	main.call("new_game")
 	await _frames(3)
@@ -2967,16 +5565,16 @@ func _run() -> void:
 	player = main.get("player")
 	map = main.get("map")
 	cart = map.get_node("Entities/OreCart")
-	check(player.global_position.distance_to(Vector2(600, 180)) < 1.0, "load restores the player position")
+	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(30, 0.05, 9)) < 0.3, "load restores the player position")
 	check(Journal.clues.size() == 4 and Journal.is_complete("quiet_mine"), "load restores the journal")
-	check(cart.state() == "trench" and cart.global_position.distance_to(Vector2(800, 340)) < 1.0, "load restores the puzzle state")
-	await _place(Vector2(800, 290))
+	check(cart.state() == "trench" and cart.global_position.distance_to(Vector3(40, 0, 16)) < 0.1, "load restores the puzzle state")
+	await _place3(Vector3(40, 0.05, 14.0))
 	Input.action_press(&"move_down")
 	await _frames(80)
 	Input.action_release(&"move_down")
-	check(player.global_position.y > 345.0, "bridge is still walkable after load (y=%.1f)" % player.global_position.y)
+	check(player.global_position.z > 17.5 and player.global_position.y > -0.2, "bridge is still walkable after load (z=%.2f)" % player.global_position.z)
 	# follow-up dialogue reacts to state
-	await _place(Vector2(336, 614))
+	await _place3(Vector3(16.8, 0.05, 31.0))
 	player.try_interact()
 	await _talk([])
 	check(GameState.get_flag("driller.told_seal") == true, "driller reacts to the sealed door")
@@ -2984,54 +5582,232 @@ func _run() -> void:
 
 func _town() -> void:
 	# travel: mine -> town -> mine
-	await _place(Vector2(160, 30))
-	check(player.target is MapExit, "the Estate stairs are an exit")
+	await _place3(Vector3(8, 6.05, 1.0))
+	check(player.target is MapExit3D, "the Estate stairs are an exit")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_town", "the stairs lead into the town map")
-	var mask: WalkMask = player.walk_mask
-	check(mask != null and mask.is_walkable(player.global_position), "player arrives on walkable ground")
-	check(player.target is MapExit, "arrives beside the way back to the mine")
-	# the Steps: walk about, and be stopped by the sea
-	await _place(Vector2(1760, 830))
-	check(mask.is_walkable(player.global_position), "the Steps are walkable")
+	check(str(main.get("map_id")) == "anjabi_town" and player is Player3D, "the mine stairs lead up into the town")
+	await _frames(10)
+	player = main.get("player")
+	var town = main.get("map")
+	check(town is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
+	var meshes: int = town.find_children("*", "MeshInstance3D", true, false).size()
+	check(meshes > 300, "the town is built from real meshes (%d)" % meshes)
+	await _frames(20)
+	check(player.is_on_floor(), "player arrives standing on the town ground (y=%.2f)" % player.global_position.y)
+	check(player.target is MapExit3D, "arrives beside the way back to the mine")
+	# every landmark from the greybox is on solid, walkable ground
+	var landmarks := {"Steps": Vector2(880, 415), "Forest": Vector2(230, 110), "Garden": Vector2(200, 345),
+		"Estate": Vector2(240, 578), "Mine": Vector2(212, 700), "Airpad": Vector2(450, 800),
+		"Beach": Vector2(650, 640), "Tion Tower": Vector2(515, 465), "Tavern": Vector2(760, 350),
+		"Pods": Vector2(580, 70), "Guard Tower": Vector2(945, 130), "Docks": Vector2(1170, 460),
+		"Shop": Vector2(930, 385), "Tram": Vector2(970, 465), "Rainforest": Vector2(1380, 325)}
+	var bad := []
+	for k: String in landmarks:
+		var at: Vector3 = town.nearest_walk(landmarks[k])
+		await _place3(at + Vector3(0, 0.3, 0))
+		await _frames(10)
+		if not player.is_on_floor() or absf(player.global_position.y - at.y) > 0.6:
+			bad.append(k)
+	check(bad.is_empty(), "the player stands at all 15 landmarks %s" % ("" if bad.is_empty() else str(bad)))
+	# the Steps: district title, walking, real height differences across town
+	await _place3(town.nearest_walk(Vector2(880, 415)) + Vector3(0, 0.1, 0))
 	await _frames(20)
 	check(main.get_node("UI").hud._title.text.contains("THE STEPS"), "district title shows '%s'" % main.get_node("UI").hud._title.text)
-	var x0 := player.global_position.x
+	var x0: float = player.global_position.x
 	Input.action_press(&"move_left")
 	await _frames(40)
 	Input.action_release(&"move_left")
-	check(player.global_position.x < x0 - 20.0, "player walks in town")
-	await _place(Vector2(1300, 1280))
+	check(player.global_position.x < x0 - 1.0, "player walks in town")
+	var hp: float = town.nearest_walk(Vector2(580, 70)).y
+	var hb: float = town.nearest_walk(Vector2(650, 640)).y
+	check(hp - hb > 10.0, "the pods stand %.1f m above the beach" % (hp - hb))
+	# leave the Steps west along the walkway toward Tion Tower: the ground rises
+	var zw: float = _walk_z(town, O.x - 14.5, -9, 9)
+	await _place3(Vector3(O.x - 14.5, town.ground(O.x - 14.5, O.z + zw) + 0.1, O.z + zw))
+	await _frames(10)
+	var y0: float = player.global_position.y
+	Input.action_press(&"move_left")
+	await _frames(240)
+	Input.action_release(&"move_left")
+	await _frames(10)
+	check(player.global_position.y > y0 + 0.5 and player.is_on_floor(), "walkways climb from the Steps (%.2f -> %.2f m)" % [y0, player.global_position.y])
+	# the sea stops the player on the beach
+	await _place3(town.nearest_walk(Vector2(650, 640)) + Vector3(0, 0.1, 0))
 	Input.action_press(&"move_right")
+	Input.action_press(&"move_down")
 	await _frames(600)
 	Input.action_release(&"move_right")
-	check(mask.is_walkable(player.global_position) and player.global_position.x < 1700.0, "the sea stops the player on the beach (x=%.0f)" % player.global_position.x)
+	Input.action_release(&"move_down")
+	check(player.global_position.y > -6.6 and player.is_on_floor(), "the sea stops the player on the beach (y=%.2f)" % player.global_position.y)
+	await _place3(town.nearest_walk(Vector2(880, 415)) + Vector3(0, 0.1, 0))
 	check(SaveManager.save_game("test"), "save in town")
-	var at := player.global_position
+	var at_save: Vector3 = player.global_position
 	main.call("new_game")
 	await _frames(3)
 	check(SaveManager.load_game("test"), "load in town")
 	await _frames(3)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(at) < 1.0, "load restores map and position")
-	await _place(Vector2(424, 1380))
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(at_save) < 0.3, "load restores map and position")
+	town = main.get("map")
+	await _place3(town.nearest_walk(Vector2(212, 692)) + Vector3(0, 0.1, 0))
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
 	check(str(main.get("map_id")) == "anjabi_mine", "the mine yard in town leads back to the mine map")
-	await _place(Vector2(880, 646))
-	check(player.target is MapExit, "the airpad path is an exit")
+	await _place3(Vector3(43.6, 0.05, 32.2))
+	check(player.target is MapExit3D, "the airpad path is an exit")
+	player.try_interact()
+	await _frames(10)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.is_on_floor(), "the airpad path arrives on the ground in town")
+	check(player.target is MapExit3D, "arrives beside the way back")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_town" and player.walk_mask.is_walkable(player.global_position), "the airpad path arrives on walkable ground in town")
-	check(player.target is MapExit, "arrives beside the way back")
+	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(43.3, 0.05, 32.2)) < 0.3, "and returns to the east side of the mine")
+
+
+## The Steps: the detailed insert (plaza, stairs, tavern terrace) inside the town map.
+const O := Vector3(101.52, 0, 45.72)
+
+
+func _district() -> void:
+	player = main.get("player")
+	var map: Node = main.get("map")
+	check(str(main.get("map_id")) == "anjabi_town", "new game starts in the town")
+	check(map is GameMap3D and player is Player3D, "the town is a 3D map with a 3D player")
+	check(player.global_position.distance_to(O + Vector3(2, 0.05, 5)) < 0.5, "new game starts on the Steps plaza")
+	var meshes: int = map.find_children("*", "MeshInstance3D", true, false).size()
+	var bodies: int = map.find_children("*", "StaticBody3D", true, false).size()
+	check(meshes > 300 and bodies > 50, "the town is built from real meshes and colliders (%d meshes, %d bodies)" % [meshes, bodies])
+	check(map.find_children("*", "Npc3D", true, false).size() >= 1, "the Steps insert is part of the town")
+	var cam: Camera3D = player.camera
+	check(cam.current and cam.projection == Camera3D.PROJECTION_ORTHOGONAL, "orthographic follow camera is current")
+	await _frames(20)
+	check(player.is_on_floor() and absf(player.global_position.y) < 0.2, "player stands on the plaza (y=%.2f)" % player.global_position.y)
+	# walk east, camera follows
+	var x0: float = player.global_position.x
+	var c0: float = cam.global_position.x
+	Input.action_press(&"move_right")
+	await _frames(40)
+	Input.action_release(&"move_right")
+	await _frames(30)
+	check(player.global_position.x > x0 + 1.5, "keyboard moves the 3D player (%.2f m)" % (player.global_position.x - x0))
+	check(cam.global_position.x > c0 + 1.0, "camera follows the player")
+	check(player.facing.x > 0.9, "player faces the way it walked")
+	var p0: Vector3 = player.global_position
+	Input.action_press(&"move_right")
+	Input.action_press(&"move_down")
+	await _frames(20)
+	Input.action_release(&"move_right")
+	Input.action_release(&"move_down")
+	var d: Vector3 = player.global_position - p0
+	check(d.x > 0.3 and d.z > 0.3, "diagonal movement")
+	x0 = player.global_position.x
+	var ui: GameUi = main.get_node("UI")
+	ui.touch.vector = Vector2.LEFT
+	await _frames(30)
+	ui.touch.vector = Vector2.ZERO
+	check(player.global_position.x < x0 - 0.8, "touch stick moves the 3D player")
+	# the terrace wall blocks, the stairs climb
+	await _place3(O + Vector3(-6, 0.05, -7))
+	Input.action_press(&"move_up")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	check(player.global_position.z > O.z - 10.2 and player.global_position.y < 0.5, "terrace wall blocks the plaza")
+	await _place3(O + Vector3(0, 0.05, -2))
+	Input.action_press(&"move_up")
+	await _frames(150)
+	Input.action_release(&"move_up")
+	await _frames(10)
+	check(player.global_position.y > 2.8 and player.is_on_floor(), "stairs carry the player up to the tavern terrace (y=%.2f)" % player.global_position.y)
+	# tavern keeper
+	await _place3(O + Vector3(-7.2, 3.05, -10.9))
+	check(player.target != null and player.target.label == "Tavern keeper", "tavern keeper is targeted")
+	check(ui.hud.prompt_text().contains("Tavern keeper"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
+	check(player.try_interact() and Dialogue.active, "talking opens dialogue")
+	var at: Vector3 = player.global_position
+	Input.action_press(&"move_down")
+	await _frames(10)
+	Input.action_release(&"move_down")
+	check(player.global_position.distance_to(at) < 0.05, "player cannot walk during dialogue")
+	await _talk(["Where's the mine"])
+	check(GameState.get_flag("tavern_keeper.met") == true, "dialogue effects apply in 3D")
+	# the insert joins the town seamlessly: walk off the plaza east and west
+	for side: float in [1.0, -1.0]:
+		var edge_x: float = O.x + (20.5 if side > 0 else -12.5)
+		var zl: float = _walk_z(map, edge_x + side * 2.0, -9, 9)
+		check(not is_nan(zl), "a town walkway meets the plaza's %s edge" % ("east" if side > 0 else "west"))
+		if is_nan(zl):
+			continue
+		await _place3(Vector3(edge_x - side * 3.0, 0.05, O.z + zl))
+		Input.action_press(&"move_right" if side > 0 else &"move_left")
+		await _frames(150)
+		Input.action_release(&"move_right" if side > 0 else &"move_left")
+		await _frames(10)
+		var past: float = (player.global_position.x - edge_x) * side
+		check(past > 4.0 and player.is_on_floor(), "the plaza runs into the town's walkway (%s, %.1f m past the edge)" % ["east" if side > 0 else "west", past])
+	# from the terrace west onto the town's paths at the same level
+	await _place3(O + Vector3(-20, 3.05, -20))
+	Input.action_press(&"move_left")
+	await _frames(150)
+	Input.action_release(&"move_left")
+	await _frames(10)
+	check(player.global_position.x < O.x - 26.0 and player.is_on_floor(), "the terrace runs into the town's paths (x=%.1f)" % (player.global_position.x - O.x))
+	# B-17 among the town's pods, and the sign by the mine
+	var b17: Node3D = map.get_node("PodB17Door")
+	await _place3(Vector3(b17.global_position.x, map.ground(b17.global_position.x, b17.global_position.z + 1.0) + 0.1, b17.global_position.z + 0.6))
+	await _frames(10)
+	check(player.target != null and player.target.label == "Pod B-17", "B-17's door is in the town")
+	player.try_interact()
+	await _talk([])
+	# save / load
+	await _place3(O + Vector3(10, 0.05, 6))
+	check(SaveManager.save_game("test"), "save on the Steps")
+	main.call("load_map", "anjabi_mine", "default")
+	await _frames(3)
+	check(SaveManager.load_game("test"), "load on the Steps")
+	await _frames(3)
+	player = main.get("player")
+	check(player is Player3D and player.global_position.distance_to(O + Vector3(10, 0.05, 6)) < 0.2, "load restores map and position")
+	# a save from the retired district map resumes on the Steps
+	main.call("restore_world", {"map": "anjabi_district", "dim": 3, "x": -30.0, "y": -2.95, "z": 4.0})
+	await _frames(3)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(O + Vector3(2, 0.05, 5)) < 0.5, "old district saves resume on the Steps")
+	# to the mine and back
+	var exit: Node3D = map.get_node("ToMineRoad") if is_instance_valid(map) else null
+	map = main.get("map")
+	exit = map.get_node("ToMineRoad")
+	await _place3(exit.global_position - Vector3(0, 0.7, 0))
+	await _frames(6)
+	check(player.target is MapExit3D, "the mine path is an exit")
 	player.try_interact()
 	await _frames(4)
 	player = main.get("player")
-	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector2(866, 646)) < 1.0, "and returns to the east side of the mine")
+	check(str(main.get("map_id")) == "anjabi_mine" and player is Player3D, "the path leads into the 3D mine yard")
+
+
+## Local z (relative to O) of the town walk cell at world x nearest the plaza centre line, or NAN.
+func _walk_z(map: Node, x: float, z0: int, z1: int) -> float:
+	var best := NAN
+	for z in range(z0, z1 + 1):
+		var cx := int(x)
+		var cz := int(O.z + z)
+		var t: int = map.cls[cz * map.w + cx]
+		if t == 1 or t == 2 or t == 3:
+			var local := (cz + 0.5) - O.z
+			if is_nan(best) or absf(local) < absf(best):
+				best = local
+	return best
+
+
+func _place3(p: Vector3) -> void:
+	player.global_position = p
+	player.velocity = Vector3.ZERO
+	await _frames(6)
 
 
 func check(ok: bool, what: String) -> void:
@@ -3096,6 +5872,248 @@ func _talk(prefer: Array) -> void:
 
 [node name="SliceTest" type="Node"]
 script = ExtResource("1")
+
+
+==============================================================================
+== tools/build_town_3d.gd
+==============================================================================
+extends SceneTree
+## Builds the cell grid for the 3D town from the director's greybox and its walk mask.
+##   Godot --headless --path . -s tools/build_town_3d.gd
+## One cell per metre (0.12 m per greybox pixel). Each cell gets a type (water, path,
+## grass, sand, slab, cliff), a visual height and a collision height. Walkable heights
+## are interpolated (Laplace) between district anchor heights, so walkways become
+## gentle slopes between levels. Cliffs and slabs are raised walls in the collider.
+## Writes maps/anjabi/town_3d_cells.res (Image, RGBF: r = visual h, g = type,
+## b = collision h) and docs/reference/town_3d_heights_debug.png.
+## Re-run after changing the greybox, the mask, or ANCHORS.
+
+const SRC := "res://maps/anjabi/town_greybox.png"
+const MASK := "res://maps/anjabi/town_walk.res"
+const OUT := "res://maps/anjabi/town_3d_cells.res"
+const DEBUG := "res://docs/reference/town_3d_heights_debug.png"
+const ORIGIN := Vector2(34, 34)
+const PX := 0.12
+const W := 166
+const H := 109
+const SEA := -7.0
+const WATER := 0
+const PATH := 1
+const GRASS := 2
+const SAND := 3
+const SLAB := 4
+const CLIFF := 5
+## Cells covered by the detailed Steps insert (maps/anjabi/district.gd placed at
+## INSERT_AT): drawn and collided by the insert, not by the grid.
+const INSERT := 6
+## World position (m) of the insert's origin: the Steps, greybox (880, 415).
+const INSERT_AT := Vector2(101.52, 45.72)
+## Insert walk areas in insert-local metres (x0, z0, x1, z1) and their heights.
+const INSERT_AREAS := [
+	[Rect2(-12, -10, 32, 20), 0.0],   # the Steps plaza
+	[Rect2(-24, -28, 36, 18), 3.0],   # tavern terrace
+]
+## Image px -> height (m). Walk cells within ANCHOR_R of each are fixed.
+const ANCHORS := [
+	[Vector2(880, 415), 0.0],    # the Steps
+	[Vector2(930, 385), 0.0],    # shop front
+	[Vector2(650, 250), 4.0],    # pods approach
+	[Vector2(580, 70), 6.0],     # pods
+	[Vector2(945, 130), 6.0],    # guard tower
+	[Vector2(230, 110), 6.0],    # forest
+	[Vector2(200, 345), 3.0],    # garden
+	[Vector2(240, 578), 3.0],    # estate
+	[Vector2(515, 465), 2.0],    # Tion Tower walk
+	[Vector2(212, 700), -3.0],   # mine
+	[Vector2(450, 800), -3.0],   # airpad
+	[Vector2(650, 640), -6.0],   # beach
+	[Vector2(1170, 460), -1.0],  # docks
+	[Vector2(970, 465), -1.0],   # tram
+	[Vector2(1380, 325), 0.0],   # rainforest approach
+]
+const ANCHOR_R := 4.0
+
+var cls := PackedByteArray()
+var hv := PackedFloat32Array()
+var hc := PackedFloat32Array()
+var insert_h := PackedFloat32Array()
+var insert_fix := PackedByteArray()
+
+
+func _init() -> void:
+	var img := Image.load_from_file(ProjectSettings.globalize_path(SRC))
+	img.convert(Image.FORMAT_RGB8)
+	var mask: BitMap = load(MASK)
+	cls.resize(W * H)
+	hv.resize(W * H)
+	hc.resize(W * H)
+	var counts := [0, 0, 0, 0, 0, 0]
+	for z in H:
+		for x in W:
+			var p := ORIGIN + (Vector2(x, z) + Vector2(0.5, 0.5)) / PX
+			var votes := 0
+			for o: Vector2 in [Vector2.ZERO, Vector2(2.5, 0), Vector2(-2.5, 0), Vector2(0, 2.5), Vector2(0, -2.5)]:
+				var q := Vector2i(p + o)
+				if mask.get_bitv(q):
+					votes += 1
+			var c := img.get_pixelv(Vector2i(p))
+			var t := CLIFF
+			if votes >= 3:
+				t = GRASS if (c.g8 > c.r8 + 12 and c.g8 > c.b8 + 25) else PATH
+			elif c.b8 > c.r8 + 30 and c.b8 > 170:
+				t = WATER
+			elif absi(c.r8 - c.g8) < 14 and absi(c.g8 - c.b8) < 16 and c.r8 > 168:
+				t = SLAB
+			cls[z * W + x] = t
+			counts[t] += 1
+	print("cells: water %d path %d grass %d sand %d slab %d cliff %d" % counts)
+	# reserve the insert: cells inside it, and a one-cell rim pinned to its height
+	insert_h.resize(W * H)
+	insert_fix.resize(W * H)
+	for a: Array in INSERT_AREAS:
+		var r: Rect2 = a[0]
+		r.position += INSERT_AT
+		for z in range(int(r.position.y) - 1, int(r.end.y) + 2):
+			for x in range(int(r.position.x) - 1, int(r.end.x) + 2):
+				if x < 0 or z < 0 or x >= W or z >= H:
+					continue
+				var c := Vector2(x + 0.5, z + 0.5)
+				var i := z * W + x
+				if r.grow(-0.5).has_point(c):
+					cls[i] = INSERT
+					insert_h[i] = a[1]
+					insert_fix[i] = 1
+				elif r.grow(0.6).has_point(c) and cls[i] != INSERT and cls[i] != WATER and insert_fix[i] == 0:
+					# a walkable rim so the insert always meets the town at its own height
+					cls[i] = PATH
+					insert_h[i] = a[1] - 0.03
+					insert_fix[i] = 2
+	_heights()
+	_report()
+	var out := Image.create(W, H, false, Image.FORMAT_RGBF)
+	var dbg := Image.create(W, H, false, Image.FORMAT_RGB8)
+	for z in H:
+		for x in W:
+			var i := z * W + x
+			out.set_pixel(x, z, Color(hv[i], float(cls[i]), hc[i]))
+			var k := clampf((hv[i] + 7.0) / 20.0, 0.0, 1.0)
+			var col := Color(0.1, 0.25, 0.6) if cls[i] == WATER else Color(k, k, k)
+			if _walk(cls[i]):
+				col = Color(0.2 + k * 0.8, 0.6 * k + 0.2, 0.2)
+			dbg.set_pixel(x, z, col)
+	ResourceSaver.save(out, OUT)
+	dbg.resize(W * 6, H * 6, Image.INTERPOLATE_NEAREST)
+	dbg.save_png(ProjectSettings.globalize_path(DEBUG))
+	print("wrote %s and %s" % [OUT, DEBUG])
+	quit()
+
+
+static func _walk(t: int) -> bool:
+	return t == PATH or t == GRASS or t == SAND or t == INSERT
+
+
+func _heights() -> void:
+	var fixed := PackedByteArray()
+	fixed.resize(W * H)
+	for a: Array in ANCHORS:
+		var c := (a[0] as Vector2 - ORIGIN) * PX
+		for z in range(int(c.y - ANCHOR_R), int(c.y + ANCHOR_R) + 1):
+			for x in range(int(c.x - ANCHOR_R), int(c.x + ANCHOR_R) + 1):
+				if x < 0 or z < 0 or x >= W or z >= H:
+					continue
+				var i := z * W + x
+				if _walk(cls[i]) and Vector2(x + 0.5, z + 0.5).distance_to(c) <= ANCHOR_R:
+					fixed[i] = 1
+					hv[i] = a[1]
+	for i in W * H:
+		if insert_fix[i] > 0:
+			fixed[i] = 1
+			hv[i] = insert_h[i]
+	# successive over-relaxation over walk cells only
+	for it in 4000:
+		var worst := 0.0
+		for z in H:
+			for x in W:
+				var i := z * W + x
+				if fixed[i] == 1 or not _walk(cls[i]):
+					continue
+				var s := 0.0
+				var n := 0
+				if x > 0 and _walk(cls[i - 1]):
+					s += hv[i - 1]; n += 1
+				if x < W - 1 and _walk(cls[i + 1]):
+					s += hv[i + 1]; n += 1
+				if z > 0 and _walk(cls[i - W]):
+					s += hv[i - W]; n += 1
+				if z < H - 1 and _walk(cls[i + W]):
+					s += hv[i + W]; n += 1
+				if n == 0:
+					continue
+				var nv: float = hv[i] + 1.9 * (s / n - hv[i])
+				worst = maxf(worst, absf(nv - hv[i]))
+				hv[i] = nv
+		if worst < 0.0005:
+			print("relaxed in %d iterations" % it)
+			break
+	for i in W * H:
+		if cls[i] == PATH and hv[i] < -4.6:
+			cls[i] = SAND
+	# non-walk cells: BFS from walk cells carrying the source height
+	var base := PackedFloat32Array()
+	base.resize(W * H)
+	var dist := PackedInt32Array()
+	dist.resize(W * H)
+	dist.fill(-1)
+	var q := PackedInt32Array()
+	for i in W * H:
+		if _walk(cls[i]):
+			dist[i] = 0
+			base[i] = hv[i]
+			hc[i] = hv[i]
+			q.append(i)
+	var head := 0
+	while head < q.size():
+		var i := q[head]
+		head += 1
+		var x := i % W
+		for n: int in [i - 1, i + 1, i - W, i + W]:
+			if n < 0 or n >= W * H or dist[n] != -1:
+				continue
+			if (n == i - 1 and x == 0) or (n == i + 1 and x == W - 1):
+				continue
+			dist[n] = dist[i] + 1
+			base[n] = base[i]
+			q.append(n)
+	for i in W * H:
+		var t := cls[i]
+		if t == INSERT:
+			hc[i] = -30.0
+			continue
+		if _walk(t):
+			continue
+		var b := base[i] if dist[i] >= 0 else 0.0
+		hc[i] = b + 4.0
+		match t:
+			WATER:
+				hv[i] = SEA
+			SLAB:
+				hv[i] = b + 0.15
+			_:
+				hv[i] = b + minf(2.2 + dist[i] * 0.5, 5.0)
+
+
+func _report() -> void:
+	var worst := 0.0
+	for z in H:
+		for x in W - 1:
+			var i := z * W + x
+			if cls[i] == INSERT:
+				continue
+			if _walk(cls[i]) and _walk(cls[i + 1]) and cls[i + 1] != INSERT:
+				worst = maxf(worst, absf(hv[i] - hv[i + 1]))
+			if z < H - 1 and _walk(cls[i]) and _walk(cls[i + W]) and cls[i + W] != INSERT:
+				worst = maxf(worst, absf(hv[i] - hv[i + W]))
+	print("steepest walkable step between neighbouring cells: %.2f m (%.0f deg)" % [worst, rad_to_deg(atan(worst))])
 
 
 ==============================================================================
@@ -3484,7 +6502,7 @@ func _ready() -> void:
 	menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
 
 
-func bind_player(p: Player) -> void:
+func bind_player(p: Node) -> void:
 	hud.bind_player(p)
 
 
@@ -3538,7 +6556,8 @@ extends Control
 signal journal_pressed
 signal menu_pressed
 
-var player: Player
+## Player or Player3D.
+var player
 
 var _safe: Control
 var _prompt: Button
@@ -3566,7 +6585,7 @@ func _ready() -> void:
 
 	_prompt = _chip("", func() -> void:
 		if player != null:
-			player.try_interact())
+			player.call("try_interact"))
 	_prompt.add_theme_font_size_override("font_size", 10)
 	_safe.add_child(_prompt)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -3602,7 +6621,7 @@ func _ready() -> void:
 	_apply_safe_area()
 
 
-func bind_player(p: Player) -> void:
+func bind_player(p: Node) -> void:
 	player = p
 
 
@@ -3628,11 +6647,11 @@ func prompt_text() -> String:
 
 
 func _process(_delta: float) -> void:
-	var t: Interactable = player.target if is_instance_valid(player) else null
+	var t = player.get("target") if is_instance_valid(player) else null
 	var show := t != null and not Dialogue.active
 	_prompt.visible = show
 	if show:
-		var text := t.prompt.to_upper()
+		var text: String = str(t.prompt).to_upper()
 		if t.label != "":
 			text += "  ·  " + t.label
 		if _prompt.text != text:
