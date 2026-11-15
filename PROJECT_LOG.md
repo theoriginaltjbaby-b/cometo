@@ -357,3 +357,11 @@ Mobile renderer) every spot holds the 60 fps cap with 83-325 draw calls and 230k
 primitives per frame including shadow passes. Not an iPhone measurement.
 Test export run: preset valid; fails only on the missing iOS template.
 
+### 2026-11-15 — 12. Web build for phones
+Added a "Web" export preset (single-threaded, ETC2/ASTC textures for phones) and
+`renderer/rendering_method.web="gl_compatibility"`. Built with the standard (non-.NET)
+Godot 4.7.2 and its web templates: `export/web/index.html` (~44 MB, not committed).
+Verified in a desktop browser: boots on the Steps, no console errors, drag-to-steer works.
+Play on a phone on the same Wi-Fi: `cd export/web && python3 -m http.server 8000`, then open
+`http://<this Mac's address>:8000` in Safari. Not yet verified on an iPhone.
+
