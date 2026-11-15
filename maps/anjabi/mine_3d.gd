@@ -116,14 +116,10 @@ func _mine_door() -> void:
 		box(Vector3(26.9, 0.12 + i * 0.16, 6.2), Vector3(0.7, 0.14, 2.0), wrap, i == 0, 0.08 * i)
 
 
-func _shed(center: Vector3, size: Vector3, m: Material, lit := false, door_side := 1.0) -> void:
-	box(center + Vector3(0, size.y * 0.5, 0), size, m)
-	box(center + Vector3(0, size.y + 0.1, 0), Vector3(size.x + 0.4, 0.2, size.z + 0.4), M.steel_dark, false)
-	var front := center.z + size.z * 0.5 * door_side
-	box(Vector3(center.x - size.x * 0.25, 1.0, front + 0.03 * door_side), Vector3(0.9, 2.0, 0.06), M.timber, false)
-	box(Vector3(center.x + size.x * 0.22, size.y * 0.62, front + 0.03 * door_side), Vector3(1.0, 0.6, 0.06), M.window if lit else M.steel_dark, false)
+func _shed(center: Vector3, size: Vector3, _m: Material, lit := false, _door_side := 1.0) -> void:
+	shed(center, size)
 	if lit:
-		warm_light(Vector3(center.x + size.x * 0.22, size.y * 0.6, front + 1.0 * door_side), 1.3, 6.0)
+		warm_light(Vector3(center.x + size.x * 0.22, size.y * 0.6, center.z + size.z * 0.5 + 1.0), 1.3, 6.0)
 
 
 func _buildings() -> void:

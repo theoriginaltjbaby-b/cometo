@@ -38,6 +38,7 @@ func _init() -> void:
 	figure.coat = Color(0.86, 0.62, 0.2)
 	figure.accent = Color(0.2, 0.24, 0.28)
 	figure.hood = true
+	figure.xray = true
 	add_child(figure)
 	reach = Area3D.new()
 	reach.collision_layer = 0

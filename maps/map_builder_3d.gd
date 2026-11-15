@@ -110,12 +110,21 @@ func _body() -> StaticBody3D:
 
 ## An authored model from res://art/models (exported from art/source/*.blend).
 ## Models face +Z (south, toward the camera). Visual only; add colliders separately.
-func model(model_name: String, at: Vector3, yaw := 0.0, s := 1.0) -> Node3D:
+func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
 	var n := (load("res://art/models/%s.glb" % model_name) as PackedScene).instantiate() as Node3D
 	n.position = at
 	n.rotation.y = yaw
-	n.scale = Vector3(s, s, s)
+	n.scale = s if s is Vector3 else Vector3(s, s, s)
 	add_child(n)
+	return n
+
+
+## The shed model (native 4 m wide, 3 m tall, 3 m deep) stretched to `size`
+## (width, height, depth), standing on `base`, door and window facing +Z, with a box collider.
+func shed(base: Vector3, size: Vector3, yaw := 0.0, solid := true) -> Node3D:
+	var n := model("shed", base, yaw, Vector3(size.x / 4.0, size.y / 3.0, size.z / 3.0))
+	if solid:
+		box(base + Vector3(0, size.y * 0.5, 0), size, null, true, yaw)
 	return n
 
 

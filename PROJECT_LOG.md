@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 7: first art pass with Blender models).
+Last updated: 2026-11-14 (entry 8: every building is a Blender model).
 
 ## 1. What this is
 
@@ -125,6 +125,7 @@ All files were created 2026-11-14 unless noted.
 | `maps/anjabi/mine_3d.tscn`, `mine_3d.gd` | Map `anjabi_mine` in 3D (entry 5), replacing `mine.tscn` in `main.gd`'s registry: 6 m stairs down from the Estate landing, fenced inner yard with the welded mine door and stretchers, gate, guard hut, wash-house, sheds, spur rails, the washout as a real cut in the ground, cliff fence, path east. Driller and Gate guard as `Npc3D`; all seven interactables and both exits. |
 | `maps/anjabi/town_3d.tscn`, `town_3d.gd` | Map `anjabi_town` in 3D (entry 6): the whole settlement. Terrain in 16 m chunks with vertex colours, one HeightMapShape3D collider, sea, skirts at the shoreline, and landmark buildings on their greybox footprints (tavern dome, shop, Tion Tower, Guard Tower, pods with B-17, estate, mine headframe, airpad and craft, tram station, tram line, Imperial Tower). Trees, lamps, district titles, spawns and both exits to the mine. |
 | `art/source/anjabi_props.blend` | Blender source (entry 7) for the pod, tavern and street lamp. Ignored by Godot (`.gdignore`). |
+| `art/models/shed.glb`, `shop.glb`, `headframe.glb`, `tram_station.glb`, `tion_tower.glb`, `guard_tower.glb`, `estate.glb`, `imperial_tower.glb` | Building models (entry 8), same conventions. `MapBuilder3D.shed()` stretches the shed to any footprint. |
 | `art/models/pod.glb`, `tavern.glb`, `lamp.glb` | Exported models (entry 7), metres, origin at the base, front facing +Z (south). Placed with `MapBuilder3D.model()`; colliders stay separate. |
 | `maps/anjabi/town_3d_cells.res` | Generated 166x109 grid (1 m cells): visual height, type, collision height. Do not edit; rebuild with `tools/build_town_3d.gd`. |
 | `tools/build_town_3d.gd` | Builds the grid from the greybox and `town_walk.res`: classifies cells by colour, interpolates walkway heights between 16 district anchors (Laplace), raises cliffs and slabs as walls. Prints the steepest walkable step; writes `docs/reference/town_3d_heights_debug.png`. |
@@ -205,9 +206,8 @@ Three combat directions were proposed; none is chosen or implemented.
 
 ## 8. Known limitations and untested areas
 
-- 3D (entry 4, updated entry 7): the pod, tavern and street lamp are authored Blender
-  models; everything else (sheds, towers, terrain, characters) is still primitives built
-  in code. No AnimationPlayer; the walk is procedural. No camera occlusion
+- 3D (entry 4, updated entry 8): every building is an authored Blender model. Terrain,
+  cliffs, fences, rails, props, trees and characters are still primitives built in code. No AnimationPlayer; the walk is procedural. No camera occlusion
   handling yet (nothing tall stands south of a walkable area so far). Only the
   every map is 3D. The town is a 3D greybox: walkways are smooth slopes from the height
   interpolation, not modelled stairs, and its buildings are not enterable. The district
@@ -311,4 +311,17 @@ paving read as surfaces rather than flat colour. `Figure3D` gained tapered limbs
 joints, a knee-length coat with hem, shoulders, scarf, satchel and strap, boot cuffs and
 a hood peak. Fixed z-fighting between the terrace/pod overlays and the ground. Slice test
 93 checks, all passing; screenshots in `docs/screens/` refreshed.
+
+### 2026-11-14 — 9. Every building modelled (entry 8)
+Eight more Blender models in `art/source/anjabi_props.blend`, exported to `art/models/`:
+a corrugated shed (door, lit window, sloped roof, vent, pipe), the shop (shopfront,
+canopy, upper storey, roof tank), the mine headframe (lattice tower, sheave wheel,
+winding house), the tram station (glazed hall with a curved copper roof and platform
+canopy), Tion Tower (stone shaft with copper bands and window rings, gallery, dome,
+mast), the Guard Tower (octagonal base and shaft, glazed observation deck, searchlight),
+the estate (two-storey house with portico, hipped copper roof, wings, chimneys) and the
+Imperial Tower (65 m shaft with blue light strips and a crown). They replace every
+remaining primitive building in the district, the mine yard and the town; colliders are
+unchanged. The player now shows a warm silhouette wherever scenery hides them
+(`Figure3D.xray`, inverted depth test). Slice test 93 checks, all passing.
 

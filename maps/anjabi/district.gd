@@ -128,11 +128,9 @@ func _tavern() -> void:
 
 func _shop() -> void:
 	var c := Vector3(15, PLAZA, -5)
-	box(c + Vector3(0, 2.0, 0), Vector3(7, 4, 6), M.panel)
-	box(c + Vector3(0, 4.15, 0), Vector3(7.6, 0.3, 6.6), M.copper_raw, false)
-	box(c + Vector3(0, 1.2, 3.02), Vector3(4.6, 1.2, 0.08), M.window, false)
-	box(c + Vector3(0, 2.3, 3.8), Vector3(6.0, 0.1, 1.6), M.canvas_teal, false)
-	sign_text(c + Vector3(0, 3.2, 3.1), "SHOP", 0.0, 56)
+	model("shop", c)
+	box(c + Vector3(0, 2.0, 0), Vector3(7, 4, 6), null)
+	sign_text(c + Vector3(0, 3.35, 3.2), "SHOP", 0.0, 56)
 	warm_light(c + Vector3(0, 2.0, 4.2), 1.6, 6.0)
 	for i in 3:
 		box(c + Vector3(-2.8 + i * 0.7, 0.35, 4.4), Vector3(0.6, 0.7, 0.6), M.timber, true)
@@ -196,9 +194,7 @@ func _mine_approach() -> void:
 		box(Vector3(-37.92, y + 1.2, 0.4 + i * 0.8), Vector3(0.05, 0.25, 0.4), M.warning if i % 2 == 0 else M.steel_dark, false)
 	sign_text(Vector3(-37.85, y + 2.4, 2), "DANGER  ·  NO ENTRY", PI * 0.5, 36, Color(0.95, 0.75, 0.3))
 	# guard hut
-	box(Vector3(-33, y + 1.4, -5), Vector3(3, 2.8, 2.6), M.panel_violet)
-	box(Vector3(-33, y + 2.9, -5), Vector3(3.4, 0.2, 3.0), M.steel_dark, false)
-	box(Vector3(-33, y + 1.6, -3.68), Vector3(1.4, 0.8, 0.06), M.window, false)
+	shed(Vector3(-33, y, -5), Vector3(3.0, 2.8, 2.6))
 	warm_light(Vector3(-33, y + 2.0, -3.0), 1.2, 5.0)
 	lamp(Vector3(-36.5, y, 5.5))
 	lamp(Vector3(-24, y, 9.5))

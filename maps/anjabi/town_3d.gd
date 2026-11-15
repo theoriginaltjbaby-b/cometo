@@ -263,6 +263,14 @@ func _pod(p: Vector2, tag := "", _lit := true) -> void:
 		sign_text(at + Vector3(0, 3.3, 2.55), tag, 0.0, 40)
 
 
+## Shed model filling a greybox footprint (visual only; the grid already blocks it).
+func _shed_px(a: Vector2, b: Vector2, h_m: float) -> void:
+	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
+	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
+	var base := Vector3((lo.x + hi.x) * 0.5, minf(lo.y, hi.y), (lo.z + hi.z) * 0.5)
+	shed(base, Vector3(hi.x - lo.x, h_m, hi.z - lo.z), 0.0, false)
+
+
 func _block(a: Vector2, b: Vector2, h_m: float, m: Material, roof: Material = null, lit := true) -> void:
 	var lo := at_px(Vector2(minf(a.x, b.x), minf(a.y, b.y)))
 	var hi := at_px(Vector2(maxf(a.x, b.x), maxf(a.y, b.y)))
@@ -282,29 +290,17 @@ func _landmarks() -> void:
 	model("tavern", tav, 0.0, 1.17)
 	sign_text(tav + Vector3(0, 5.0, 7.9), "TAVERN", 0.0, 64)
 	warm_light(tav + Vector3(0, 2.4, 8.5), 2.2, 9.0)
-	_block(Vector2(700, 205), Vector2(735, 300), 4.0, M.panel_violet, M.canvas)
+	_shed_px(Vector2(700, 215), Vector2(735, 290), 4.0)
 	# 12 Shop
-	_block(Vector2(905, 225), Vector2(1020, 355), 5.0, M.panel, M.copper_raw)
-	sign_text(at_px(Vector2(962, 357)) + Vector3(0, 4.0, 0.3), "SHOP", 0.0, 56)
+	model("shop", at_px(Vector2(962, 300)), 0.0, 1.8)
+	sign_text(at_px(Vector2(962, 300)) + Vector3(0, 6.0, 5.8), "SHOP", 0.0, 80)
 	warm_light(at_px(Vector2(962, 370)) + Vector3(0, 2.5, 0), 1.6, 7.0)
 	# 07 Tion Tower
 	var tion := at_px(Vector2(515, 390))
-	cyl(tion, 6.4, 7.0, 4.0, M.concrete, false, 20)
-	cyl(tion + Vector3(0, 4.0, 0), 5.2, 5.8, 18.0, M.stone, false, 20)
-	for k in 5:
-		cyl(tion + Vector3(0, 6.0 + k * 3.4, 0), 5.9, 5.9, 0.35, M.copper_raw, false, 20)
-		for i in 6:
-			var a := TAU * i / 6.0
-			box(tion + Vector3(cos(a) * 5.55, 7.4 + k * 3.4, sin(a) * 5.55), Vector3(0.9, 1.1, 0.1), M.window, false, -a + PI * 0.5)
-	dome(tion + Vector3(0, 22.0, 0), 5.4, M.copper, 0.5)
+	model("tion_tower", tion)
 	# 10 Guard Tower
 	var gt := at_px(Vector2(1035, 118))
-	cyl(gt, 8.4, 8.8, 3.0, M.concrete, false, 8)
-	cyl(gt + Vector3(0, 3.0, 0), 5.4, 5.8, 9.0, M.panel_violet, false, 8)
-	cyl(gt + Vector3(0, 12.0, 0), 6.6, 6.0, 1.6, M.steel_dark, false, 8)
-	for i in 8:
-		var a := TAU * (i + 0.5) / 8.0
-		box(gt + Vector3(cos(a) * 6.2, 12.8, sin(a) * 6.2), Vector3(1.6, 0.6, 0.1), M.window, false, -a + PI * 0.5)
+	model("guard_tower", gt)
 	warm_light(gt + Vector3(0, 13.5, 7.0), 2.0, 10.0)
 	# 09 Living pods
 	_pod(Vector2(530, 68), "", true)
@@ -314,19 +310,14 @@ func _landmarks() -> void:
 	_pod(Vector2(546, 182), "", true)
 	for b: Array in [[Vector2(480, 95), Vector2(505, 118)], [Vector2(690, 75), Vector2(730, 108)], [Vector2(718, 112), Vector2(745, 135)],
 			[Vector2(592, 272), Vector2(622, 296)]]:
-		_block(b[0], b[1], 3.0, M.panel_violet, M.steel_dark, false)
+		_shed_px(b[0], b[1], 3.0)
 	# 03 Estate and its walls
-	_block(Vector2(165, 433), Vector2(315, 540), 6.0, M.concrete, M.copper)
-	_block(Vector2(150, 520), Vector2(335, 560), 3.5, M.stone, M.steel_dark, true)
-	_block(Vector2(210, 400), Vector2(250, 433), 4.5, M.concrete, M.copper, false)
+	model("estate", at_px(Vector2(240, 480)), 0.0, 0.85)
 	# 04 Mine yard: headframe over the slab
 	var mine := at_px(Vector2(215, 700))
-	for o: Vector3 in [Vector3(-2, 0, -2), Vector3(2, 0, -2), Vector3(-2, 0, 2), Vector3(2, 0, 2)]:
-		box(mine + o + Vector3(0, 4, -6), Vector3(0.4, 8, 0.4), M.timber, false)
-	box(mine + Vector3(0, 8.1, -6), Vector3(4.8, 0.5, 4.8), M.timber, false)
-	cyl(mine + Vector3(0, 8.4, -6), 1.2, 1.2, 0.4, M.rust, false, 12)
-	_block(Vector2(150, 760), Vector2(205, 790), 3.0, M.panel, M.steel_dark, true)
-	_block(Vector2(255, 640), Vector2(300, 668), 3.0, M.panel_violet, M.steel_dark, false)
+	model("headframe", mine + Vector3(0, 0, -6))
+	_shed_px(Vector2(150, 760), Vector2(205, 790), 3.0)
+	_shed_px(Vector2(255, 640), Vector2(300, 668), 3.0)
 	# 05 Private airpad: pad ring and a parked craft
 	var pad := at_px(Vector2(382, 782))
 	cyl(pad + Vector3(0, 0.02, 0), 3.6, 3.6, 0.05, M.warning, false, 24)
@@ -337,8 +328,7 @@ func _landmarks() -> void:
 	box(craft + Vector3(0, 2.1, -2.2), Vector3(2.0, 0.6, 1.6), M.blue_light, false)
 	# 13 Tram / subway station, angled toward the docks
 	var tram := at_px(Vector2(1030, 505))
-	box(tram + Vector3(0, 3.0, 0), Vector3(16.0, 6.0, 9.0), M.panel, false, deg_to_rad(-33))
-	box(tram + Vector3(0, 6.2, 0), Vector3(17.0, 0.4, 10.0), M.copper_raw, false, deg_to_rad(-33))
+	model("tram_station", tram, deg_to_rad(-33))
 	warm_light(tram + Vector3(-3, 3, 6), 1.6, 8.0)
 	# tram line north-south, and 16 Imperial Tower
 	var north := at_px(Vector2(1160, 10)) + Vector3(0, 0, 0)
@@ -353,11 +343,7 @@ func _landmarks() -> void:
 		box(Vector3(p.x, (p.y + SEA) * 0.5, p.z), Vector3(1.0, p.y - SEA, 1.0), M.steel_dark, false)
 		box(p + Vector3(0, 0.8, 0), Vector3(0.4, 0.3, 0.4), M.blue_light, false)
 	var it := Vector3(tower.x, SEA, tower.z)
-	cyl(it, 9.0, 10.0, 6.0, M.concrete, false, 16)
-	cyl(it + Vector3(0, 6, 0), 4.0, 5.0, 52.0, M.steel_dark, false, 12)
-	for k in 7:
-		box(it + Vector3(0, 12 + k * 6.5, 4.4), Vector3(1.8, 0.4, 0.2), M.blue_light, false)
-	cyl(it + Vector3(0, 58, 0), 6.0, 4.0, 3.5, M.steel, false, 12)
+	model("imperial_tower", it)
 	# docks: posts and crates on the boardwalk
 	for p: Vector2 in [Vector2(1080, 380), Vector2(1150, 380), Vector2(1240, 400), Vector2(1300, 470), Vector2(1250, 520)]:
 		box(at_px(p) + Vector3(0, 0.45, 0), Vector3(1.0, 0.9, 1.0), M.timber, true)
