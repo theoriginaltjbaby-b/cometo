@@ -356,6 +356,12 @@ func _insert_dressing() -> void:
 	for i in 18:
 		ferns.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.4 + rng.randf() * 0.8), rng.randf() * TAU, rng.randf_range(0.9, 1.4)))
 	scatter("fern", ferns)
+	var fl: Array[Transform3D] = []
+	for i in 30:
+		fl.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.3 + rng.randf() * 0.7), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
+	for i in 14:
+		fl.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.6 + rng.randf() * 0.4), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
+	scatter("flowers", fl)
 	for p: Vector3 in [Vector3(-6, PLAZA, -9.2), Vector3(6.5, PLAZA, -9.2), Vector3(-11, PLAZA, 9.2), Vector3(18.5, PLAZA, 9.2)]:
 		model("planter", p)
 	model("crate_stack", Vector3(19, PLAZA, -1.6), 0.3)

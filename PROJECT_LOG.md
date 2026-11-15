@@ -477,3 +477,21 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
   on steps. New screenshots `3d_28`, `3d_29`.
 - Tests 96/96.
 
+### Pass 8 — whole map
+- `art/models/flowers.glb`: flower clump (violet, pink, yellow) batched along every grass
+  edge of a town path, the terrace foot and the plaza wall.
+- Iron railings (`MapBuilder3D.railings()`, one MultiMesh of 1 m segments) wherever a
+  walkway, boardwalk or beach path drops to the water.
+- Lamps: evenly spaced (10 m apart) along all town path edges, up to 90, every other one
+  lit, replacing the random scatter.
+- Trees keep two cells clear of any path, boardwalk or the Steps insert.
+- Rain splashes: droplets burst on the ground around the player (`Rain3D._splashes`).
+- Tests 96/96.
+- Render cost after passes 1–8 (`tests/perf_probe.tscn`, desktop Radeon Pro 570):
+  227–783 draw calls and 0.6–1.5 M primitives per frame including shadow passes, 4–6 ms
+  per frame. That is several times the pass-0 cost and likely too heavy for older
+  iPhones. Main contributors: per-part character meshes (~50 per figure), per-instance
+  pines, lantern posts and props (not batched), shadows from everything. An optimisation
+  pass (batch pines/lanterns into MultiMeshes, merge figure parts, limit shadow casters,
+  LOD on distant buildings) is the next performance step. Not measured on an iPhone.
+

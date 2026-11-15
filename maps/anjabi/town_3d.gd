@@ -371,7 +371,7 @@ func _vegetation_and_lamps() -> void:
 			var r := rng.randf()
 			var forest := Rect2(40, 40, 330, 560).has_point(Vector2(x + 0.5, z + 0.5) / PX + ORIGIN) or z < 8
 			if t == CLIFF and r < (0.16 if forest else 0.05) and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
-					and cls[i - w] == CLIFF and cls[i + w] == CLIFF:
+					and cls[i - w] == CLIFF and cls[i + w] == CLIFF and _clear_of_paths(x, z, 2):
 				tree(Vector3(x + rng.randf(), hv[i], z + rng.randf()), rng.randf_range(0.8, 1.4))
 			elif t == GRASS and r < 0.012:
 				var clear := true
@@ -382,15 +382,41 @@ func _vegetation_and_lamps() -> void:
 					var p := Vector3(x + 0.5, hv[i], z + 0.5)
 					tree(p, rng.randf_range(0.9, 1.4))
 					blocker(p + Vector3(-0.25, 0, -0.25), p + Vector3(0.25, 1.6, 0.25))
-			elif t == PATH and r < 0.03 and lamps < 48:
-				# lamps stand at path edges, against a wall
-				var edge := false
-				for n: int in [i - 1, i + 1, i - w, i + w]:
-					if cls[n] == CLIFF or cls[n] == SLAB:
-						edge = true
-				if edge:
-					lamps += 1
-					lamp(Vector3(x + 0.5, hv[i], z + 0.5), lamps % 2 == 0)
+
+	# lamps: evenly spaced along path edges (against a wall), every other one lit
+	var placed: Array[Vector3] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != PATH or placed.size() >= 90:
+				continue
+			var edge := false
+			for n: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[n] == CLIFF or cls[n] == SLAB:
+					edge = true
+			if not edge:
+				continue
+			var p := Vector3(x + 0.5, hv[i], z + 0.5)
+			var near := false
+			for q in placed:
+				if q.distance_squared_to(p) < 100.0:
+					near = true
+					break
+			if not near:
+				placed.append(p)
+				lamp(p, placed.size() % 2 == 0)
+
+
+## True when no walkable cell lies within r cells (keeps trees off paths and boardwalks).
+func _clear_of_paths(x: int, z: int, r: int) -> bool:
+	for dz in range(-r, r + 1):
+		for dx in range(-r, r + 1):
+			var cx := clampi(x + dx, 0, w - 1)
+			var cz := clampi(z + dz, 0, h - 1)
+			var t := cls[cz * w + cx]
+			if t == PATH or t == SAND or t == INSERT:
+				return false
+	return true
 
 
 func _spawns_and_exits() -> void:
@@ -473,6 +499,35 @@ func _dressing() -> void:
 					var p := Vector3(x + rng.randf(), hv[i], z + rng.randf())
 					ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.5)))
 	scatter("fern", ferns)
+	# iron railings where a walkway or boardwalk drops to the water
+	var rails: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if not (cls[i] == PATH or cls[i] == SAND) or hv[i] < SEA + 1.5:
+				continue
+			var y := hv[i]
+			if cls[i - w] == WATER:
+				rails.append(Transform3D(Basis(), Vector3(x, y, z + 0.05)))
+			if cls[i + w] == WATER:
+				rails.append(Transform3D(Basis(), Vector3(x, y, z + 0.95)))
+			if cls[i - 1] == WATER:
+				rails.append(Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(x + 0.05, y, z)))
+			if cls[i + 1] == WATER:
+				rails.append(Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(x + 0.95, y, z)))
+	railings(rails)
+	# flowers along the grass edges of paths
+	var flowers: Array[Transform3D] = []
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != GRASS:
+				continue
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] == PATH and rng.randf() < 0.35:
+					flowers.append(xform(Vector3(x + rng.randf(), hv[i], z + rng.randf()), rng.randf() * TAU, rng.randf_range(0.8, 1.4)))
+					break
+	scatter("flowers", flowers)
 	# lone water cells on the beach and shore are the map's rocks: boulders
 	for z in range(1, h - 1):
 		for x in range(1, w - 1):

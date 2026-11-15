@@ -199,6 +199,48 @@ func scatter(model_name: String, xforms: Array[Transform3D], shadows := false) -
 	add_child(mmi)
 
 
+static var _rail_mesh: ArrayMesh
+
+
+## One metre of iron railing (post at the start, top and mid rails) along +X.
+static func railing_mesh() -> ArrayMesh:
+	if _rail_mesh == null:
+		var st := SurfaceTool.new()
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
+		var parts := [
+			[Vector3(0.05, 1.0, 0.05), Vector3(0.0, 0.5, 0)],
+			[Vector3(1.0, 0.05, 0.05), Vector3(0.5, 0.97, 0)],
+			[Vector3(1.0, 0.035, 0.035), Vector3(0.5, 0.5, 0)],
+		]
+		for p: Array in parts:
+			var b := BoxMesh.new()
+			b.size = p[0]
+			st.append_from(b, 0, Transform3D(Basis(), p[1]))
+		st.generate_normals()
+		_rail_mesh = st.commit()
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(0.05, 0.05, 0.055)
+		m.metallic = 0.8
+		m.roughness = 0.4
+		_rail_mesh.surface_set_material(0, m)
+	return _rail_mesh
+
+
+## Batched railings, one transform per metre segment.
+func railings(xforms: Array[Transform3D]) -> void:
+	if xforms.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = railing_mesh()
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	add_child(mmi)
+
+
 static func xform(at: Vector3, yaw: float, s: float) -> Transform3D:
 	return Transform3D(Basis(Vector3.UP, yaw).scaled(Vector3(s, s, s)), at)
 
