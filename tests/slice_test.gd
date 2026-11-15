@@ -284,7 +284,7 @@ func _district() -> void:
 	check(meshes > 300 and bodies > 50, "the town is built from real meshes and colliders (%d meshes, %d bodies)" % [meshes, bodies])
 	check(map.find_children("*", "Npc3D", true, false).size() >= 1, "the Steps insert is part of the town")
 	var cam: Camera3D = player.camera
-	check(cam.current and cam.projection == Camera3D.PROJECTION_ORTHOGONAL, "orthographic follow camera is current")
+	check(cam.current and cam.projection == Camera3D.PROJECTION_PERSPECTIVE and absf(cam.rotation_degrees.y) < 0.01, "fixed-orientation follow camera is current")
 	await _frames(20)
 	check(player.is_on_floor() and absf(player.global_position.y) < 0.2, "player stands on the plaza (y=%.2f)" % player.global_position.y)
 	# walk east, camera follows

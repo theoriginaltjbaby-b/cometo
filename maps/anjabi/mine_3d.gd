@@ -26,6 +26,7 @@ func _ready() -> void:
 	_props()
 	_people()
 	_interactables()
+	reflection_probe(Vector3(25, 5, 18), Vector3(44, 16, 36))
 
 
 func _ground() -> void:

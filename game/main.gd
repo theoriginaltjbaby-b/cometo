@@ -100,6 +100,7 @@ func _enter_map(id: String) -> void:
 	ui.bind_player(player)
 	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
 	$Weather/Fog.visible = not (map is GameMap3D)
+	$Weather/Rain.visible = not (map is GameMap3D)
 	ui.hud.show_location(map.display_name)
 
 

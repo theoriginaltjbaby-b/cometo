@@ -365,3 +365,23 @@ Verified in a desktop browser: boots on the Steps, no console errors, drag-to-st
 Play on a phone on the same Wi-Fi: `cd export/web && python3 -m http.server 8000`, then open
 `http://<this Mac's address>:8000` in Safari. Not yet verified on an iPhone.
 
+## AAA aesthetic passes (2026-11-15)
+Target: the director's concept map (layout) and the "Anjabi gameplay" key art (look):
+rain-soaked cobbles mirroring warm lamps, weathered riveted metal, Quonset pods, a domed
+tavern with arched windows and banners, cable tram, foliage and flowers, warm interiors
+against a cold storm.
+
+### Pass 1 — camera, shading, weather, light
+- Camera: narrow-lens perspective (FOV 32, pitch 40, 30 m) replaces orthographic; still
+  fixed orientation. Shows facades like the key art.
+- `art/shaders/wet_ground.gdshader`: world-space procedural cobblestones (staggered,
+  warped, varying width, rounded, mortar joints, per-stone tint), wetness, puddles that
+  pool in joints and go mirror-smooth, bump via surface gradient. Used by paving, mud,
+  gravel, moss and the town terrain (vertex colour + alpha = cobble amount).
+- `art_provisional/rain_3d.gd`: GPU particle rain streaks around the player in world
+  space; the 2D rain and mist overlays are hidden on 3D maps.
+- Lighting: ACES tonemap, softlight glow, colour adjustment; cool moonlight with shadows
+  plus a warm low western afterglow light; warmer, stronger lamp lights; once-baked
+  reflection probes over the Steps and the mine yard so wet ground catches lamps.
+- Player recoloured to the key art's burgundy coat.
+

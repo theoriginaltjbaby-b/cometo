@@ -62,6 +62,7 @@ func _ready() -> void:
 	_landmarks()
 	_vegetation_and_lamps()
 	_spawns_and_exits()
+	reflection_probe(INSERT_AT + Vector3(-2, 6, -8), Vector3(70, 24, 60))
 
 
 # --- grid ------------------------------------------------------------------------
@@ -162,11 +163,7 @@ func _terrain() -> void:
 	for z in h + 1:
 		for x in w + 1:
 			vh[z * (w + 1) + x] = _vertex(x, z, false)
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.vertex_color_is_srgb = true
-	add_detail(mat, 0.3)
-	mat.roughness = 0.72
+	var mat := ground_mat(Color.WHITE, 1.0, 0.8, 0.5, true)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 21
 	for cz0 in range(0, h, CHUNK):
@@ -218,17 +215,18 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, col:
 
 
 func _colour(t: int, n: float) -> Color:
+	# rgb: sRGB colour; a: cobble amount for the wet-ground shader
 	var j := (n - 0.5) * 0.05
 	match t:
 		PATH:
-			return Color(0.4 + j, 0.39 + j, 0.37 + j)
+			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
 		GRASS:
-			return Color(0.15 + j, 0.25 + j * 1.5, 0.18 + j)
+			return Color(0.25 + j, 0.36 + j * 1.5, 0.24 + j, 0.0)
 		SAND:
-			return Color(0.56 + j, 0.5 + j, 0.41 + j)
+			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
 		SLAB:
-			return Color(0.44 + j, 0.44 + j, 0.42 + j)
-	return Color(0.21 + j, 0.24 + j, 0.26 + j)
+			return Color(0.6 + j, 0.59 + j, 0.56 + j, 1.0)
+	return Color(0.33 + j, 0.36 + j, 0.38 + j, 0.0)
 
 
 func _collision() -> void:

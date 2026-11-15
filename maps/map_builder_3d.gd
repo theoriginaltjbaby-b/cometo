@@ -52,13 +52,29 @@ static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
 
 # --- materials ------------------------------------------------------------------
 
+const WET_GROUND := preload("res://art/shaders/wet_ground.gdshader")
+
+
+## Wet ground material (art/shaders/wet_ground.gdshader).
+static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, vertex_color := false) -> ShaderMaterial:
+	var m := ShaderMaterial.new()
+	m.shader = WET_GROUND
+	m.set_shader_parameter("base_color", c)
+	m.set_shader_parameter("cobble", cobble)
+	m.set_shader_parameter("wetness", wet)
+	m.set_shader_parameter("puddles", puddles)
+	m.set_shader_parameter("use_vertex_color", vertex_color)
+	m.set_shader_parameter("noise_tex", detail_textures()[0])
+	return m
+
+
 func _materials() -> void:
-	M.paving = _mat(Color(0.3, 0.32, 0.35), 0.38)
-	M.paving_light = _mat(Color(0.42, 0.42, 0.42), 0.45)
+	M.paving = ground_mat(Color(0.42, 0.4, 0.38))
+	M.paving_light = ground_mat(Color(0.5, 0.48, 0.45), 1.0, 0.7, 0.3)
 	M.stone = _mat(Color(0.36, 0.35, 0.33), 0.8)
 	M.rock = _mat(Color(0.2, 0.23, 0.25), 0.95)
 	M.rock_dark = _mat(Color(0.13, 0.15, 0.17), 0.95)
-	M.moss = _mat(Color(0.14, 0.24, 0.18), 0.95)
+	M.moss = ground_mat(Color(0.16, 0.26, 0.17), 0.0, 0.5, 0.15)
 	M.concrete = _mat(Color(0.47, 0.47, 0.44), 0.85)
 	M.steel = _mat(Color(0.33, 0.35, 0.37), 0.45, 0.6)
 	M.steel_dark = _mat(Color(0.17, 0.18, 0.2), 0.5, 0.6)
@@ -79,8 +95,8 @@ func _materials() -> void:
 	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
 	M.mesh_fence = _mat(Color(0.25, 0.27, 0.3, 0.45), 0.6, 0.4)
 	M.mesh_fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	M.mud = _mat(Color(0.27, 0.24, 0.21), 0.45)
-	M.gravel = _mat(Color(0.33, 0.34, 0.35), 0.9)
+	M.mud = ground_mat(Color(0.3, 0.26, 0.22), 0.0, 0.95, 0.75)
+	M.gravel = ground_mat(Color(0.4, 0.39, 0.37), 0.0, 0.75, 0.45)
 	M.rust = _mat(Color(0.48, 0.27, 0.17), 0.7, 0.5)
 	M.blue_light = _mat(Color(0.4, 0.6, 1.0), 0.3, 0.0, Color(0.35, 0.55, 1.0), 3.0)
 
@@ -268,18 +284,18 @@ func lamp(at: Vector3, with_light := true, _h := 2.6) -> void:
 	if with_light:
 		var l := OmniLight3D.new()
 		l.position = at + Vector3(0, 2.3, 0.55)
-		l.light_color = Color(1.0, 0.68, 0.38)
-		l.light_energy = 1.6
-		l.omni_range = 7.0
-		l.omni_attenuation = 1.3
+		l.light_color = Color(1.0, 0.6, 0.28)
+		l.light_energy = 2.4
+		l.omni_range = 8.5
+		l.omni_attenuation = 1.6
 		add_child(l)
 
 
 func warm_light(at: Vector3, energy := 1.4, rng := 6.0) -> void:
 	var l := OmniLight3D.new()
 	l.position = at
-	l.light_color = Color(1.0, 0.64, 0.34)
-	l.light_energy = energy
+	l.light_color = Color(1.0, 0.6, 0.3)
+	l.light_energy = energy * 1.3
 	l.omni_range = rng
 	add_child(l)
 
@@ -309,30 +325,58 @@ func sign_text(at: Vector3, text: String, yaw := 0.0, px := 48, col := Color(0.9
 func _environment() -> void:
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.1, 0.13, 0.17)
+	env.background_color = Color(0.06, 0.08, 0.11)
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.42, 0.5, 0.62)
-	env.ambient_light_energy = 0.55
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_exposure = 1.05
+	env.ambient_light_color = Color(0.36, 0.42, 0.55)
+	env.ambient_light_energy = 0.75
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.45
+	env.tonemap_white = 6.0
 	env.glow_enabled = true
-	env.glow_intensity = 0.5
-	env.glow_bloom = 0.05
-	env.glow_hdr_threshold = 1.2
+	env.glow_intensity = 0.85
+	env.glow_strength = 1.1
+	env.glow_bloom = 0.08
+	env.glow_hdr_threshold = 0.85
+	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.3, 0.37, 0.45)
-	env.fog_density = 0.0025
+	env.fog_light_color = Color(0.2, 0.25, 0.33)
+	env.fog_light_energy = 1.0
+	env.fog_density = 0.0055
 	env.fog_sky_affect = 0.0
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 1.18
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -35, 0)
-	sun.light_color = Color(0.62, 0.72, 0.9)
-	sun.light_energy = 0.75
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 60.0
-	add_child(sun)
+	# cool storm moonlight with shadows
+	var moon := DirectionalLight3D.new()
+	moon.rotation_degrees = Vector3(-52, -30, 0)
+	moon.light_color = Color(0.52, 0.62, 0.86)
+	moon.light_energy = 0.7
+	moon.shadow_enabled = true
+	moon.directional_shadow_max_distance = 55.0
+	add_child(moon)
+	# low warm afterglow from the western horizon, no shadows: warm rims on everything
+	var glow := DirectionalLight3D.new()
+	glow.rotation_degrees = Vector3(-12, -100, 0)
+	glow.light_color = Color(1.0, 0.55, 0.35)
+	glow.light_energy = 0.4
+	glow.light_specular = 0.6
+	add_child(glow)
+
+
+## A once-baked reflection probe so wet ground and glass catch the lamps.
+func reflection_probe(center: Vector3, size: Vector3) -> void:
+	var p := ReflectionProbe.new()
+	p.position = center
+	p.size = size
+	p.box_projection = true
+	p.update_mode = ReflectionProbe.UPDATE_ONCE
+	p.intensity = 0.8
+	p.max_distance = 60.0
+	add_child(p)
 
 
 ## Chain-link fence from a to b: posts, rails, a dark mesh panel, a 2 m invisible wall.

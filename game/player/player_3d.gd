@@ -38,9 +38,9 @@ func _init() -> void:
 	cs.position.y = 0.8
 	add_child(cs)
 	figure = Figure3D.new()
-	figure.coat = Color(0.86, 0.62, 0.2)
-	figure.accent = Color(0.2, 0.24, 0.28)
-	figure.hood = true
+	figure.coat = Color(0.5, 0.13, 0.11)
+	figure.accent = Color(0.62, 0.42, 0.2)
+	figure.hood = false
 	figure.xray = true
 	add_child(figure)
 	reach = Area3D.new()
@@ -54,6 +54,7 @@ func _init() -> void:
 	rs.position = Vector3(0, 0.8, 0)
 	reach.add_child(rs)
 	add_child(reach)
+	add_child(Rain3D.new())
 	camera = FollowCamera.new()
 	camera.target = self
 	add_child(camera)
