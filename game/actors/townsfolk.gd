@@ -12,6 +12,7 @@ var skin := Color(0.7, 0.53, 0.42)
 var hood := false
 ## Facing in degrees when standing still with a single point.
 var yaw_deg := 180.0
+var look := {}
 
 var _fig: Figure3D
 var _i := 0
@@ -24,6 +25,7 @@ func _ready() -> void:
 	_fig.accent = accent
 	_fig.skin = skin
 	_fig.hood = hood
+	_fig.configure(look)
 	_fig.rotation.y = deg_to_rad(yaw_deg)
 	add_child(_fig)
 	if not points.is_empty():

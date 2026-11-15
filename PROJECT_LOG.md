@@ -459,3 +459,21 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
   or Imperial city silhouette on the horizon (camera looks down); no rain splashes or
   dripping eaves. iPhone performance after these passes is not measured.
 
+### Pass 6 — characters
+- `Figure3D`: smaller head (~4.5 heads tall) on a neck; face with eye whites and pupils,
+  brows, nose, mouth and cheek colour; hair styles `short`, `bun`, `long`, `bald` with a
+  fringe; hats `cap`, `hardhat` (with a lit lamp), `brim`; coat lapels and brass buttons;
+  optional `long_coat`, `apron`, `satchel`. Set through `configure(look)`; `Npc3D.look`
+  and `Townsfolk.look` pass it on.
+- Player: dark hair in a bun, long burgundy coat (the key art's look). Driller: hard hat.
+  Tavern keeper: apron. Gate guard: long coat and hood. Two hard-hatted miners stand at
+  the mine portal (key art). Townsfolk vary hair, caps, brimmed hats and coats.
+
+### Pass 7 — stairs
+- `wet_ground.gdshader`: paved walkway slopes steeper than ~8° are drawn as stone steps:
+  level treads at 18 cm risers following the slope's contours, slab joints, dark riser
+  faces, lit nosings; the bump term cancels the ramp slope on each tread so treads read
+  level. Collision stays a smooth ramp (as with the plaza stairs). Puddles are suppressed
+  on steps. New screenshots `3d_28`, `3d_29`.
+- Tests 96/96.
+

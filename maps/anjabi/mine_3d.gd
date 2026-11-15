@@ -231,7 +231,7 @@ func _props() -> void:
 			blocker(p + Vector3(-0.2, 0, -0.2), p + Vector3(0.2, 1.5, 0.2))
 
 
-func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: Color, hood := false) -> void:
+func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: Color, hood := false, look := {}) -> void:
 	var npc := Npc3D.new()
 	npc.name = n.replace(" ", "")
 	npc.display_name = n
@@ -242,12 +242,20 @@ func _npc(n: String, d: String, at: Vector3, coat: Color, accent: Color, skin: C
 	npc.hood = hood
 	npc.position = at
 	npc.yaw_deg = 180.0
+	npc.look = look
 	entities.add_child(npc)
 
 
 func _people() -> void:
-	_npc("Driller", "anjabi/driller", Vector3(16.8, 0, 30.0), Color(0.42, 0.33, 0.27), Color(0.8, 0.5, 0.18), Color(0.62, 0.45, 0.36))
-	_npc("Gate guard", "anjabi/guard", Vector3(26.4, 0, 13.3), Color(0.24, 0.3, 0.36), Color(0.75, 0.75, 0.7), Color(0.8, 0.64, 0.52), true)
+	_npc("Driller", "anjabi/driller", Vector3(16.8, 0, 30.0), Color(0.42, 0.33, 0.27), Color(0.8, 0.5, 0.18), Color(0.62, 0.45, 0.36), false,
+			{"hat": "hardhat", "satchel": false, "hair_color": Color(0.2, 0.18, 0.16)})
+	_npc("Gate guard", "anjabi/guard", Vector3(26.4, 0, 13.3), Color(0.24, 0.3, 0.36), Color(0.75, 0.75, 0.7), Color(0.8, 0.64, 0.52), true,
+			{"satchel": false, "long_coat": true})
+	# two miners at the portal, as in the key art
+	townsfolk([Vector3(21.6, 0, 7.4)], Color(0.4, 0.36, 0.28), Color(0.7, 0.55, 0.2), Color(0.66, 0.5, 0.4), false, 120.0,
+			{"hat": "hardhat", "satchel": false})
+	townsfolk([Vector3(23.0, 0, 8.1)], Color(0.3, 0.33, 0.36), Color(0.6, 0.6, 0.55), Color(0.5, 0.36, 0.27), false, 250.0,
+			{"hat": "hardhat", "satchel": false})
 
 
 func _look(n: String, prompt: String, label: String, dialogue: String, at: Vector3, enabled_if := {}) -> Interactable3D:

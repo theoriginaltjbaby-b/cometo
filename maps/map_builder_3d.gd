@@ -204,7 +204,7 @@ static func xform(at: Vector3, yaw: float, s: float) -> Transform3D:
 
 
 ## A background inhabitant walking `points` (one point = standing).
-func townsfolk(points: Array, coat: Color, accent: Color, skin: Color, hood := false, yaw := 180.0) -> void:
+func townsfolk(points: Array, coat: Color, accent: Color, skin: Color, hood := false, yaw := 180.0, look := {}) -> void:
 	var t := Townsfolk.new()
 	t.points = PackedVector3Array(points)
 	t.coat = coat
@@ -212,6 +212,7 @@ func townsfolk(points: Array, coat: Color, accent: Color, skin: Color, hood := f
 	t.skin = skin
 	t.hood = hood
 	t.yaw_deg = yaw
+	t.look = look
 	entities.add_child(t)
 
 

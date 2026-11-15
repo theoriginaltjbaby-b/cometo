@@ -15,6 +15,9 @@ uniform float stone_size = 0.3;
 uniform float wetness : hint_range(0.0, 1.0) = 0.8;
 uniform float puddles : hint_range(0.0, 1.0) = 0.55;
 uniform float bump_strength = 1.6;
+// Walkway slopes steeper than this (normal.y below it) are drawn as stone steps.
+uniform float stair_start = 0.99;
+uniform float step_height = 0.18;
 // Terrain meshes carry their colour in COLOR.rgb (sRGB) and cobble amount in COLOR.a.
 uniform bool use_vertex_color = false;
 uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
@@ -103,6 +106,25 @@ void fragment() {
 	float puddle = smoothstep(0.52, 0.6, pool) * puddles * mix(0.35, 1.0, max(amount, planks));
 	float wet = clamp(wetness * (0.65 + 0.35 * n2) + (1.0 - stone) * amount * 0.3, 0.0, 1.0);
 
+	// stairs: on sloped paved walkways, level treads at fixed risers following contours
+	float stairs = smoothstep(stair_start, stair_start - 0.03, wnrm.y) * smoothstep(0.5, 0.62, wnrm.y) * step(0.5, amount + planks * 0.0);
+	float sy = wpos.y / step_height;
+	float fs = fract(sy);
+	float step_id = floor(sy);
+	float riser = 1.0 - smoothstep(0.0, 0.2, fs);
+	float nose = smoothstep(0.82, 0.97, fs);
+	vec3 tread = base_color.rgb;
+	if (use_vertex_color) {
+		tread = pow(COLOR.rgb, vec3(2.2));
+	}
+	tread *= (0.85 + 0.3 * hash(vec2(step_id, 3.3))) * (0.85 + 0.3 * n2);
+	float slab_joint = smoothstep(0.0, 0.03, abs(fract((wpos.x + wpos.z) * 0.9 + hash(vec2(step_id, 1.1))) - 0.5) - 0.47);
+	tread = mix(tread, tread * 0.5, slab_joint);
+	vec3 stair_col = mix(tread, tread * 0.15, riser) + nose * 0.1;
+	col = mix(col, stair_col, stairs);
+	puddle *= 1.0 - stairs * 0.85;
+	stone = mix(stone, 1.0, stairs);
+
 	ALBEDO = col * mix(1.0, 0.5, wet);
 	ALBEDO = mix(ALBEDO, ALBEDO * 0.3 + vec3(0.01, 0.015, 0.02), puddle);
 	float rough = mix(0.8, 0.18, wet);
@@ -112,7 +134,9 @@ void fragment() {
 	SPECULAR = mix(0.55, 0.25, steep);
 
 	// bump: rounded stones, flattened under puddles
-	float h = dome * amount * (1.0 - puddle) * 0.03;
+	float h = dome * amount * (1.0 - puddle) * 0.03 * (1.0 - stairs);
+	// cancel the ramp's slope on each tread so treads read level and risers steep
+	h -= fs * step_height * stairs / bump_strength;
 	vec3 dpdx = dFdx(VERTEX);
 	vec3 dpdy = dFdy(VERTEX);
 	float dhdx = dFdx(h);

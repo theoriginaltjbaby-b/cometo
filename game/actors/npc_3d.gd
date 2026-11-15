@@ -11,6 +11,8 @@ extends StaticBody3D
 @export var hood := false
 ## Facing in degrees around Y; 0 faces north, 180 faces south (toward the camera).
 @export var yaw_deg := 180.0
+## Figure3D look options (hair, hat, long_coat, apron, satchel, hair_color).
+@export var look: Dictionary = {}
 
 var figure: Figure3D
 var interactable: Interactable3D
@@ -31,6 +33,7 @@ func _ready() -> void:
 	figure.accent = accent
 	figure.skin = skin
 	figure.hood = hood
+	figure.configure(look)
 	figure.rotation.y = deg_to_rad(yaw_deg)
 	add_child(figure)
 	interactable = Interactable3D.new()

@@ -500,11 +500,13 @@ func _dressing() -> void:
 	var O := INSERT_AT
 	var coats := [Color(0.24, 0.3, 0.34), Color(0.38, 0.3, 0.22), Color(0.3, 0.22, 0.28), Color(0.2, 0.27, 0.22)]
 	var skins := [Color(0.78, 0.6, 0.48), Color(0.55, 0.38, 0.28), Color(0.68, 0.5, 0.38)]
-	townsfolk([O + Vector3(-6, 0, 6), O + Vector3(10, 0, 6), O + Vector3(10, 0, -3)], coats[0], Color(0.7, 0.6, 0.4), skins[0], true)
-	townsfolk([O + Vector3(14, 0, 2), O + Vector3(-4, 0, 1)], coats[1], Color(0.5, 0.15, 0.12), skins[1])
-	townsfolk([O + Vector3(1.5, 0, -2.5), O + Vector3(4, 0, 4)], coats[2], Color(0.75, 0.65, 0.45), skins[2])
-	townsfolk([O + Vector3(-8.4, 3, -11.0)], coats[3], Color(0.6, 0.4, 0.2), skins[0], false, 160.0)
-	townsfolk([O + Vector3(-6.6, 3, -10.6)], coats[1], Color(0.3, 0.3, 0.3), skins[2], false, 210.0)
-	townsfolk([nearest_walk(Vector2(1120, 430)), nearest_walk(Vector2(1260, 430)), nearest_walk(Vector2(1230, 480))], coats[0], Color(0.8, 0.7, 0.3), skins[1], true)
-	townsfolk([nearest_walk(Vector2(600, 110)), nearest_walk(Vector2(640, 200))], coats[2], Color(0.5, 0.2, 0.15), skins[0])
+	var hc := [Color(0.1, 0.07, 0.05), Color(0.35, 0.22, 0.12), Color(0.55, 0.5, 0.45), Color(0.18, 0.12, 0.1)]
+	townsfolk([O + Vector3(-6, 0, 6), O + Vector3(10, 0, 6), O + Vector3(10, 0, -3)], coats[0], Color(0.7, 0.6, 0.4), skins[0], true, 180.0, {"long_coat": true})
+	townsfolk([O + Vector3(14, 0, 2), O + Vector3(-4, 0, 1)], coats[1], Color(0.5, 0.15, 0.12), skins[1], false, 180.0, {"hat": "brim", "hair_color": hc[0]})
+	townsfolk([O + Vector3(1.5, 0, -2.5), O + Vector3(4, 0, 4)], coats[2], Color(0.75, 0.65, 0.45), skins[2], false, 180.0, {"hair": "long", "hair_color": hc[1], "satchel": false})
+	townsfolk([O + Vector3(-8.4, 3, -11.0)], coats[3], Color(0.6, 0.4, 0.2), skins[0], false, 160.0, {"hat": "cap", "hair_color": hc[3]})
+	townsfolk([O + Vector3(-6.6, 3, -10.6)], coats[1], Color(0.3, 0.3, 0.3), skins[2], false, 210.0, {"hair": "bun", "hair_color": hc[2], "long_coat": true})
+	townsfolk([nearest_walk(Vector2(1120, 430)), nearest_walk(Vector2(1260, 430)), nearest_walk(Vector2(1230, 480))], coats[0], Color(0.8, 0.7, 0.3), skins[1], false, 180.0, {"hat": "cap", "satchel": false})
+	townsfolk([nearest_walk(Vector2(600, 110)), nearest_walk(Vector2(640, 200))], coats[2], Color(0.5, 0.2, 0.15), skins[0], false, 180.0, {"hair": "long", "hair_color": hc[0]})
+	townsfolk([nearest_walk(Vector2(230, 690))], coats[1], Color(0.7, 0.55, 0.2), skins[2], false, 200.0, {"hat": "hardhat", "satchel": false})
 

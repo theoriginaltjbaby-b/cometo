@@ -41,6 +41,7 @@ func _init() -> void:
 	figure.coat = Color(0.5, 0.13, 0.11)
 	figure.accent = Color(0.62, 0.42, 0.2)
 	figure.hood = false
+	figure.configure({"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05), "long_coat": true})
 	figure.xray = true
 	add_child(figure)
 	reach = Area3D.new()

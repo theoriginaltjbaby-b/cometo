@@ -342,6 +342,7 @@ func _people() -> void:
 	keeper.skin = Color(0.6, 0.43, 0.33)
 	keeper.position = Vector3(-7.2, TERRACE, -12.2)
 	keeper.yaw_deg = 180.0
+	keeper.look = {"apron": true, "satchel": false, "hair": "short", "hair_color": Color(0.35, 0.3, 0.27)}
 	entities.add_child(keeper)
 
 
