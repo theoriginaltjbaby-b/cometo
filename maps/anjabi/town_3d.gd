@@ -153,11 +153,14 @@ func _vertex(x: int, z: int, collide: bool) -> float:
 			elif cls[i] != WATER:
 				os += hv[i]
 				on += 1
+			else:
+				os += SEA - 2.5
+				on += 1
 	if wn > 0:
 		return ws / wn
 	if collide:
 		return top if top > -INF else 0.0
-	return os / on if on > 0 else SEA
+	return os / on if on > 0 else SEA - 2.5
 
 
 func _terrain() -> void:
@@ -179,7 +182,7 @@ func _terrain() -> void:
 				for x in range(cx0, mini(cx0 + CHUNK, w)):
 					var i := z * w + x
 					var t := cls[i]
-					if t == WATER or t == INSERT:
+					if t == INSERT:
 						continue
 					any = true
 					var col := _colour(t, rng.randf())
@@ -190,16 +193,6 @@ func _terrain() -> void:
 					var c := Vector3(x + 1, vh[(z + 1) * (w + 1) + x + 1], z + 1)
 					var d := Vector3(x, vh[(z + 1) * (w + 1) + x], z + 1)
 					_quad(st, a, b, c, d, col)
-					# skirts down to the sea where this cell borders water
-					var dark := col.darkened(0.35)
-					if z > 0 and cls[i - w] == WATER:
-						_quad(st, Vector3(b.x, SEA, b.z), b, a, Vector3(a.x, SEA, a.z), dark)
-					if z < h - 1 and cls[i + w] == WATER:
-						_quad(st, Vector3(d.x, SEA, d.z), d, c, Vector3(c.x, SEA, c.z), dark)
-					if x > 0 and cls[i - 1] == WATER:
-						_quad(st, Vector3(a.x, SEA, a.z), a, d, Vector3(d.x, SEA, d.z), dark)
-					if x < w - 1 and cls[i + 1] == WATER:
-						_quad(st, Vector3(c.x, SEA, c.z), c, b, Vector3(b.x, SEA, b.z), dark)
 			if not any:
 				continue
 			st.index()
@@ -228,6 +221,8 @@ func _colour(t: int, n: float) -> Color:
 			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
 		GRASS:
 			return Color(0.25 + j, 0.36 + j * 1.5, 0.24 + j, 0.0)
+		WATER:
+			return Color(0.3, 0.29, 0.26, 0.0)
 		SAND:
 			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
 		SLAB:
@@ -374,9 +369,10 @@ func _vegetation_and_lamps() -> void:
 			var i := z * w + x
 			var t := cls[i]
 			var r := rng.randf()
-			if t == CLIFF and r < 0.03 and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
-					and cls[i - w] == CLIFF and cls[i + w] == CLIFF and cls[i - 2 * w] == CLIFF:
-				tree(Vector3(x + 0.5, hv[i], z + 0.5), rng.randf_range(0.7, 1.1))
+			var forest := Rect2(40, 40, 330, 560).has_point(Vector2(x + 0.5, z + 0.5) / PX + ORIGIN) or z < 8
+			if t == CLIFF and r < (0.16 if forest else 0.05) and hv[i] > -2.0 and cls[i - 1] == CLIFF and cls[i + 1] == CLIFF \
+					and cls[i - w] == CLIFF and cls[i + w] == CLIFF:
+				tree(Vector3(x + rng.randf(), hv[i], z + rng.randf()), rng.randf_range(0.8, 1.4))
 			elif t == GRASS and r < 0.012:
 				var clear := true
 				for n: int in [i - 1, i + 1, i - w, i + w, i - 2, i + 2, i - 2 * w, i + 2 * w]:
@@ -477,6 +473,20 @@ func _dressing() -> void:
 					var p := Vector3(x + rng.randf(), hv[i], z + rng.randf())
 					ferns.append(xform(p, rng.randf() * TAU, rng.randf_range(0.8, 1.5)))
 	scatter("fern", ferns)
+	# lone water cells on the beach and shore are the map's rocks: boulders
+	for z in range(1, h - 1):
+		for x in range(1, w - 1):
+			var i := z * w + x
+			if cls[i] != WATER:
+				continue
+			var land := 0
+			for nb: int in [i - 1, i + 1, i - w, i + w]:
+				if cls[nb] != WATER:
+					land += 1
+			if land >= 3 or (land == 0 and rng.randf() < 0.004):
+				var s := rng.randf_range(0.9, 2.2)
+				var b := box(Vector3(x + 0.5, SEA + s * 0.3, z + 0.5), Vector3(s, s * 1.4, s * 0.9), M.rock, false, rng.randf() * TAU)
+				b.rotation.x = rng.randf_range(-0.3, 0.3)
 	# clutter by the Quonset porches, the shop and the docks
 	for p: Vector2 in [Vector2(530, 68), Vector2(622, 72), Vector2(508, 128), Vector2(660, 132), Vector2(546, 182)]:
 		var at := at_px(p)

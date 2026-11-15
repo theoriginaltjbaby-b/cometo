@@ -423,3 +423,19 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
 - Tram pylons rebuilt as slender four-leg lattice towers.
 - Tests 96/96.
 
+### Pass 4 — layout against the concept map
+- `tests/overview.tscn`: renders a top-down orthographic overview of the whole town
+  (`docs/screens/overview_town.png`) to compare with `docs/reference/anjabi_concept_map.png`.
+  Landmark placement matches the map (estate W, Tion Tower centre-left, tavern above the
+  Steps, pods N, Guard Tower NE, tram station and boardwalk E, beach S, airpad SW,
+  Imperial Tower on the water SE).
+- Shorelines: water cells are now a sloping seabed (no vertical skirts), so the sea
+  surface traces a smooth coast instead of 1 m stair steps.
+- Forest: pine density raised in the forest/estate belt (west) and along the north edge,
+  and trees jittered off the cell grid, matching the map's dense woods.
+- Lone water cells on the beach and shore become boulders (the map's rocks).
+- Fixed a shading bug present since pass 1: the shared noise texture is ramped to
+  0.6–1.05, so puddles covered almost everything and the sea was all foam; both shaders
+  now remap it (`nz()`). Wet sheen raised, puddles patchy, fewer on sand and grass.
+- Tests 96/96.
+

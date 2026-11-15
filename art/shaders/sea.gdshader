@@ -14,6 +14,11 @@ uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_e
 
 varying vec3 wpos;
 
+// The shared noise texture is colour-ramped to roughly 0.6..1.05; remap to 0..1.
+float nz(vec2 uv) {
+	return clamp((texture(noise_tex, uv).r - 0.6) / 0.45, 0.0, 1.0);
+}
+
 void vertex() {
 	wpos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
@@ -21,15 +26,15 @@ void vertex() {
 void fragment() {
 	vec2 uv = wpos.xz * 0.035;
 	float t = TIME * speed;
-	float a = texture(noise_tex, uv + vec2(t, t * 0.6)).r;
-	float b = texture(noise_tex, uv * 2.7 - vec2(t * 1.4, -t * 0.8)).r;
-	float c = texture(noise_tex, uv * 7.0 + vec2(-t * 2.0, t * 1.7)).r;
+	float a = nz(uv + vec2(t, t * 0.6));
+	float b = nz(uv * 2.7 - vec2(t * 1.4, -t * 0.8));
+	float c = nz(uv * 7.0 + vec2(-t * 2.0, t * 1.7));
 	float h = a * 0.55 + b * 0.3 + c * 0.15;
 	vec3 col = mix(deep.rgb, shallow.rgb, smoothstep(0.3, 0.75, h));
 	float foam = smoothstep(0.7, 0.82, a * 0.5 + b * 0.5) * smoothstep(0.45, 0.7, c);
 	ALBEDO = mix(col, foam_color.rgb, foam * 0.6);
-	ROUGHNESS = mix(0.05, 0.6, foam);
-	SPECULAR = 0.7;
+	ROUGHNESS = mix(0.16, 0.7, foam);
+	SPECULAR = 0.3;
 	float hh = h * 0.12;
 	vec3 dpdx = dFdx(VERTEX);
 	vec3 dpdy = dFdy(VERTEX);

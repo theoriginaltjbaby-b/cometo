@@ -20,6 +20,11 @@ uniform bool use_vertex_color = false;
 uniform sampler2D noise_tex : hint_default_white, filter_linear_mipmap, repeat_enable;
 
 varying vec3 wpos;
+
+// The shared noise texture is colour-ramped to roughly 0.6..1.05; remap to 0..1.
+float nz(vec2 uv) {
+	return clamp((texture(noise_tex, uv).r - 0.6) / 0.45, 0.0, 1.0);
+}
 varying vec3 wnrm;
 
 void vertex() {
@@ -62,10 +67,10 @@ void fragment() {
 		amount = COLOR.a * (1.0 - planks);
 	}
 	amount *= up;
-	float n = texture(noise_tex, wpos.xz * 0.06).r;
-	float n2 = texture(noise_tex, wpos.xz * 0.5 + vec2(wpos.y * 0.3)).r;
+	float n = nz(wpos.xz * 0.06);
+	float n2 = nz(wpos.xz * 0.5 + vec2(wpos.y * 0.3));
 
-	float warp = texture(noise_tex, wpos.xz * 0.9).r;
+	float warp = nz(wpos.xz * 0.9);
 	vec2 c = cobbles(wpos.xz, warp);
 	float stone = smoothstep(0.015, 0.07, c.x);
 	float dome = smoothstep(0.0, 0.32, c.x);
@@ -76,8 +81,8 @@ void fragment() {
 	vec3 plain = col * (0.7 + 0.5 * n2) * (0.85 + 0.3 * n);
 	// steep faces: layered rock with dark crevices and a little lichen
 	float steep = 1.0 - up;
-	float strata = texture(noise_tex, vec2((wpos.x + wpos.z) * 0.12, wpos.y * 0.9)).r;
-	float crack = smoothstep(0.42, 0.5, texture(noise_tex, vec2((wpos.x - wpos.z) * 0.35, wpos.y * 1.6)).r);
+	float strata = nz(vec2((wpos.x + wpos.z) * 0.12, wpos.y * 0.9));
+	float crack = smoothstep(0.42, 0.5, nz(vec2((wpos.x - wpos.z) * 0.35, wpos.y * 1.6)));
 	vec3 rock = col * vec3(1.0, 0.94, 0.86) * (0.35 + 0.95 * strata) * mix(0.35, 1.0, crack);
 	rock = mix(rock, vec3(0.16, 0.22, 0.12), smoothstep(0.62, 0.75, n2) * 0.5);
 	plain = mix(plain, rock, steep);
@@ -88,19 +93,19 @@ void fragment() {
 	float fb = fract(bw);
 	float along = fract((wpos.x + hash(vec2(board, 1.7)) * 5.0) / 2.6);
 	float gap = smoothstep(0.0, 0.07, min(fb, 1.0 - fb)) * smoothstep(0.0, 0.012, min(along, 1.0 - along));
-	vec3 wood = col * (0.7 + 0.5 * hash(vec2(board, 9.1))) * (0.85 + 0.3 * texture(noise_tex, vec2(wpos.x * 0.8, wpos.z * 6.0)).r);
+	vec3 wood = col * (0.7 + 0.5 * hash(vec2(board, 9.1))) * (0.85 + 0.3 * nz(vec2(wpos.x * 0.8, wpos.z * 6.0)));
 	col = mix(col, mix(wood * 0.25, wood, gap), planks * up);
 	stone = mix(stone, gap, planks * up);
 	amount = max(amount, planks * up * 0.6);
 
 	// puddles: low-frequency noise, pooling first in the joints
 	float pool = n + (1.0 - stone) * 0.1 * amount - (1.0 - up) * 2.0;
-	float puddle = smoothstep(0.6, 0.66, pool) * puddles;
+	float puddle = smoothstep(0.52, 0.6, pool) * puddles * mix(0.35, 1.0, max(amount, planks));
 	float wet = clamp(wetness * (0.65 + 0.35 * n2) + (1.0 - stone) * amount * 0.3, 0.0, 1.0);
 
 	ALBEDO = col * mix(1.0, 0.5, wet);
 	ALBEDO = mix(ALBEDO, ALBEDO * 0.3 + vec3(0.01, 0.015, 0.02), puddle);
-	float rough = mix(0.82, 0.3, wet);
+	float rough = mix(0.8, 0.18, wet);
 	rough = mix(rough, 0.92, steep);
 	rough = mix(rough, 0.95, (1.0 - stone) * amount * (1.0 - wet * 0.6));
 	ROUGHNESS = mix(rough, 0.03, puddle);
