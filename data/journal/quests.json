@@ -1,6 +1,6 @@
 {
 	"quiet_mine": {
-		"title": "The Quiet Mine",
+		"title": "The Closed Mine",
 		"summary": "The No. 2 Working at Anjabi is closed. Nobody down here tells it the same way twice.",
 		"objectives": [
 			{"id": "notice", "text": "Read the closure notice at the mine gate"},

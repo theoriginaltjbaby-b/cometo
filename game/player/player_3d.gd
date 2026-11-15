@@ -55,6 +55,23 @@ func _init() -> void:
 	reach.add_child(rs)
 	add_child(reach)
 	add_child(Rain3D.new())
+	# soft ring under the feet, as in the key art
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.42
+	tm.outer_radius = 0.47
+	tm.rings = 32
+	tm.ring_segments = 4
+	ring.mesh = tm
+	ring.scale = Vector3(1, 0.05, 1)
+	ring.position.y = 0.04
+	var rm := StandardMaterial3D.new()
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rm.albedo_color = Color(0.95, 0.92, 0.85, 0.55)
+	ring.material_override = rm
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(ring)
 	camera = FollowCamera.new()
 	camera.target = self
 	add_child(camera)

@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-15 (entry 10: iOS export prepared, not built).
+Last updated: 2026-11-15 (AAA aesthetic passes 1–5).
 
 ## 1. What this is
 
@@ -438,4 +438,24 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
   0.6–1.05, so puddles covered almost everything and the sea was all foam; both shaders
   now remap it (`nz()`). Wet sheen raised, puddles patchy, fewer on sand and grass.
 - Tests 96/96.
+
+### Pass 5 — HUD and finishing
+- `ui/quest_tracker.gd` (`QuestTracker`): top-left "Cometographia" title, rule, the open
+  investigation as "◆ title" and its active/done objectives as ☐/☑, refreshed from
+  `Journal.updated`. Journal notifications moved to the top centre.
+- `ui/compass.gd` (`Compass`): eight-point compass rose, bottom-left (north is always up).
+- Soft ring under the player's feet.
+- Investigation title changed to "The Closed Mine" to match the director's key art
+  (`data/journal/quests.json`); objectives unchanged.
+- Tests 96/96.
+
+### State after the passes, and what is still short of the key art
+- Matches: wet cobbles with mirrored lamplight, warm-against-cold lighting, rain, Quonset
+  pods, domed tavern with sign, banners, awning café, lantern posts, mine portal with
+  CLOSED sign and guard, ferns, planters, townsfolk, tram gondolas, HUD layout.
+- Still short: no cobbled stairs with step risers in the town (walkways are slopes);
+  terrain is a 1 m grid so some edges stay angular; characters are primitives (no rigged
+  model, no faces); no flower beds on the ground, no ivy on walls; no distant sunset sky
+  or Imperial city silhouette on the horizon (camera looks down); no rain splashes or
+  dripping eaves. iPhone performance after these passes is not measured.
 

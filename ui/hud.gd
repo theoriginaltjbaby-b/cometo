@@ -45,14 +45,26 @@ func _ready() -> void:
 	_prompt.offset_top = -12
 	_prompt.visible = false
 
+	var tracker := QuestTracker.new()
+	_safe.add_child(tracker)
+	tracker.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	tracker.position = Vector2(10, 8)
+	var compass := Compass.new()
+	_safe.add_child(compass)
+	compass.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+	compass.size = Vector2(40, 40)
+	compass.position += Vector2(10, -50)
+
 	_toast = Label.new()
 	_toast.add_theme_color_override("font_color", UiTheme.AMBER)
 	_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.8))
 	_toast.add_theme_font_size_override("font_size", 9)
 	_toast.modulate.a = 0.0
+	_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_safe.add_child(_toast)
-	_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	_toast.position = Vector2(8, 8)
+	_toast.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_toast.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_toast.offset_top = 70
 
 	_title = Label.new()
 	_title.add_theme_font_size_override("font_size", 16)
