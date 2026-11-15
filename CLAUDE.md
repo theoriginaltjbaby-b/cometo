@@ -16,6 +16,8 @@ $GODOT --path . res://tests/screenshot_3d.tscn -- /some/folder  # windowed shots
 $GODOT --headless --path . -s tools/build_town_mask.gd       # rebuild the town walkable mask from the greybox
 $GODOT --headless --path . -s tools/build_town_3d.gd         # then rebuild the 3D town grid (heights, types) from greybox + mask
 sh tools/package_review.sh                                   # export/COMETO_review_<date>.zip
+$GODOT --path . res://tests/perf_probe.tscn                  # render cost per spot (desktop proxy)
+$GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs iOS templates, Xcode, team id
 ```
 
 ## Layout

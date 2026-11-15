@@ -2,7 +2,7 @@
 
 Running log. Newest entry at the bottom of the Changelog; the sections above it are
 kept current so the project can be understood from this file alone.
-Last updated: 2026-11-14 (entry 9: the district is merged into the town; two maps remain).
+Last updated: 2026-11-15 (entry 10: iOS export prepared, not built).
 
 ## 1. What this is
 
@@ -225,8 +225,11 @@ Three combat directions were proposed; none is chosen or implemented.
 
 - Touch: only the steering vector is tested. Real drag and tap gestures, the
   safe-area margins and gamepad input have never been tried on a device.
-- iOS export has not been attempted. JSON under `data/` must be added to the
-  export filter when it is.
+- iOS build not yet produced (entry 10). Preset, icon and mobile settings are ready and
+  Godot accepts the preset; blocked on this Mac by: no iOS export templates installed,
+  no Xcode (command-line tools only), macOS 13.7.8 (current Xcode needs 14.5+), no Apple
+  signing team. iOS export from the .NET Godot build is experimental; this project is
+  GDScript only, so use the standard Godot 4.7.2 build and its templates.
 - No audio. No combat. No companions. No NPC routines or time of day.
 - The town is a greybox: no NPCs or interactables there except the two mine exits.
 - The town's mine yard and the detailed mine map represent the same place twice.
@@ -341,4 +344,16 @@ below the world. The player's see-through silhouette now uses Godot's X-Ray sten
 scaled to 0.8 to fit its footprint. Slice test reworked: 96 checks, all passing,
 including walking off the plaza east and west onto town walkways and old-save fallback.
 Removed screenshots of geometry that no longer exists; `docs/screens/3d_0*` retaken.
+
+### 2026-11-15 — 11. iOS export prepared (entry 10)
+Added `export_presets.cfg` (iOS: bundle id `com.cometo.anjabi` placeholder, team id empty,
+iPhone only, iOS 15+, Xcode project export, includes `data/*.json`, excludes docs, tools,
+tests, export, art/source). `project.godot`: app icon, ETC2/ASTC texture import, and
+iOS-only overrides (3D render scale 0.7 with FSR, 2048 shadow map, low soft-shadow
+quality, no MSAA). `icon.png`: 1024 px app icon rendered in Blender from the game's
+tavern, pod and lamp models (scene `icon` in `art/source/anjabi_props.blend`).
+`tests/perf_probe.tscn` measures render cost: on this iMac (Radeon Pro 570, Vulkan,
+Mobile renderer) every spot holds the 60 fps cap with 83-325 draw calls and 230k-350k
+primitives per frame including shadow passes. Not an iPhone measurement.
+Test export run: preset valid; fails only on the missing iOS template.
 
