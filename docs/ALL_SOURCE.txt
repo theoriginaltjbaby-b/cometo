@@ -1624,6 +1624,9 @@ var apron := false
 var satchel := true
 ## Draw a faint silhouette wherever the figure is hidden behind scenery (player only).
 var xray := false
+## Pull clothing toward the settlement palette. Off for the player, whose colours are
+## chosen in character creation and must stay exactly as picked.
+var harmonize_clothes := true
 
 
 func configure(look: Dictionary) -> void:
@@ -1654,6 +1657,10 @@ var _t := 0.0
 
 
 func _ready() -> void:
+	# clothing in the settlement palette's family (skin and hair untouched)
+	if harmonize_clothes:
+		coat = MapBuilder3D.harmonize(coat, 0.4)
+		accent = MapBuilder3D.harmonize(accent, 0.3)
 	var coat_m := _mat(coat, 0.85)
 	var dark_m := _mat(coat.darkened(0.3), 0.9)
 	var skin_m := _mat(skin, 0.7)
@@ -4740,7 +4747,7 @@ var lamps := Curve.new()
 var weather_blend := 10.0
 var indoor := false
 var indoor_look := {
-	"ambient": Color(0.62, 0.56, 0.5), "ambient_energy": 0.9, "background": Color(0.02, 0.02, 0.03),
+	"ambient": Color(0.56, 0.52, 0.62), "ambient_energy": 0.85, "background": Color(0.02, 0.02, 0.03),
 	"fog": 0.0, "exposure": 1.2, "lamps": 1.0,
 }
 
@@ -4957,7 +4964,7 @@ func _defaults() -> void:
 		[0.83, Color(0.3, 0.26, 0.42)], [0.875, n_fog], [1.0, n_fog]])
 	_curve(ambient_energy, [[0.0, 0.75], [0.2, 0.75], [SUNRISE, 1.3], [0.28, 1.0], [0.5, 1.0], [0.7, 0.95], [0.78, 1.0], [SUNSET, 1.3], [0.85, 0.95], [0.875, 0.75], [1.0, 0.75]])
 	_curve(sun_energy, [[0.0, 0.86], [SUNRISE - 0.012, 0.7], [SUNRISE, 0.0], [SUNRISE + 0.012, 0.45], [0.27, 0.7], [0.36, 1.05], [0.5, 1.2], [0.68, 1.1],
-		[0.77, 0.95], [SUNSET - 0.012, 0.55], [SUNSET, 0.0], [SUNSET + 0.012, 0.6], [0.86, 0.8], [1.0, 0.86]])
+		[0.75, 0.85], [0.77, 0.7], [SUNSET - 0.012, 0.45], [SUNSET, 0.0], [SUNSET + 0.012, 0.6], [0.86, 0.8], [1.0, 0.86]])
 	_curve(fill_energy, [[0.0, 0.35], [0.17, 0.2], [0.2, 0.0], [0.25, 0.32], [0.31, 0.2], [0.4, 0.0], [0.62, 0.0],
 		[0.72, 0.18], [0.785, 0.32], [0.83, 0.3], [0.875, 0.3], [1.0, 0.35]])
 	_curve(exposure, [[0.0, 1.45], [0.2, 1.45], [0.27, 1.25], [0.36, 1.05], [0.5, 1.0], [0.7, 1.02], [0.78, 1.25], [0.84, 1.4], [0.875, 1.45], [1.0, 1.45]])
@@ -5822,6 +5829,7 @@ func _init() -> void:
 	figure.configure({"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05), "long_coat": true})
 	apply_look(figure, GameState.get_flag("player_look", {}))
 	figure.xray = true
+	figure.harmonize_clothes = false
 	add_child(figure)
 	reach = Area3D.new()
 	reach.collision_layer = 0
@@ -6547,6 +6555,7 @@ extends MapBuilder3D
 func _ready() -> void:
 	indoor = true
 	_materials()
+	SettlementKit.materials(self)
 	_environment()
 	_build()
 	var spawns := Node3D.new()
@@ -6699,36 +6708,36 @@ static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, ver
 
 
 func _materials() -> void:
-	M.paving = ground_mat(Color(0.42, 0.4, 0.38))
-	M.paving_light = ground_mat(Color(0.5, 0.48, 0.45), 1.0, 0.7, 0.3)
+	M.paving = ground_mat(Color(0.46, 0.41, 0.42))
+	M.paving_light = ground_mat(Color(0.55, 0.49, 0.48), 1.0, 0.7, 0.3)
 	M.stone = _mat(Color(0.36, 0.35, 0.33), 0.8)
-	M.rock = _mat(Color(0.2, 0.23, 0.25), 0.95)
-	M.rock_dark = _mat(Color(0.13, 0.15, 0.17), 0.95)
-	M.moss = ground_mat(Color(0.16, 0.26, 0.17), 0.0, 0.5, 0.15)
-	M.concrete = _mat(Color(0.47, 0.47, 0.44), 0.85)
-	M.steel = _mat(Color(0.33, 0.35, 0.37), 0.45, 0.6)
-	M.steel_dark = _mat(Color(0.17, 0.18, 0.2), 0.5, 0.6)
-	M.copper = _mat(Color(0.3, 0.5, 0.45), 0.5, 0.55)
+	M.rock = _mat(Color(0.25, 0.22, 0.27), 0.95)
+	M.rock_dark = _mat(Color(0.14, 0.12, 0.17), 0.95)
+	M.moss = ground_mat(Color(0.17, 0.27, 0.23), 0.0, 0.5, 0.15)
+	M.concrete = _mat(Color(0.5, 0.45, 0.45), 0.85)
+	M.steel = _mat(Color(0.38, 0.33, 0.33), 0.45, 0.6)
+	M.steel_dark = _mat(Color(0.17, 0.15, 0.19), 0.5, 0.6)
+	M.copper = _mat(Color(0.3, 0.53, 0.48), 0.5, 0.45)
 	M.copper_raw = _mat(Color(0.62, 0.36, 0.22), 0.4, 0.75)
-	M.panel = _mat(Color(0.42, 0.45, 0.42), 0.7, 0.2)
+	M.panel = _mat(Color(0.36, 0.45, 0.46), 0.7, 0.2)
 	M.panel_violet = _mat(Color(0.33, 0.29, 0.36), 0.75, 0.15)
-	M.timber = _mat(Color(0.22, 0.15, 0.11), 0.85)
-	M.canvas = _mat(Color(0.45, 0.17, 0.17), 0.95)
-	M.canvas_teal = _mat(Color(0.2, 0.33, 0.33), 0.95)
+	M.timber = _mat(Color(0.28, 0.17, 0.12), 0.85)
+	M.canvas = _mat(Color(0.52, 0.2, 0.24), 0.95)
+	M.canvas_teal = _mat(Color(0.19, 0.38, 0.4), 0.95)
 	M.window = _mat(Color(1.0, 0.72, 0.38), 0.3, 0.0, Color(1.0, 0.62, 0.28), 2.2)
 	M.lamp = _mat(Color(1.0, 0.8, 0.5), 0.3, 0.0, Color(1.0, 0.7, 0.35), 4.0)
 	M.warning = _mat(Color(0.8, 0.6, 0.12), 0.6)
-	M.sand = _mat(Color(0.55, 0.5, 0.42), 0.9)
+	M.sand = _mat(Color(0.58, 0.51, 0.45), 0.9)
 	M.sea = ShaderMaterial.new()
 	M.sea.shader = preload("res://art/shaders/sea.gdshader")
 	M.sea.set_shader_parameter("noise_tex", detail_textures()[0])
-	M.foliage = _mat(Color(0.08, 0.2, 0.15), 0.9)
-	M.foliage_b = _mat(Color(0.11, 0.24, 0.16), 0.9)
+	M.foliage = _mat(Color(0.09, 0.21, 0.19), 0.9)
+	M.foliage_b = _mat(Color(0.12, 0.25, 0.2), 0.9)
 	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
 	M.mesh_fence = _mat(Color(0.25, 0.27, 0.3, 0.45), 0.6, 0.4)
 	M.mesh_fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	M.mud = ground_mat(Color(0.3, 0.26, 0.22), 0.0, 0.95, 0.75)
-	M.gravel = ground_mat(Color(0.4, 0.39, 0.37), 0.0, 0.75, 0.45)
+	M.mud = ground_mat(Color(0.32, 0.26, 0.25), 0.0, 0.95, 0.75)
+	M.gravel = ground_mat(Color(0.44, 0.4, 0.41), 0.0, 0.75, 0.45)
 	M.rust = _mat(Color(0.48, 0.27, 0.17), 0.7, 0.5)
 	M.blue_light = _mat(Color(0.4, 0.6, 1.0), 0.3, 0.0, Color(0.35, 0.55, 1.0), 3.0)
 
@@ -6910,9 +6919,37 @@ static func weather_model(root: Node) -> void:
 			var nm := m.resource_name.to_lower()
 			if "leaf" in nm or "pine" in nm or "petal" in nm:
 				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if not m.emission_enabled:
+				m.albedo_color = harmonize(m.albedo_color)
 			if m.emission_enabled or m.roughness < 0.55:
 				continue
 			add_detail(m, 0.6)
+
+
+## The settlement palette (PROJECT_LOG entry 21): dusty rose, warm stone, ochre,
+## muted teal, verdigris, indigo slate, aged brass, deep violet. Shared by everything
+## that is coloured in code.
+const PALETTE: Array[Color] = [
+	Color(0.62, 0.46, 0.46), Color(0.54, 0.47, 0.45), Color(0.66, 0.53, 0.38),
+	Color(0.3, 0.45, 0.46), Color(0.3, 0.53, 0.48), Color(0.22, 0.2, 0.32),
+	Color(0.62, 0.46, 0.25), Color(0.32, 0.24, 0.38), Color(0.52, 0.2, 0.24),
+	Color(0.14, 0.24, 0.2), Color(0.3, 0.19, 0.13),
+]
+
+
+## Pulls a colour part of the way toward the nearest palette swatch (by hue and
+## value), keeping its own lightness, so imported and code-built things share a family.
+static func harmonize(c: Color, amount := 0.35) -> Color:
+	var best := PALETTE[0]
+	var best_d := INF
+	for p in PALETTE:
+		var dh := absf(fposmod(c.h - p.h + 0.5, 1.0) - 0.5) * (c.s + p.s)
+		var d := dh * 2.0 + absf(c.v - p.v) + absf(c.s - p.s) * 0.5
+		if d < best_d:
+			best_d = d
+			best = p
+	var target := Color.from_hsv(best.h, lerpf(c.s, best.s, 0.6), c.v, c.a)
+	return c.lerp(target, amount)
 
 
 static var _mesh_cache := {}
@@ -8850,6 +8887,7 @@ const TR_Z1 := 17.0
 
 func _ready() -> void:
 	_materials()
+	SettlementKit.materials(self)
 	_environment()
 	_ground()
 	_walls_and_fences()
@@ -9579,17 +9617,19 @@ func _colour(t: int, n: float) -> Color:
 	# rgb: sRGB colour; a: cobble amount for the wet-ground shader
 	var j := (n - 0.5) * (0.04 if t == PATH or t == SLAB else 0.012)
 	match t:
+		# the settlement palette: rose-grey paving, teal-green grass, rose sand,
+		# violet-grey rock
 		PATH:
-			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
+			return Color(0.64 + j, 0.56 + j, 0.56 + j, 1.0)
 		GRASS:
-			return Color(0.25 + j, 0.36 + j * 1.5, 0.24 + j, 0.0)
+			return Color(0.22 + j, 0.35 + j * 1.5, 0.3 + j, 0.0)
 		WATER:
-			return Color(0.3, 0.29, 0.26, 0.0)
+			return Color(0.3, 0.27, 0.28, 0.0)
 		SAND:
-			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
+			return Color(0.72 + j, 0.64 + j, 0.56 + j, 0.0)
 		SLAB:
-			return Color(0.6 + j, 0.59 + j, 0.56 + j, 1.0)
-	return Color(0.36 + j, 0.35 + j, 0.33 + j, 0.0)
+			return Color(0.62 + j, 0.56 + j, 0.56 + j, 1.0)
+	return Color(0.38 + j, 0.33 + j, 0.38 + j, 0.0)
 
 
 func _collision() -> void:
@@ -9958,7 +9998,7 @@ extends InteriorMap3D
 
 
 func _build() -> void:
-	room(Vector3(10, 3.2, 7), ground_mat(Color(0.36, 0.3, 0.25), 0.0, 0.2, 0.0), M.panel)
+	room(Vector3(10, 3.2, 7), ground_mat(Color(0.4, 0.33, 0.3), 0.0, 0.2, 0.0), M.plaster_teal)
 	# counter along the back, a till on it
 	box(Vector3(1.5, 0.55, -2.2), Vector3(4.2, 1.1, 0.8), M.timber)
 	box(Vector3(2.6, 1.2, -2.2), Vector3(0.6, 0.2, 0.4), M.steel_dark, false)
@@ -9980,7 +10020,9 @@ func _build() -> void:
 	model("barrel", Vector3(3.9, 0, 2.6))
 	model("planter", Vector3(-3.9, 0, 2.7))
 	# a rug in the middle
-	box(Vector3(0, 0.01, 0.4), Vector3(3.6, 0.02, 2.4), M.canvas_teal, false)
+	box(Vector3(0, 0.01, 0.4), Vector3(3.6, 0.02, 2.4), M.rug, false)
+	SettlementKit.pot(self, Vector3(-4.0, 0, 2.2), "lavender", 1.2)
+	SettlementKit.lantern(self, Vector3(2.0, 1.2, -2.2), 0.8)
 	ceiling_lamp(Vector3(-1.5, 2.9, -0.5))
 	ceiling_lamp(Vector3(2.0, 2.9, -1.0))
 
@@ -14330,6 +14372,7 @@ func _rebuild() -> void:
 	if _figure != null:
 		_figure.queue_free()
 	_figure = Figure3D.new()
+	_figure.harmonize_clothes = false
 	_figure.accent = Color(0.62, 0.42, 0.2)
 	_figure.configure({"hair": "bun", "long_coat": true})
 	Player3D.apply_look(_figure, profile()["player_look"])
