@@ -1,5 +1,7 @@
 COMETO - all source files. Index:
   project.godot
+  art/baked2d/steps/layout.json
+  art/shaders/handheld_grade.gdshader
   art/shaders/sea.gdshader
   art/shaders/title_planet.gdshader
   art/shaders/title_wisps.gdshader
@@ -11,6 +13,7 @@ COMETO - all source files. Index:
   art_provisional/prov_rail.gd
   art_provisional/rain.gd
   art_provisional/rain_3d.gd
+  core/art_style.gd
   core/audio_manager.gd
   core/data.gd
   core/dialogue.gd
@@ -32,6 +35,7 @@ COMETO - all source files. Index:
   data/dialogue/anjabi/mine_approach_sign.json
   data/dialogue/anjabi/notice.json
   data/dialogue/anjabi/pod_b17.json
+  data/dialogue/anjabi/shop_shelves.json
   data/dialogue/anjabi/tavern_keeper.json
   data/dialogue/anjabi/trench.json
   data/journal/clues.json
@@ -59,6 +63,7 @@ COMETO - all source files. Index:
   game/puzzle/track_switch_3d.gd
   maps/game_map.gd
   maps/game_map_3d.gd
+  maps/interior_map_3d.gd
   maps/map_builder_3d.gd
   maps/walk_mask.gd
   maps/anjabi/district.gd
@@ -67,10 +72,17 @@ COMETO - all source files. Index:
   maps/anjabi/mine_3d.gd
   maps/anjabi/mine_3d.tscn
   maps/anjabi/mine_ground.gd
+  maps/anjabi/steps_2d.tscn
   maps/anjabi/town.gd
   maps/anjabi/town.tscn
   maps/anjabi/town_3d.gd
   maps/anjabi/town_3d.tscn
+  maps/anjabi/interiors/shop.gd
+  maps/anjabi/interiors/shop.tscn
+  maps/proto2d/environment_controller_2d.gd
+  maps/proto2d/map_2d.gd
+  maps/proto2d/person_2d.gd
+  maps/proto2d/player_2d.gd
   tests/menu_test.gd
   tests/menu_test.tscn
   tests/overview.gd
@@ -79,8 +91,12 @@ COMETO - all source files. Index:
   tests/perf_probe.tscn
   tests/screenshot.gd
   tests/screenshot.tscn
+  tests/screenshot_2d.gd
+  tests/screenshot_2d.tscn
   tests/screenshot_3d.gd
   tests/screenshot_3d.tscn
+  tests/screenshot_interior.gd
+  tests/screenshot_interior.tscn
   tests/screenshot_time.gd
   tests/screenshot_time.tscn
   tests/screenshot_title.gd
@@ -89,6 +105,8 @@ COMETO - all source files. Index:
   tests/screenshot_town.tscn
   tests/slice_test.gd
   tests/slice_test.tscn
+  tools/bake_2d.gd
+  tools/bake_2d.tscn
   tools/build_town_3d.gd
   tools/build_town_mask.gd
   tools/bundle_source.py
@@ -179,6 +197,726 @@ scaling_3d/scale.ios=0.7
 lights_and_shadows/directional_shadow/size.ios=2048
 lights_and_shadows/directional_shadow/soft_shadow_filter_quality.ios=1
 anti_aliasing/quality/msaa_3d.ios=0
+
+
+==============================================================================
+== art/baked2d/steps/layout.json
+==============================================================================
+{
+	"S": 16,
+	"grid": 4,
+	"height": 1664,
+	"interactables": [
+		{
+			"dialogue_id": "anjabi/pod_b17",
+			"label": "Pod B-17",
+			"prompt": "Knock",
+			"radius": 1.3,
+			"x": 4.0,
+			"y": 6.90000009536743,
+			"z": -36.9000015258789
+		},
+		{
+			"dialogue_id": "anjabi/mine_approach_sign",
+			"label": "Warning sign",
+			"prompt": "Read",
+			"radius": 1.2,
+			"x": -37.0,
+			"y": -2.0,
+			"z": -1.20000004768372
+		},
+		{
+			"dialogue_id": "",
+			"label": "Mine yard",
+			"prompt": "Enter",
+			"radius": 1.4,
+			"target_map": "anjabi_mine",
+			"target_spawn": "default",
+			"x": -36.5999984741211,
+			"y": -2.0,
+			"z": 2.0
+		}
+	],
+	"lamps": [
+		{
+			"energy": 2.33999991416931,
+			"range": 9.0,
+			"x": 2.0,
+			"y": 3.20000004768372,
+			"z": 1.0
+		},
+		{
+			"energy": 3.11999988555908,
+			"range": 9.0,
+			"x": -10.0,
+			"y": 5.40000009536743,
+			"z": -12.8999996185303
+		},
+		{
+			"energy": 1.82000005245209,
+			"range": 6.0,
+			"x": -7.40000009536743,
+			"y": 5.19999980926514,
+			"z": -12.1000003814697
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": -13.3999996185303,
+			"y": 6.0,
+			"z": -11.8999996185303
+		},
+		{
+			"energy": 2.07999992370605,
+			"range": 6.0,
+			"x": 15.0,
+			"y": 2.0,
+			"z": -0.800000190734863
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": 6.59999990463257,
+			"y": 9.0,
+			"z": -36.0
+		},
+		{
+			"energy": 1.55999994277954,
+			"range": 5.0,
+			"x": -33.0,
+			"y": -1.0,
+			"z": -3.0
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": -36.5,
+			"y": 0.0,
+			"z": 5.5
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": -24.0,
+			"y": 0.0,
+			"z": 9.5
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": -8.0,
+			"y": 3.0,
+			"z": 8.0
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": 12.0,
+			"y": 3.0,
+			"z": 8.0
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": -8.0,
+			"y": 3.0,
+			"z": -8.0
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": 8.0,
+			"y": 3.0,
+			"z": -3.0
+		},
+		{
+			"energy": 2.40000009536743,
+			"range": 8.5,
+			"x": 5.0,
+			"y": 6.0,
+			"z": -12.5
+		}
+	],
+	"objects": [
+		{
+			"file": "000",
+			"glow": true,
+			"model": "tavern_v2",
+			"rect": [
+				471,
+				284,
+				213,
+				421
+			],
+			"sort_z": -18.9149990081787
+		},
+		{
+			"file": "001",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				515,
+				628,
+				13,
+				66
+			],
+			"sort_z": -11.8999996185303
+		},
+		{
+			"file": "002",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				672,
+				628,
+				13,
+				66
+			],
+			"sort_z": -11.8999996185303
+		},
+		{
+			"file": "003",
+			"model": "cafe_table",
+			"rect": [
+				583,
+				660,
+				37,
+				36
+			],
+			"sort_z": -12.1000003814697
+		},
+		{
+			"file": "004",
+			"model": "cafe_table",
+			"rect": [
+				618,
+				657,
+				37,
+				37
+			],
+			"sort_z": -12.3000001907349
+		},
+		{
+			"file": "005",
+			"model": "barrel",
+			"rect": [
+				522,
+				653,
+				18,
+				32
+			],
+			"sort_z": -12.6999998092651
+		},
+		{
+			"file": "006",
+			"model": "barrel",
+			"rect": [
+				532,
+				664,
+				17,
+				32
+			],
+			"sort_z": -12.0
+		},
+		{
+			"file": "007",
+			"model": "planter",
+			"rect": [
+				487,
+				650,
+				23,
+				30
+			],
+			"sort_z": -12.8999996185303
+		},
+		{
+			"file": "008",
+			"model": "banner",
+			"rect": [
+				521,
+				606,
+				20,
+				63
+			],
+			"sort_z": -13.3204898834229
+		},
+		{
+			"file": "009",
+			"model": "banner",
+			"rect": [
+				611,
+				606,
+				20,
+				64
+			],
+			"sort_z": -13.2795104980469
+		},
+		{
+			"file": "010",
+			"glow": true,
+			"model": "shop",
+			"rect": [
+				914,
+				708,
+				124,
+				208
+			],
+			"sort_z": -4.33839702606201
+		},
+		{
+			"file": "011",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				758,
+				103,
+				84,
+				146
+			],
+			"sort_z": -39.3000030517578
+		},
+		{
+			"file": "012",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				646,
+				79,
+				84,
+				146
+			],
+			"sort_z": -40.8000030517578
+		},
+		{
+			"file": "013",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				534,
+				111,
+				84,
+				141
+			],
+			"sort_z": -39.1999969482422
+		},
+		{
+			"file": "014",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				454,
+				7,
+				84,
+				146
+			],
+			"sort_z": -45.3000030517578
+		},
+		{
+			"file": "015",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				870,
+				15,
+				84,
+				148
+			],
+			"sort_z": -44.8000030517578
+		},
+		{
+			"file": "016",
+			"glow": true,
+			"model": "pod",
+			"rect": [
+				726,
+				0,
+				84,
+				124
+			],
+			"sort_z": -47.1999969482422
+		},
+		{
+			"file": "017",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				835,
+				194,
+				13,
+				67
+			],
+			"sort_z": -36.0
+		},
+		{
+			"file": "018",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				625,
+				194,
+				13,
+				66
+			],
+			"sort_z": -36.0
+		},
+		{
+			"file": "019",
+			"glow": true,
+			"model": "shed",
+			"rect": [
+				178,
+				822,
+				65,
+				99
+			],
+			"sort_z": -4.96365928649902
+		},
+		{
+			"file": "020",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				146,
+				1002,
+				12,
+				67
+			],
+			"sort_z": 5.5
+		},
+		{
+			"file": "021",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				345,
+				1067,
+				13,
+				66
+			],
+			"sort_z": 9.5
+		},
+		{
+			"file": "022",
+			"model": "pine",
+			"rect": [
+				307,
+				15,
+				72,
+				146
+			],
+			"sort_z": -40.2245941162109
+		},
+		{
+			"file": "023",
+			"model": "pine",
+			"rect": [
+				5,
+				80,
+				81,
+				165
+			],
+			"sort_z": -34.9917602539062
+		},
+		{
+			"file": "024",
+			"model": "pine",
+			"rect": [
+				75,
+				45,
+				74,
+				151
+			],
+			"sort_z": -37.7582015991211
+		},
+		{
+			"file": "025",
+			"model": "pine",
+			"rect": [
+				250,
+				158,
+				60,
+				126
+			],
+			"sort_z": -32.4243850708008
+		},
+		{
+			"file": "026",
+			"model": "pine",
+			"rect": [
+				0,
+				48,
+				38,
+				117
+			],
+			"sort_z": -39.3815879821777
+		},
+		{
+			"file": "027",
+			"model": "pine",
+			"rect": [
+				223,
+				0,
+				75,
+				103
+			],
+			"sort_z": -43.8646965026855
+		},
+		{
+			"file": "028",
+			"model": "pine",
+			"rect": [
+				163,
+				158,
+				61,
+				119
+			],
+			"sort_z": -32.4637298583984
+		},
+		{
+			"file": "029",
+			"model": "pine",
+			"rect": [
+				253,
+				0,
+				86,
+				78
+			],
+			"sort_z": -45.3023567199707
+		},
+		{
+			"file": "030",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				602,
+				996,
+				12,
+				65
+			],
+			"sort_z": 8.0
+		},
+		{
+			"file": "031",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				921,
+				995,
+				13,
+				66
+			],
+			"sort_z": 8.0
+		},
+		{
+			"file": "032",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				602,
+				740,
+				12,
+				65
+			],
+			"sort_z": -8.0
+		},
+		{
+			"file": "033",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				857,
+				819,
+				13,
+				66
+			],
+			"sort_z": -3.0
+		},
+		{
+			"file": "034",
+			"model": "pine",
+			"rect": [
+				555,
+				749,
+				40,
+				81
+			],
+			"sort_z": -6.06486892700195
+		},
+		{
+			"file": "035",
+			"model": "pine",
+			"rect": [
+				986,
+				941,
+				41,
+				79
+			],
+			"sort_z": 5.93496465682983
+		},
+		{
+			"file": "036",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				810,
+				618,
+				12,
+				67
+			],
+			"sort_z": -12.5
+		},
+		{
+			"file": "037",
+			"glow": true,
+			"model": "lantern_post",
+			"rect": [
+				410,
+				618,
+				12,
+				67
+			],
+			"sort_z": -12.5
+		},
+		{
+			"file": "038",
+			"model": "pine",
+			"rect": [
+				372,
+				380,
+				54,
+				119
+			],
+			"sort_z": -24.9782638549805
+		},
+		{
+			"file": "039",
+			"model": "pine",
+			"rect": [
+				744,
+				382,
+				51,
+				102
+			],
+			"sort_z": -25.4223442077637
+		},
+		{
+			"file": "040",
+			"model": "pine",
+			"rect": [
+				537,
+				1060,
+				55,
+				115
+			],
+			"sort_z": 13.0928974151611
+		},
+		{
+			"file": "041",
+			"model": "pine",
+			"rect": [
+				992,
+				1057,
+				67,
+				135
+			],
+			"sort_z": 14.0997714996338
+		}
+	],
+	"people": [
+		{
+			"accent": "d9b366ff",
+			"coat": "663833ff",
+			"dialogue_id": "anjabi/tavern_keeper",
+			"hood": false,
+			"look": {
+				"apron": true,
+				"hair": "short",
+				"hair_color": "594d45ff",
+				"satchel": false
+			},
+			"name": "Tavern keeper",
+			"points": [
+				[
+					-7.19999980926514,
+					3.0,
+					-12.1999998092651
+				]
+			],
+			"sheet": "person_00",
+			"skin": "996e54ff",
+			"yaw": 180.0
+		}
+	],
+	"sea": -7.0,
+	"spawns": {
+		"default": [
+			2.0,
+			0.0500000007450581,
+			5.0
+		],
+		"mine": [
+			-34.0,
+			-2.95000004768372,
+			2.0
+		]
+	},
+	"v0": -58.0,
+	"width": 1472,
+	"x0": -46.0,
+	"z0": -46.0
+}
+
+==============================================================================
+== art/shaders/handheld_grade.gdshader
+==============================================================================
+shader_type canvas_item;
+// The handheld look (ArtStyle.handheld): applied to the low-resolution 3D image as it
+// is scaled to the screen. One texture read per pixel, nothing else.
+//   1. Colour grade in the spirit of 1970s-80s space opera film: shadows pushed toward
+//      teal, highlights toward warm sand, blacks slightly lifted and faded, a little
+//      extra saturation in the mid-tones.
+//   2. 15-bit colour (32 levels per channel, as on the DS) with a 4x4 ordered dither,
+//      applied per source pixel so the dither pattern is as chunky as the pixels.
+//   3. A soft vignette.
+
+uniform vec3 shadow_tint : source_color = vec3(0.30, 0.47, 0.52);
+uniform vec3 highlight_tint : source_color = vec3(1.0, 0.86, 0.66);
+uniform float split = 0.22;
+uniform float lift = 0.035;
+uniform float fade = 0.06;
+uniform float saturation = 1.12;
+uniform float contrast = 1.06;
+uniform float levels = 32.0;
+uniform float dither = 1.0;
+uniform float vignette = 0.28;
+
+float bayer(vec2 p) {
+	int x = int(mod(p.x, 4.0));
+	int y = int(mod(p.y, 4.0));
+	int m[16] = int[16](0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5);
+	return float(m[y * 4 + x]) / 16.0 - 0.5;
+}
+
+void fragment() {
+	vec3 c = texture(TEXTURE, UV).rgb;
+	float l = dot(c, vec3(0.299, 0.587, 0.114));
+	// split toning by luminance
+	vec3 tone = mix(shadow_tint, highlight_tint, smoothstep(0.08, 0.7, l));
+	c = mix(c, c * tone * 1.25, split);
+	// saturation and contrast around mid-grey
+	c = mix(vec3(l), c, saturation);
+	c = (c - 0.5) * contrast + 0.5;
+	// lifted, faded blacks with a warm-brown cast
+	c = c * (1.0 - fade) + vec3(lift * 1.1, lift, lift * 0.95);
+	// 15-bit colour with ordered dither, in source pixels
+	vec2 src = floor(UV / TEXTURE_PIXEL_SIZE);
+	c += bayer(src) * dither / levels;
+	c = floor(clamp(c, 0.0, 1.0) * (levels - 1.0) + 0.5) / (levels - 1.0);
+	// vignette
+	vec2 q = UV - 0.5;
+	c *= 1.0 - dot(q, q) * vignette * 1.6;
+	COLOR = vec4(c, 1.0);
+}
 
 
 ==============================================================================
@@ -664,6 +1402,8 @@ var _elbow_r: Node3D
 var _neck: Node3D
 var _head_parts: Node3D
 var _run := 0.0
+## Hip height; shorter for the chibi proportions of ArtStyle.handheld.
+var _hip_h := 0.82
 var _phase := 0.0
 var _amount := 0.0
 var _speed := 0.0
@@ -677,7 +1417,8 @@ func _ready() -> void:
 	var boot_m := _mat(Color(0.1, 0.09, 0.09), 0.6)
 	var accent_m := _mat(accent, 0.6, 0.3)
 	_hips = Node3D.new()
-	_hips.position.y = 0.82
+	_hip_h = 0.82 * (ArtStyle.LEGS if ArtStyle.handheld else 1.0)
+	_hips.position.y = _hip_h
 	add_child(_hips)
 	_leg_l = _limb(_hips, Vector3(-0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
 	_leg_r = _limb(_hips, Vector3(0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
@@ -764,6 +1505,19 @@ func _ready() -> void:
 	_knee_r = _leg_r.get_node("Lower")
 	_elbow_l = _arm_l.get_node("Lower")
 	_elbow_r = _arm_r.get_node("Lower")
+	# animate only while on screen
+	var vis := VisibleOnScreenNotifier3D.new()
+	vis.aabb = AABB(Vector3(-0.6, 0, -0.6), Vector3(1.2, 2.2, 1.2))
+	vis.screen_entered.connect(func() -> void: set_process(true))
+	vis.screen_exited.connect(func() -> void: set_process(false))
+	add_child(vis)
+	if ArtStyle.handheld:
+		scale = Vector3.ONE * ArtStyle.FIGURE_SCALE
+		_neck.scale = Vector3.ONE * ArtStyle.HEAD
+		for leg: Node3D in [_leg_l, _leg_r]:
+			leg.scale = Vector3(1.1, ArtStyle.LEGS, 1.1)
+		for arm: Node3D in [_arm_l, _arm_r]:
+			arm.scale = Vector3(1.05, ArtStyle.ARMS, 1.05)
 	for pivot: Node3D in [_torso, _head_parts, _leg_l, _leg_r, _arm_l, _arm_r, _knee_l, _knee_r, _elbow_l, _elbow_r]:
 		_merge(pivot)
 
@@ -984,7 +1738,7 @@ func _process(delta: float) -> void:
 	_elbow_r.rotation.x = bend + maxf(sw, 0.0) * 0.3 * a
 	# body
 	var breathe := sin(_t * 2.0) * 0.012 * idle
-	_hips.position.y = 0.82 + absf(cw) * lerpf(0.035, 0.075, _run) * a - 0.03 * _run * a
+	_hips.position.y = _hip_h + absf(cw) * lerpf(0.035, 0.075, _run) * a - 0.03 * _run * a
 	_hips.rotation.z = sw * 0.03 * a
 	var lean := lerpf(0.06, 0.26, _run) * a
 	var twist := sw * lerpf(0.07, 0.17, _run) * a
@@ -1372,17 +2126,21 @@ func _buffer(at: Vector2, out: Vector2) -> void:
 ==============================================================================
 class_name Rain
 extends Control
-## PROVISIONAL ART. Screen-space rain streaks.
+## PROVISIONAL ART. Screen-space precipitation for 2D maps: rain streaks, or slow snow.
+## EnvironmentController2D sets the amounts through set_precipitation(rain, snow).
 
-@export var count := 110
+@export var count := 220
 @export var fall := Vector2(-70.0, 330.0)
 @export var streak := 0.035
 
+var rain := 0.5
+var snow := 0.0
 var _pos := PackedVector2Array()
 var _speed := PackedFloat32Array()
 
 
 func _ready() -> void:
+	add_to_group(&"precipitation")
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 1
 	for i in count:
@@ -1390,10 +2148,27 @@ func _ready() -> void:
 		_speed.append(rng.randf_range(0.75, 1.25))
 
 
+func set_precipitation(r: float, s: float) -> void:
+	rain = r
+	snow = s
+
+
+func clear_particles() -> void:
+	pass
+
+
 func _process(delta: float) -> void:
+	if not is_visible_in_tree() or (rain <= 0.02 and snow <= 0.02):
+		if not _pos.is_empty():
+			queue_redraw()
+		return
 	var s := size
+	var snowing := snow > rain
 	for i in _pos.size():
-		var p := _pos[i] + fall * _speed[i] * delta
+		var v := fall * _speed[i]
+		if snowing:
+			v = Vector2(-12.0 + sin(Time.get_ticks_msec() * 0.001 + i) * 10.0, 28.0) * _speed[i]
+		var p := _pos[i] + v * delta
 		if p.y > s.y:
 			p.y -= s.y + 10.0
 			p.x += 40.0
@@ -1406,8 +2181,17 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-	for i in _pos.size():
-		draw_line(_pos[i], _pos[i] + fall * _speed[i] * streak, Color(0.75, 0.84, 0.92, 0.22), 1.0)
+	if rain <= 0.02 and snow <= 0.02:
+		return
+	if snow > rain:
+		var n := int(_pos.size() * clampf(snow, 0.0, 1.0))
+		for i in n:
+			draw_rect(Rect2(_pos[i].round(), Vector2(1, 1)), Color(0.95, 0.97, 1.0, 0.85))
+		return
+	var k := int(_pos.size() * clampf(rain, 0.0, 1.0))
+	for i in k:
+		var p := _pos[i]
+		draw_line(p, p - fall * _speed[i] * streak, Color(0.75, 0.82, 0.92, 0.3), 1.0)
 
 
 ==============================================================================
@@ -1426,7 +2210,8 @@ var _snow: GPUParticles3D
 
 func _init() -> void:
 	add_to_group(&"precipitation")
-	amount = 1600
+	# the handheld view is smaller and low-res: fewer streaks read the same
+	amount = 900 if ArtStyle.handheld else 1600
 	lifetime = 0.9
 	preprocess = 1.0
 	local_coords = false
@@ -1483,7 +2268,7 @@ static func _level(p: GPUParticles3D, level: float) -> void:
 ## Droplets bursting on the ground around the player.
 static func _splashes() -> GPUParticles3D:
 	var p := GPUParticles3D.new()
-	p.amount = 460
+	p.amount = 240 if ArtStyle.handheld else 460
 	p.lifetime = 0.35
 	p.local_coords = false
 	p.position = Vector3(0, -11.9, 0)
@@ -1514,7 +2299,7 @@ static func _splashes() -> GPUParticles3D:
 ## Slow drifting flakes.
 static func _snowfall() -> GPUParticles3D:
 	var p := GPUParticles3D.new()
-	p.amount = 700
+	p.amount = 420 if ArtStyle.handheld else 700
 	p.lifetime = 7.0
 	p.preprocess = 7.0
 	p.local_coords = false
@@ -1556,6 +2341,31 @@ static func _snowfall() -> GPUParticles3D:
 	q.material = m
 	p.draw_pass_1 = q
 	return p
+
+
+==============================================================================
+== core/art_style.gd
+==============================================================================
+class_name ArtStyle
+## One switch for the HeartGold-style look test (PROJECT_LOG entry 17). With `handheld`
+## on, the 3D world renders at the 480x270 base resolution and is scaled up with sharp
+## pixels, the camera is steeper and closer, people have chibi proportions and paving
+## is chunkier. Set it false to get the previous look back; nothing else changes.
+
+static var handheld := true
+
+## Camera (FollowCamera reads these when handheld is on).
+const CAM_PITCH := 52.0
+const CAM_DISTANCE := 27.0
+const CAM_FOV := 30.0
+## People drawn larger than life against the buildings, as handheld RPGs do.
+const FIGURE_SCALE := 1.25
+## Figure proportions: head size, leg length, arm length.
+const HEAD := 1.38
+const LEGS := 0.78
+const ARMS := 0.88
+## Cobble size on wet_ground (metres).
+const STONE := 0.45
 
 
 ==============================================================================
@@ -3249,6 +4059,22 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ==============================================================================
+== data/dialogue/anjabi/shop_shelves.json
+==============================================================================
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "Shelves of stock, stacked and labelled."],
+				["", "[PLACEHOLDER: what the shop sells, and its keeper, come from the director.]"]
+			]
+		}
+	}
+}
+
+
+==============================================================================
 == data/dialogue/anjabi/tavern_keeper.json
 ==============================================================================
 {
@@ -3399,6 +4225,7 @@ func _ready() -> void:
 	title.new_game_requested.connect(_on_new_game)
 	title.load_requested.connect(_on_load)
 	title.quit_requested.connect(_on_quit)
+	title.prototype_requested.connect(_on_prototype)
 	var top := CanvasLayer.new()
 	top.layer = 100
 	add_child(top)
@@ -3490,6 +4317,17 @@ func _on_continue() -> void:
 		_enter_game()
 	else:
 		_start("load:auto", {})
+	await _fade(0.0)
+	_busy = false
+
+
+## The Golden Sun-style 2D test area: a fresh game started on the 2D Steps.
+func _on_prototype() -> void:
+	if _busy:
+		return
+	_busy = true
+	await _fade(1.0)
+	_start("proto2d", {})
 	await _fade(0.0)
 	_busy = false
 
@@ -3636,6 +4474,10 @@ var _flash := 0.0
 var _lamp_lights: Array[Light3D] = []
 var _lamp_level := -1.0
 var _lamp_scan := 0.0
+## Seconds between lighting updates (the clock moves one game minute per second).
+const APPLY_EVERY := 0.1
+var _tick := 0.0
+var _precip: Array[Node] = []
 
 
 func _init() -> void:
@@ -3688,6 +4530,11 @@ func _process(delta: float) -> void:
 	var snowing := float(p["snow"]) > 0.0
 	w["cover"] = move_toward(w["cover"], 1.0 if snowing else 0.0, delta / (45.0 if snowing else 60.0))
 	_flash = move_toward(_flash, 0.0, delta * 4.0)
+	# the light drifts slowly; ten updates a second are plenty unless lightning flashes
+	_tick -= delta
+	if _tick > 0.0 and _flash <= 0.0:
+		return
+	_tick = APPLY_EVERY
 	_lamp_scan -= delta
 	if _lamp_scan <= 0.0:
 		_lamp_scan = 2.0
@@ -3714,12 +4561,14 @@ func _apply() -> void:
 	env.background_color = bg.lightened(flash * 0.5)
 	var amb := ambient.sample(t).lerp(Color(0.7, 0.8, 1.0), float(w["snow"]) * 0.3)
 	env.ambient_light_color = amb
-	env.ambient_light_energy = ambient_energy.sample(t) * (1.0 - cloud * 0.25 * day) + flash * 1.2
-	env.tonemap_exposure = exposure.sample(t)
-	env.adjustment_saturation = 1.18 - cloud * 0.3 * day
+	# the handheld style reads brighter and cleaner by day; nights stay moody
+	var hh := day if ArtStyle.handheld else 0.0
+	env.ambient_light_energy = ambient_energy.sample(t) * (1.0 - cloud * 0.25 * day) * (1.0 + 0.2 * hh) + flash * 1.2
+	env.tonemap_exposure = exposure.sample(t) * (1.0 + 0.12 * hh)
+	env.adjustment_saturation = 1.18 - cloud * 0.3 * day + 0.08 * hh
 	var fog_grey := fog_color.sample(t).get_luminance() * (1.0 - cloud * 0.35)
 	env.fog_light_color = fog_color.sample(t).lerp(Color(fog_grey, fog_grey * 1.03, fog_grey * 1.08), cloud * 0.85)
-	env.fog_density = 0.002 + float(w["rain"]) * 0.007 * (1.0 - 0.4 * float(w["fog"])) + float(w["fog"]) * 0.0065 + float(w["snow"]) * 0.003
+	env.fog_density = (1.0 - 0.45 * hh) * 0.002 + (1.0 - 0.3 * hh) * float(w["rain"]) * 0.007 * (1.0 - 0.4 * float(w["fog"])) + float(w["fog"]) * 0.0065 + float(w["snow"]) * 0.003
 
 	var is_day := t > SUNRISE and t < SUNSET
 	if is_day:
@@ -3738,8 +4587,9 @@ func _apply() -> void:
 	_set_lamps(maxf(lamps.sample(t), cloud * 0.6 * day))
 	RenderingServer.global_shader_parameter_set(&"weather_wet", float(w["wet"]))
 	RenderingServer.global_shader_parameter_set(&"weather_snow", float(w["cover"]))
-	for n in get_tree().get_nodes_in_group(&"precipitation"):
-		n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
+	for n in _precip:
+		if is_instance_valid(n):
+			n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
 
 
 func _apply_indoor() -> void:
@@ -3762,6 +4612,7 @@ func _apply_indoor() -> void:
 func _collect_lamps() -> void:
 	if not is_inside_tree():
 		return
+	_precip = get_tree().get_nodes_in_group(&"precipitation")
 	var found: Array[Light3D] = []
 	for n in get_tree().get_nodes_in_group(&"lamp_lights"):
 		found.append(n as Light3D)
@@ -3840,6 +4691,10 @@ extends Node
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
 	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
+	# interiors (InteriorMap3D)
+	"anjabi_shop": "res://maps/anjabi/interiors/shop.tscn",
+	# Golden Sun-style 2D prototype baked from the 3D district (tools/bake_2d.gd)
+	"anjabi_steps_2d": "res://maps/anjabi/steps_2d.tscn",
 }
 const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
@@ -3857,14 +4712,44 @@ var boot := ""
 var profile := {}
 
 @onready var world: Node2D = $World
+## 3D maps render here: at the base resolution with sharp upscaling when
+## ArtStyle.handheld is on, otherwise straight to the screen.
+var view3d: Node
 @onready var ui: GameUi = $UI
 
 
 func _ready() -> void:
+	view3d = world
+	if ArtStyle.handheld:
+		# a 480x270 image needs far less shadow resolution and filtering
+		RenderingServer.directional_shadow_atlas_set_size(2048, true)
+		RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW)
+		RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW)
+		var layer := CanvasLayer.new()
+		layer.layer = -1
+		add_child(layer)
+		var box := SubViewportContainer.new()
+		box.stretch = true
+		box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var grade := ShaderMaterial.new()
+		grade.shader = preload("res://art/shaders/handheld_grade.gdshader")
+		box.material = grade
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(box)
+		box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var vp := SubViewport.new()
+		vp.own_world_3d = true
+		vp.audio_listener_enable_3d = true
+		box.add_child(vp)
+		view3d = vp
 	SaveManager.world = self
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
 	GameState.travel_requested.connect(_on_travel_requested)
+	$Weather/Fog.add_to_group(&"fog_overlay")
+	if boot == "proto2d":
+		new_game("anjabi_steps_2d")
+		return
 	if boot.begins_with("load:"):
 		if SaveManager.load_game(boot.trim_prefix("load:")):
 			return
@@ -3873,20 +4758,22 @@ func _ready() -> void:
 	new_game()
 
 
-func new_game() -> void:
+func new_game(start_map: String = START_MAP) -> void:
 	GameState.reset()
 	Journal.reset()
 	for k: String in profile:
 		GameState.set_flag(k, profile[k])
 	WorldTime.reset()
 	Weather.reset()
-	load_map(START_MAP, "default")
+	load_map(start_map, "default")
 	Journal.start_quest(START_QUEST)
 
 
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
+	if player is Player2D:
+		player.global_position = map.nearest_standable(player.global_position)
 	if player is Player and player.walk_mask != null:
 		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
 	player.camera.reset_smoothing()
@@ -3930,12 +4817,16 @@ func _enter_map(id: String) -> void:
 	Dialogue.cancel()
 	get_tree().paused = false
 	if map != null:
-		world.remove_child(map)
+		map.get_parent().remove_child(map)
 		map.queue_free()
 	map_id = id
 	map = (load(MAPS[id]) as PackedScene).instantiate()
-	world.add_child(map)
-	if map is GameMap3D:
+	(view3d if map is GameMap3D else world).add_child(map)
+	if map is Map2D:
+		player = Player2D.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch, map)
+	elif map is GameMap3D:
 		player = Player3D.new()
 		map.entities.add_child(player)
 		player.setup(ui.touch)
@@ -3949,6 +4840,7 @@ func _enter_map(id: String) -> void:
 	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
 	$Weather/Fog.visible = not (map is GameMap3D)
 	$Weather/Rain.visible = not (map is GameMap3D)
+	(get_node("Weather/Fog") as CanvasItem).z_index = 0
 	ui.hud.show_location(map.display_name)
 
 
@@ -4219,6 +5111,10 @@ var _lead := Vector3.ZERO
 
 
 func _ready() -> void:
+	if ArtStyle.handheld:
+		pitch_deg = ArtStyle.CAM_PITCH
+		distance = ArtStyle.CAM_DISTANCE
+		fov_deg = ArtStyle.CAM_FOV
 	top_level = true
 	if perspective:
 		projection = PROJECTION_PERSPECTIVE
@@ -4280,6 +5176,7 @@ var enabled := true
 
 
 func _ready() -> void:
+	add_to_group(&"interactables_2d")
 	collision_layer = 4
 	collision_mask = 0
 	monitoring = false
@@ -5270,6 +6167,87 @@ func spawn_position(spawn: String) -> Vector3:
 
 
 ==============================================================================
+== maps/interior_map_3d.gd
+==============================================================================
+class_name InteriorMap3D
+extends MapBuilder3D
+## Base for interiors in the Pokemon manner: a single room (or a few) entered through
+## a door on the overworld, drawn as a cut-away box under the same fixed camera, with
+## black around it. The front wall is left out so the camera sees in; a mat at the
+## front edge leads back out. Lighting is indoor (EnvironmentController.indoor_look):
+## the clock runs on, but sky, sun and weather do not reach inside.
+##
+## A subclass sets `exit_map` / `exit_spawn` (where the mat leads) and builds its room
+## in _build() with room() and the MapBuilder3D kit.
+
+## Where the exit mat leads.
+@export var exit_map := "anjabi_town"
+@export var exit_spawn := "default"
+
+
+func _ready() -> void:
+	indoor = true
+	_materials()
+	_environment()
+	_build()
+	var spawns := Node3D.new()
+	spawns.name = "Spawns"
+	add_child(spawns)
+	var m := Marker3D.new()
+	m.name = "default"
+	m.position = entry_point()
+	spawns.add_child(m)
+
+
+## Override: the room's contents.
+func _build() -> void:
+	pass
+
+
+## Override: where the player appears on entering (just inside the door).
+func entry_point() -> Vector3:
+	return Vector3(0, 0.05, 2.6)
+
+
+## A room `size` (width, height, depth) centred on the origin, floor at y = 0, door in
+## the middle of the open front (+Z). Walls are solid; the front has a low sill either
+## side of the door so the room reads as closed.
+func room(size: Vector3, floor_m: Material, wall_m: Material, door_w := 1.6) -> void:
+	var hx := size.x * 0.5
+	var hz := size.z * 0.5
+	slab(Vector3(-hx - 0.3, -0.4, -hz - 0.3), Vector3(hx + 0.3, 0.0, hz + 0.3), floor_m)
+	box(Vector3(0, size.y * 0.5, -hz - 0.15), Vector3(size.x + 0.6, size.y, 0.3), wall_m)
+	box(Vector3(-hx - 0.15, size.y * 0.5, 0), Vector3(0.3, size.y, size.z), wall_m)
+	box(Vector3(hx + 0.15, size.y * 0.5, 0), Vector3(0.3, size.y, size.z), wall_m)
+	# skirting along the walls
+	box(Vector3(0, 0.08, -hz + 0.03), Vector3(size.x, 0.16, 0.06), M.timber, false)
+	# low front sill either side of the door, and an invisible wall above it
+	var side := (size.x - door_w) * 0.5
+	for s: float in [-1.0, 1.0]:
+		var cx := s * (door_w * 0.5 + side * 0.5)
+		box(Vector3(cx, 0.25, hz + 0.15), Vector3(side, 0.5, 0.3), wall_m)
+		blocker(Vector3(cx - side * 0.5, 0, hz), Vector3(cx + side * 0.5, 3, hz + 0.3))
+	# the door mat and the way out
+	box(Vector3(0, 0.01, hz - 0.35), Vector3(door_w * 0.8, 0.02, 0.6), M.canvas, false)
+	blocker(Vector3(-door_w * 0.5, 0, hz + 0.8), Vector3(door_w * 0.5, 3, hz + 1.1))
+	var out := MapExit3D.new()
+	out.name = "ExitMat"
+	out.prompt = "Leave"
+	out.label = display_name.get_slice("·", display_name.get_slice_count("·") - 1).strip_edges().capitalize()
+	out.radius = 1.0
+	out.target_map = exit_map
+	out.target_spawn = exit_spawn
+	out.position = Vector3(0, 0.6, hz - 0.2)
+	add_child(out)
+
+
+## A hanging lamp: a small lit shade and a warm light under the ceiling.
+func ceiling_lamp(at: Vector3) -> void:
+	box(at, Vector3(0.5, 0.18, 0.5), M.lamp, false)
+	warm_light(at + Vector3(0, -0.4, 0), 2.2, 7.0)
+
+
+==============================================================================
 == maps/map_builder_3d.gd
 ==============================================================================
 class_name MapBuilder3D
@@ -5315,12 +6293,27 @@ static func detail_textures() -> Array:
 	return [_detail, _detail_n]
 
 
+static var _detail_soft: NoiseTexture2D
+
+
+## The detail noise with a narrower range, for the handheld style's flatter surfaces.
+## (The ground and sea shaders keep the full-range texture: their thresholds expect it.)
+static func soft_detail() -> NoiseTexture2D:
+	if _detail_soft == null:
+		_detail_soft = detail_textures()[0].duplicate() as NoiseTexture2D
+		var g := Gradient.new()
+		g.set_color(0, Color(0.8, 0.8, 0.8))
+		g.set_color(1, Color(1.02, 1.02, 1.02))
+		_detail_soft.color_ramp = g
+	return _detail_soft
+
+
 static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
 	var t := detail_textures()
-	m.albedo_texture = t[0]
+	m.albedo_texture = soft_detail() if ArtStyle.handheld else t[0]
 	m.normal_enabled = true
 	m.normal_texture = t[1]
-	m.normal_scale = 0.8
+	m.normal_scale = 0.8 if not ArtStyle.handheld else 0.35
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3(scale, scale, scale)
@@ -5340,6 +6333,8 @@ static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, ver
 	m.set_shader_parameter("wetness", wet)
 	m.set_shader_parameter("puddles", puddles)
 	m.set_shader_parameter("use_vertex_color", vertex_color)
+	if ArtStyle.handheld:
+		m.set_shader_parameter("stone_size", ArtStyle.STONE)
 	m.set_shader_parameter("noise_tex", detail_textures()[0])
 	return m
 
@@ -5407,7 +6402,7 @@ func _body() -> StaticBody3D:
 ## Repeated small models in BATCHED are not instanced: they are gathered and drawn as
 ## one MultiMesh per model part per 24 m cell (see _flush_batches), and model() returns null.
 func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
-	if model_name in BATCHED:
+	if model_name in BATCHED and not bake_mode:
 		var sv: Vector3 = s if s is Vector3 else Vector3(s, s, s)
 		batch(model_name, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(sv), at))
 		return null
@@ -5420,6 +6415,8 @@ func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Nod
 	return n
 
 
+## Set by tools/bake_2d.gd: every model stays a separate node so it can be rendered alone.
+static var bake_mode := false
 const BATCHED := ["pine", "lantern_post", "barrel", "planter", "crate_stack"]
 ## Models whose batches cast shadows (the rest are too small to matter).
 const BATCH_SHADOWS := ["pine", "lantern_post"]
@@ -5458,7 +6455,7 @@ func _flush_batches() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_READY:
+	if what == NOTIFICATION_READY and not bake_mode:
 		merge_static.call_deferred()
 
 
@@ -6132,6 +7129,16 @@ func _shop() -> void:
 	warm_light(c + Vector3(0, 2.0, 4.2), 1.6, 6.0)
 	for i in 3:
 		box(c + Vector3(-2.8 + i * 0.7, 0.35, 4.4), Vector3(0.6, 0.7, 0.6), M.timber, true)
+	# the shop door: the first interior (maps/anjabi/interiors/shop.tscn)
+	var door := MapExit3D.new()
+	door.name = "ShopDoor"
+	door.prompt = "Enter"
+	door.label = "Shop"
+	door.radius = 1.2
+	door.target_map = "anjabi_shop"
+	door.target_spawn = "default"
+	door.position = c + Vector3(0, 0.9, 3.4)
+	add_child(door)
 
 
 func _pod(at: Vector3, tag := "", _lit := true) -> void:
@@ -7229,6 +8236,23 @@ func _draw() -> void:
 
 
 ==============================================================================
+== maps/anjabi/steps_2d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/proto2d/map_2d.gd" id="1"]
+
+[node name="Steps2D" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_steps_2d"
+display_name = "Anjabi  ·  The Steps (2D prototype)"
+bake_dir = "res://art/baked2d/steps"
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+
+==============================================================================
 == maps/anjabi/town.gd
 ==============================================================================
 extends GameMap
@@ -7780,6 +8804,11 @@ func _spawns_and_exits() -> void:
 		if k == "default":
 			m.position = INSERT_AT + Vector3(2, 0.05, 5)
 		spawns.add_child(m)
+	# back out of the shop, on the step in front of its door
+	var shop := Marker3D.new()
+	shop.name = "shop"
+	shop.position = INSERT_AT + Vector3(15, 0.05, -0.6)
+	spawns.add_child(shop)
 	var door := Interactable3D.new()
 	door.name = "PodB17Door"
 	door.prompt = "Knock"
@@ -7930,6 +8959,538 @@ map_id = "anjabi_town"
 display_name = "ANJABI"
 
 [node name="Entities" type="Node3D" parent="."]
+
+
+==============================================================================
+== maps/anjabi/interiors/shop.gd
+==============================================================================
+extends InteriorMap3D
+## Interior of 12 Shop on the Steps (greybox landmark 12). PROVISIONAL dressing; what
+## the shop sells and who keeps it are for the director. One room, counter at the back.
+
+
+func _build() -> void:
+	room(Vector3(10, 3.2, 7), ground_mat(Color(0.36, 0.3, 0.25), 0.0, 0.2, 0.0), M.panel)
+	# counter along the back, a till on it
+	box(Vector3(1.5, 0.55, -2.2), Vector3(4.2, 1.1, 0.8), M.timber)
+	box(Vector3(2.6, 1.2, -2.2), Vector3(0.6, 0.2, 0.4), M.steel_dark, false)
+	# shelving on both side walls
+	for s: float in [-1.0, 1.0]:
+		var x := s * 4.55
+		box(Vector3(x, 1.1, -0.4), Vector3(0.7, 2.2, 4.4), M.timber)
+		for k in 3:
+			box(Vector3(x - s * 0.05, 0.45 + k * 0.7, -0.4), Vector3(0.6, 0.06, 4.2), M.steel_dark, false)
+		var shelf := Interactable3D.new()
+		shelf.prompt = "Look"
+		shelf.label = "Shelves"
+		shelf.dialogue_id = "anjabi/shop_shelves"
+		shelf.radius = 1.4
+		shelf.position = Vector3(x - s * 0.8, 0.9, -0.4)
+		add_child(shelf)
+	model("crate_stack", Vector3(-3.0, 0, -2.6), 0.3)
+	model("barrel", Vector3(-1.6, 0, -2.8))
+	model("barrel", Vector3(3.9, 0, 2.6))
+	model("planter", Vector3(-3.9, 0, 2.7))
+	# a rug in the middle
+	box(Vector3(0, 0.01, 0.4), Vector3(3.6, 0.02, 2.4), M.canvas_teal, false)
+	ceiling_lamp(Vector3(-1.5, 2.9, -0.5))
+	ceiling_lamp(Vector3(2.0, 2.9, -1.0))
+
+
+==============================================================================
+== maps/anjabi/interiors/shop.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/interiors/shop.gd" id="1"]
+
+[node name="Shop" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_shop"
+display_name = "ANJABI  ·  SHOP"
+exit_map = "anjabi_town"
+exit_spawn = "shop"
+
+[node name="Entities" type="Node3D" parent="."]
+
+
+==============================================================================
+== maps/proto2d/environment_controller_2d.gd
+==============================================================================
+class_name EnvironmentController2D
+extends EnvironmentController
+## Day, night and weather for a Map2D. Same clock, weather and gradients as the 3D
+## EnvironmentController; drawn with a CanvasModulate tint, PointLight2D lamps, the
+## baked glow layers (windows, signs) and the screen-space rain, snow and mist in
+## game/main.tscn's Weather layer.
+
+var _tint: CanvasModulate
+var _lamps2d: Array[PointLight2D] = []
+static var _lamp_tex: GradientTexture2D
+
+
+func _init() -> void:
+	super._init()
+	_tint = CanvasModulate.new()
+
+
+func _ready() -> void:
+	super._ready()
+	get_parent().add_child.call_deferred(_tint)
+
+
+func add_lamp(at: Vector2, energy: float, range_px: float) -> void:
+	if _lamp_tex == null:
+		var g := Gradient.new()
+		g.offsets = PackedFloat32Array([0.0, 0.25, 1.0])
+		g.colors = PackedColorArray([Color(1, 1, 1, 1), Color(1, 1, 1, 0.45), Color(1, 1, 1, 0)])
+		_lamp_tex = GradientTexture2D.new()
+		_lamp_tex.gradient = g
+		_lamp_tex.width = 128
+		_lamp_tex.height = 128
+		_lamp_tex.fill = GradientTexture2D.FILL_RADIAL
+		_lamp_tex.fill_from = Vector2(0.5, 0.5)
+		_lamp_tex.fill_to = Vector2(1.0, 0.5)
+	var l := PointLight2D.new()
+	l.texture = _lamp_tex
+	l.texture_scale = range_px / 64.0 * 0.9
+	l.position = at
+	l.color = Color(1.0, 0.66, 0.36)
+	l.set_meta(&"lit_energy", clampf(energy * 0.35, 0.3, 1.0))
+	l.blend_mode = Light2D.BLEND_MODE_ADD
+	get_parent().add_child.call_deferred(l)
+	_lamps2d.append(l)
+
+
+func _apply() -> void:
+	if not is_inside_tree():
+		return
+	var t := WorldTime.day_fraction()
+	var day := daylight.sample(t)
+	var cloud: float = w["cloud"]
+	var dim := 1.0 - cloud * lerpf(0.25, 0.65, day)
+	var flash := _flash * _flash
+	var sunc := sun_color.sample(t) * sun_energy.sample(t) * dim * 0.5
+	var amb := ambient.sample(t) * ambient_energy.sample(t) * 0.55
+	var c := Color(sunc.r + amb.r, sunc.g + amb.g, sunc.b + amb.b)
+	var grey := c.get_luminance()
+	c = c.lerp(Color(grey, grey * 1.02, grey * 1.08), cloud * 0.5 * day)
+	c = c.lerp(Color(0.78, 0.84, 0.95), float(w["snow"]) * 0.15)
+	c = Color(minf(c.r + flash, 1.0), minf(c.g + flash, 1.0), minf(c.b + flash, 1.0))
+	_tint.color = c
+	var lit := maxf(lamps.sample(t), cloud * 0.6 * day)
+	for l in _lamps2d:
+		l.energy = float(l.get_meta(&"lit_energy")) * lit
+		l.visible = lit > 0.02
+	# glow layers bypass the tint, so they shine against the dark
+	for n in get_tree().get_nodes_in_group(&"night_glow"):
+		(n as CanvasItem).modulate = Color(1, 1, 1, lit * 0.9)
+		(n as CanvasItem).visible = lit > 0.02
+	for n in get_tree().get_nodes_in_group(&"precipitation"):
+		n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
+	for n in get_tree().get_nodes_in_group(&"fog_overlay"):
+		var m := (n as CanvasItem).material as ShaderMaterial
+		if m != null:
+			m.set_shader_parameter("fog_amount", 0.03 + float(w["fog"]) * 0.32 + float(w["rain"]) * 0.05 + float(w["snow"]) * 0.05)
+
+
+==============================================================================
+== maps/proto2d/map_2d.gd
+==============================================================================
+class_name Map2D
+extends GameMap
+## A 2D map in the Golden Sun-style 3/4 view, built at runtime from a bake made by
+## tools/bake_2d.gd (a pre-rendered ground, y-sorted object sprites, a height grid).
+##
+## Two coordinate spaces, both in pixels (S per metre):
+##   ground (x, z): where things stand. Node positions use it, so y-sort is by z.
+##   screen (x, z - h): where they are drawn. Visuals are offset up by their height h.
+## Walking is limited by the height grid: no cell without ground, no step taller than
+## MAX_STEP between neighbours, nothing below the sea. That gives cliffs, terraces,
+## stairs and walls the way the 3D colliders defined them.
+
+const MAX_STEP := 0.35
+
+@export_dir var bake_dir := ""
+
+var S := 16
+var layout: Dictionary = {}
+var lighting: EnvironmentController2D
+var _heights: Image
+var _grid := 4
+var _x0 := 0.0
+var _z0 := 0.0
+var _sea := -1000.0
+
+
+func _ready() -> void:
+	layout = Data.load_dict(bake_dir.path_join("layout.json"))
+	S = int(layout["S"])
+	_grid = int(layout["grid"])
+	_x0 = float(layout["x0"])
+	_z0 = float(layout["z0"])
+	_sea = float(layout["sea"])
+	_heights = load(bake_dir.path_join("heights.res")) as Image
+	var v0 := float(layout["v0"])
+	var origin := Vector2(_x0 * S, v0 * S)
+	bounds = Rect2(origin, Vector2(float(layout["width"]), float(layout["height"])))
+	var bg := ColorRect.new()
+	bg.color = Color(0.05, 0.06, 0.09)
+	bg.position = origin - Vector2(400, 400)
+	bg.size = bounds.size + Vector2(800, 800)
+	bg.z_index = -20
+	add_child(bg)
+	var ground := Sprite2D.new()
+	ground.texture = load(bake_dir.path_join("ground.png"))
+	ground.centered = false
+	ground.position = origin
+	ground.z_index = -10
+	add_child(ground)
+	var gglow := bake_dir.path_join("ground_glow.png")
+	if ResourceLoader.exists(gglow):
+		add_child(_glow_sprite(load(gglow), origin, -9))
+	entities.y_sort_enabled = true
+	for o: Dictionary in layout["objects"]:
+		var r: Array = o["rect"]
+		var screen := origin + Vector2(float(r[0]), float(r[1]))
+		var node := Node2D.new()
+		node.name = "Obj_" + str(o["model"])
+		# sort by where the object stands; the sprite hangs from there to its screen spot
+		var base := Vector2(screen.x + float(r[2]) * 0.5, float(o["sort_z"]) * S)
+		node.position = base
+		var sp := Sprite2D.new()
+		sp.texture = load(bake_dir.path_join("objects/%s.png" % o["file"]))
+		sp.centered = false
+		sp.position = screen - base
+		node.add_child(sp)
+		if o.get("glow", false):
+			node.add_child(_glow_sprite(load(bake_dir.path_join("objects/%s_glow.png" % o["file"])), screen - base, 1))
+		entities.add_child(node)
+	var spawns := Node2D.new()
+	spawns.name = "Spawns"
+	add_child(spawns)
+	for k: String in layout["spawns"]:
+		var p: Array = layout["spawns"][k]
+		var m := Marker2D.new()
+		m.name = k
+		m.position = Vector2(float(p[0]), float(p[2])) * S
+		spawns.add_child(m)
+	for e: Dictionary in layout["interactables"]:
+		var it := Interactable.new()
+		it.prompt = str(e["prompt"])
+		it.label = str(e["label"])
+		it.dialogue_id = str(e["dialogue_id"])
+		it.radius = float(e["radius"]) * S
+		it.position = Vector2(float(e["x"]), float(e["z"])) * S
+		if e.has("target_map"):
+			var tm := str(e["target_map"])
+			var ts := str(e["target_spawn"])
+			it.interacted.connect(func(_by: Node2D) -> void: GameState.travel_requested.emit(tm, ts))
+		add_child(it)
+	for p: Dictionary in layout["people"]:
+		var person := Person2D.new()
+		person.sheet = load("res://art/baked2d/chars/%s.png" % p["sheet"])
+		person.map = self
+		var pts := PackedVector2Array()
+		for q: Array in p["points"]:
+			pts.append(Vector2(float(q[0]), float(q[2])) * S)
+		person.points = pts
+		var yaw := deg_to_rad(float(p["yaw"]))
+		person.facing = Vector2(-sin(yaw), -cos(yaw))
+		if str(p["dialogue_id"]) != "":
+			person.make_talkable(str(p["name"]), str(p["dialogue_id"]))
+		entities.add_child(person)
+	lighting = EnvironmentController2D.new()
+	lighting.name = "Lighting"
+	add_child(lighting)
+	for l: Dictionary in layout["lamps"]:
+		lighting.add_lamp(Vector2(float(l["x"]), float(l["z"]) - float(l["y"])) * S, float(l["energy"]), float(l["range"]) * S)
+
+
+func _glow_sprite(tex: Texture2D, at: Vector2, z: int) -> Sprite2D:
+	var g := Sprite2D.new()
+	g.texture = tex
+	g.centered = false
+	g.position = at
+	g.z_index = z
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	g.material = m
+	g.add_to_group(&"night_glow")
+	return g
+
+
+## Ground height in metres under a ground-space pixel position; -1000 off the grid.
+func height_at(p: Vector2) -> float:
+	var i := int(floor((p.x / S - _x0) * _grid))
+	var j := int(floor((p.y / S - _z0) * _grid))
+	if i < 0 or j < 0 or i >= _heights.get_width() or j >= _heights.get_height():
+		return -1000.0
+	return _heights.get_pixel(i, j).r
+
+
+func is_ground(h: float) -> bool:
+	return h > _sea + 0.5
+
+
+## True if a walker at `from` may stand at `to` (ground px). Checks the footprint.
+func can_step(from: Vector2, to: Vector2) -> bool:
+	var h0 := height_at(from)
+	for o: Vector2 in [Vector2.ZERO, Vector2(0.22, 0), Vector2(-0.22, 0), Vector2(0, 0.12), Vector2(0, -0.12)]:
+		var h := height_at(to + o * S)
+		if not is_ground(h) or absf(h - h0) > MAX_STEP:
+			return false
+	return true
+
+
+## Nearest standable point to a ground px position (spawns, loads).
+func nearest_standable(p: Vector2) -> Vector2:
+	if is_ground(height_at(p)):
+		return p
+	for r in range(1, 40):
+		for k in 16:
+			var q := p + Vector2.from_angle(TAU * k / 16.0) * r * 4.0
+			if is_ground(height_at(q)):
+				return q
+	return p
+
+
+==============================================================================
+== maps/proto2d/person_2d.gd
+==============================================================================
+class_name Person2D
+extends Node2D
+## A character in a Map2D drawn from a baked sheet (tools/bake_2d.gd): 8 directions,
+## columns idle, 8 walk frames, 8 run frames. Stands in ground space; the sprite is
+## lifted by the ground height. Optionally walks a loop of points (townsfolk) and can
+## be talked to (make_talkable).
+
+const CELL := Vector2i(32, 42)
+const FEET := 35
+
+var sheet: Texture2D
+var map: Map2D
+var points := PackedVector2Array()
+var facing := Vector2(0, 1)
+var speed := 1.1
+var interactable: Interactable
+
+var visual: Node2D
+var _sprite: Sprite2D
+var _phase := 0.0
+var _height := 0.0
+var _i := 0
+var _wait := 0.0
+
+
+func _ready() -> void:
+	visual = Node2D.new()
+	add_child(visual)
+	var shadow := Shadow.new()
+	visual.add_child(shadow)
+	_sprite = Sprite2D.new()
+	_sprite.texture = sheet
+	_sprite.hframes = 17
+	_sprite.vframes = 8
+	_sprite.centered = false
+	_sprite.offset = Vector2(-CELL.x * 0.5, -FEET)
+	visual.add_child(_sprite)
+	if not points.is_empty():
+		position = points[0]
+	_height = map.height_at(position) if map != null else 0.0
+	_wait = randf_range(0.0, 3.0)
+	show_pose(false, false, 0.0)
+
+
+func make_talkable(display_name: String, dialogue_id: String) -> void:
+	interactable = Interactable.new()
+	interactable.prompt = "Talk"
+	interactable.label = display_name
+	interactable.dialogue_id = dialogue_id
+	interactable.radius = 18.0
+	add_child(interactable)
+	interactable.interacted.connect(func(by: Node2D) -> void:
+		var d := by.position - position
+		if d.length() > 0.5:
+			facing = d.normalized()
+			show_pose(false, false, 0.0))
+
+
+## Pick the frame for the facing and gait; delta advances the cycle.
+func show_pose(moving: bool, running: bool, delta: float) -> void:
+	var d := posmod(roundi(facing.angle() / (TAU / 8.0)), 8)
+	var col := 0
+	if moving:
+		_phase += delta * (14.5 if running else 10.0)
+		var f := posmod(int(floor(_phase / (TAU / 8.0))), 8)
+		col = (9 if running else 1) + f
+	else:
+		_phase = 0.0
+	_sprite.frame = d * 17 + col
+
+
+func _process(delta: float) -> void:
+	if map != null:
+		var h := map.height_at(position)
+		if map.is_ground(h):
+			_height = lerpf(_height, h, 1.0 - exp(-20.0 * delta))
+	visual.position = Vector2(0, -roundf(_height * map.S)) if map != null else Vector2.ZERO
+	if points.size() < 2 or Dialogue.active:
+		return
+	if _wait > 0.0:
+		_wait -= delta
+		show_pose(false, false, delta)
+		return
+	var target := points[(_i + 1) % points.size()]
+	var to := target - position
+	if to.length() < 1.0:
+		_i = (_i + 1) % points.size()
+		_wait = randf_range(1.5, 5.0)
+		return
+	facing = to.normalized()
+	position += facing * minf(speed * map.S * delta, to.length())
+	show_pose(true, false, delta)
+
+
+## Soft oval under the feet.
+class Shadow:
+	extends Node2D
+
+	func _draw() -> void:
+		draw_set_transform(Vector2(0, -1), 0.0, Vector2(1.0, 0.42))
+		draw_circle(Vector2.ZERO, 7.0, Color(0.02, 0.02, 0.05, 0.35))
+		draw_circle(Vector2.ZERO, 5.0, Color(0.02, 0.02, 0.05, 0.25))
+
+
+==============================================================================
+== maps/proto2d/player_2d.gd
+==============================================================================
+class_name Player2D
+extends Person2D
+## The player on a Map2D. Same outward interface as Player and Player3D (target,
+## facing, try_interact, setup, camera, sprinting) so main, HUD and saves drive it alike.
+## Moves in ground space, blocked by the map's height grid; slides along edges.
+
+signal target_changed(target: Interactable)
+
+@export var walk_speed := 4.2
+@export var run_speed := 7.4
+## Camera zoom: 2 shows about 15 x 8 m, close to a handheld screen.
+@export var zoom := 2.0
+
+var touch: TouchControls
+var target: Interactable
+var sprinting := false
+var camera: Camera2D
+var _vel := Vector2.ZERO
+var _cam_pos := Vector2.ZERO
+
+
+func _init() -> void:
+	sheet = load("res://art/baked2d/chars/player.png")
+
+
+func setup(touch_controls: TouchControls, m: Map2D) -> void:
+	touch = touch_controls
+	map = m
+	camera = Camera2D.new()
+	camera.zoom = Vector2(zoom, zoom)
+	camera.top_level = true
+	camera.limit_left = int(m.bounds.position.x)
+	camera.limit_top = int(m.bounds.position.y)
+	camera.limit_right = int(m.bounds.end.x)
+	camera.limit_bottom = int(m.bounds.end.y)
+	add_child(camera)
+	camera.make_current()
+	_height = m.height_at(position)
+	_cam_pos = _screen()
+	camera.position = _cam_pos
+
+
+func _physics_process(delta: float) -> void:
+	if map == null:
+		return
+	var dir := Vector2.ZERO
+	if not Dialogue.active:
+		dir = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+		if dir == Vector2.ZERO and touch != null:
+			dir = touch.vector
+	var moving := dir.length() > 0.1
+	sprinting = moving and (Input.is_action_pressed(&"sprint") or (touch != null and touch.sprint))
+	var top := (run_speed if sprinting else walk_speed) * map.S
+	var want := dir.limit_length(1.0) * top if moving else Vector2.ZERO
+	_vel = _vel.move_toward(want, (28.0 if moving else 36.0) * map.S * delta)
+	var step := _vel * delta
+	if step != Vector2.ZERO:
+		var to := position + step
+		if map.can_step(position, to):
+			position = to
+		elif step.x != 0.0 and map.can_step(position, position + Vector2(step.x, 0)):
+			position.x += step.x
+			_vel.y = 0.0
+		elif step.y != 0.0 and map.can_step(position, position + Vector2(0, step.y)):
+			position.y += step.y
+			_vel.x = 0.0
+		else:
+			_vel = Vector2.ZERO
+	if moving:
+		facing = dir.normalized()
+	show_pose(_vel.length() > 0.3 * map.S, _vel.length() > walk_speed * 1.25 * map.S, delta * _vel.length() / (walk_speed * map.S) if _vel.length() < walk_speed * 1.25 * map.S else delta)
+	_update_target()
+
+
+func _process(delta: float) -> void:
+	if map == null:
+		return
+	var h := map.height_at(position)
+	if map.is_ground(h):
+		_height = lerpf(_height, h, 1.0 - exp(-20.0 * delta))
+	visual.position = Vector2(0, -roundf(_height * map.S))
+	if camera == null:
+		return
+	var want := _screen()
+	if _cam_pos.distance_to(want) > 120.0:
+		_cam_pos = want
+	_cam_pos = _cam_pos.lerp(want, 1.0 - exp(-8.0 * delta))
+	# whole art pixels only, so the pixel art never shimmers
+	camera.position = _cam_pos.round()
+
+
+func _screen() -> Vector2:
+	return position + Vector2(0, -_height * map.S - 12.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"interact") and try_interact():
+		get_viewport().set_input_as_handled()
+
+
+func try_interact() -> bool:
+	if Dialogue.active or target == null or not target.is_available():
+		return false
+	target.interact(self)
+	return true
+
+
+func face_now() -> void:
+	show_pose(false, false, 0.0)
+
+
+func _update_target() -> void:
+	var best: Interactable = null
+	var best_d := INF
+	for n in get_tree().get_nodes_in_group(&"interactables_2d"):
+		var it := n as Interactable
+		if it == null or not it.is_available() or not it.is_inside_tree():
+			continue
+		var d := position.distance_to(it.global_position)
+		if d < it.radius + 14.0 and d < best_d:
+			best_d = d
+			best = it
+	if best != target:
+		target = best
+		target_changed.emit(target)
 
 
 ==============================================================================
@@ -8215,10 +9776,13 @@ extends Node
 ## at representative spots. A desktop proxy only; it is not an iPhone measurement.
 ##   Godot --path . res://tests/perf_probe.tscn
 
-const O := Vector3(101.52, 0, 45.72)
+const O := preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 
 
 func _ready() -> void:
+	# measure real frame cost: no vsync (Settings would otherwise turn it back on)
+	Settings.vsync = false
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	SaveManager.autosave_enabled = false
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
@@ -8351,6 +9915,66 @@ script = ExtResource("1")
 
 
 ==============================================================================
+== tests/screenshot_2d.gd
+==============================================================================
+extends Node
+## Windowed shots of the 2D prototype (the Steps baked to 2D) at several times and
+## weathers, plus walking and running.  Godot --path . res://tests/screenshot_2d.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	main.set("boot", "proto2d")
+	add_child(main)
+	WorldTime.minutes_per_second = 0.0
+	await get_tree().create_timer(1.0).timeout
+	var p: Player2D = main.get("player")
+	var S := 16.0
+	var looks := [["p2d_01_steps_day", Vector2(2, 5), 13, "clear"], ["p2d_02_terrace_golden", Vector2(-6, -12), 18, "clear"],
+		["p2d_03_steps_night_rain", Vector2(2, 5), 22, "rain"], ["p2d_04_pods_morning", Vector2(4, -34), 9, "cloudy"],
+		["p2d_05_mine_fog", Vector2(-30, 2), 8, "fog"], ["p2d_06_steps_snow", Vector2(4, 2), 21, "snow"]]
+	for l: Array in looks:
+		WorldTime.set_time(l[2], 0)
+		Weather.set_weather(l[3])
+		for n in get_tree().get_nodes_in_group(&"environment_controller"):
+			n.call(&"snap")
+		p.position = main.get("map").call("nearest_standable", (l[1] as Vector2) * S)
+		await get_tree().create_timer(1.0).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(str(l[0]) + ".png"))
+	WorldTime.set_time(16, 0)
+	Weather.set_weather("clear")
+	p.position = Vector2(-4, 6) * S
+	await get_tree().create_timer(0.5).timeout
+	Input.action_press(&"move_right")
+	await get_tree().create_timer(0.5).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("p2d_07_walk.png"))
+	Input.action_press(&"sprint")
+	await get_tree().create_timer(0.5).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("p2d_08_run.png"))
+	Input.action_release(&"move_right")
+	Input.action_release(&"sprint")
+	get_tree().quit()
+
+
+==============================================================================
+== tests/screenshot_2d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_2d.gd" id="1"]
+
+[node name="Screenshot3D" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
 == tests/screenshot_3d.gd
 ==============================================================================
 extends Node
@@ -8371,7 +9995,7 @@ func _ready() -> void:
 	WorldTime.set_time(21, 30)
 	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
-	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
+	var o: Vector3 = preload("res://maps/anjabi/town_3d.gd").INSERT_AT  # the Steps insert in the town
 	var shots := {
 		"3d_01_steps": o + Vector3(2, 0.05, 5),
 		"3d_02_tavern": o + Vector3(-6, 3.05, -11.5),
@@ -8456,6 +10080,47 @@ script = ExtResource("1")
 
 
 ==============================================================================
+== tests/screenshot_interior.gd
+==============================================================================
+extends Node
+## Windowed shots of the interiors.  Godot --path . res://tests/screenshot_interior.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	add_child(main)
+	WorldTime.minutes_per_second = 0.0
+	await get_tree().create_timer(1.0).timeout
+	for t: Array in [["int_01_shop_day", 13], ["int_02_shop_night", 22]]:
+		WorldTime.set_time(t[1], 0)
+		main.call("load_map", "anjabi_shop", "default")
+		await get_tree().create_timer(1.2).timeout
+		await RenderingServer.frame_post_draw
+		get_viewport().get_texture().get_image().save_png(dir.path_join(str(t[0]) + ".png"))
+	WorldTime.set_time(13, 0)
+	main.call("load_map", "anjabi_town", "shop")
+	await get_tree().create_timer(1.2).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join("int_03_shop_door.png"))
+	get_tree().quit()
+
+
+==============================================================================
+== tests/screenshot_interior.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_interior.gd" id="1"]
+
+[node name="Screenshot3D" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
 == tests/screenshot_time.gd
 ==============================================================================
 extends Node
@@ -8473,7 +10138,7 @@ func _ready() -> void:
 	add_child(main)
 	WorldTime.minutes_per_second = 0.0
 	await get_tree().create_timer(1.0).timeout
-	var o := Vector3(101.52, 0, 45.72)
+	var o: Vector3 = preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 	var p: Player3D = main.get("player")
 	var looks := [
 		["t_01_dawn_clear", 5, 50, "clear"], ["t_02_morning_clear", 9, 0, "clear"], ["t_03_midday_clear", 13, 0, "clear"],
@@ -8643,6 +10308,8 @@ func _ready() -> void:
 	await _run()
 	await _town()
 	await _world()
+	await _interiors()
+	await _proto2d()
 	SaveManager.delete_save("test")
 	print("\n%d checks, %d failed" % [_checks, _fails])
 	get_tree().quit(1 if _fails > 0 else 0)
@@ -8894,7 +10561,7 @@ func _town() -> void:
 
 
 ## The Steps: the detailed insert (plaza, stairs, tavern terrace) inside the town map.
-const O := Vector3(101.52, 0, 45.72)
+const O := preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 
 
 func _district() -> void:
@@ -9231,7 +10898,7 @@ func _world() -> void:
 	check(float(ctl.w["rain"]) > 0.0 and float(ctl.w["rain"]) < 0.5, "weather blends in gradually (rain %.2f after 5 frames)" % float(ctl.w["rain"]))
 	ctl.snap()
 	check(is_equal_approx(float(ctl.w["rain"]), 1.0) and ctl.sun.light_energy < clear_sun * 0.6, "heavy rain darkens the day")
-	var rain: Rain3D = get_tree().get_nodes_in_group(&"precipitation")[0]
+	var rain: Rain3D = get_tree().get_nodes_in_group(&"precipitation").filter(func(n: Node) -> bool: return n is Rain3D)[0]
 	check(rain.emitting, "rain falls")
 	Weather.set_weather("snow")
 	ctl.snap()
@@ -9294,6 +10961,108 @@ func _world() -> void:
 	WorldTime.minutes_per_second = 1.0
 
 
+## The Golden Sun-style 2D prototype (maps/anjabi/steps_2d.tscn, baked by tools/bake_2d.gd).
+func _proto2d() -> void:
+	main.call("new_game", "anjabi_steps_2d")
+	await _frames(5)
+	WorldTime.minutes_per_second = 0.0
+	var map: Map2D = main.get("map")
+	player = main.get("player")
+	check(map is Map2D and player is Player2D and str(main.get("map_id")) == "anjabi_steps_2d", "the 2D prototype loads as a 2D map with a 2D player")
+	var S := float(map.S)
+	check(absf(map.height_at(Vector2(2, 5) * S)) < 0.2 and absf(map.height_at(Vector2(-6, -15) * S) - 3.0) < 0.2, "the baked heights put the plaza at 0 m and the terrace at 3 m")
+	check(map.entities.get_child_count() > 30, "buildings, lamps and trees are y-sorted sprites (%d)" % map.entities.get_child_count())
+	player.position = Vector2(2, 5) * S
+	await _frames(2)
+	var x0: float = player.position.x
+	Input.action_press(&"move_right")
+	await _frames(30)
+	Input.action_release(&"move_right")
+	check(player.position.x - x0 > 20.0, "the player walks on the plaza")
+	# the terrace wall: walking north from the plaza beside the stairs is blocked
+	player.position = Vector2(-6, -8) * S
+	await _frames(2)
+	Input.action_press(&"move_up")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	check(player.position.y > -10.5 * S and absf(map.height_at(player.position)) < 0.3, "the terrace wall stops the player (y = %.1f m)" % (player.position.y / S))
+	# the stairs climb to the terrace
+	player.position = Vector2(0, -3.5) * S
+	await _frames(2)
+	Input.action_press(&"move_up")
+	await _frames(90)
+	Input.action_release(&"move_up")
+	check(map.height_at(player.position) > 2.8, "the stairs lead up to the terrace (h = %.2f m)" % map.height_at(player.position))
+	var keeper: Person2D = null
+	for n in map.entities.get_children():
+		if n is Person2D and not n is Player2D and (n as Person2D).interactable != null:
+			keeper = n
+	check(keeper != null, "the tavern keeper stands on the terrace")
+	player.position = keeper.position + Vector2(0, 14)
+	await _frames(4)
+	check(player.target == keeper.interactable and player.try_interact() and Dialogue.active, "walking up to the keeper offers Talk, and talking opens the dialogue")
+	Dialogue.cancel()
+	await _frames(2)
+	# lighting follows the clock
+	var tint: CanvasModulate = map.find_children("*", "CanvasModulate", true, false)[0]
+	Weather.set_weather("clear")
+	WorldTime.set_time(13, 0)
+	await _frames(2)
+	var day := tint.color.get_luminance()
+	WorldTime.set_time(23, 0)
+	await _frames(2)
+	check(tint.color.get_luminance() < day * 0.6 and tint.color.b > tint.color.r, "night tints the 2D map dark blue")
+	# save and load in 2D
+	var at: Vector2 = player.position
+	check(SaveManager.save_game("test"), "save in the 2D prototype")
+	main.call("new_game")
+	await _frames(3)
+	check(SaveManager.load_game("test"), "load the 2D prototype")
+	await _frames(3)
+	player = main.get("player")
+	check(player is Player2D and player.position.distance_to(at) < 2.0, "load restores the 2D map and position")
+	WorldTime.minutes_per_second = 1.0
+
+
+## Pokemon-style interiors: the shop door on the Steps leads into a room and back.
+func _interiors() -> void:
+	main.call("new_game")
+	await _frames(8)
+	WorldTime.minutes_per_second = 0.0
+	player = main.get("player")
+	var door: MapExit3D = main.get("map").find_child("ShopDoor", true, false)
+	check(door != null and door.target_map == "anjabi_shop", "the shop on the Steps has a door")
+	await _place3(door.global_position - Vector3(0, 0.85, -0.9))
+	await _frames(4)
+	check(player.target == door, "standing at the shop door offers Enter")
+	var door_at: Vector3 = door.global_position
+	player.try_interact()
+	await _frames(8)
+	player = main.get("player")
+	var shop = main.get("map")
+	check(str(main.get("map_id")) == "anjabi_shop" and shop is InteriorMap3D and player.is_on_floor(), "entering puts the player inside the shop, standing")
+	check((shop as MapBuilder3D).environment.indoor, "the shop is lit as an interior")
+	Weather.set_weather("heavy_rain")
+	(shop as MapBuilder3D).environment.snap()
+	var rain: Rain3D = player.find_children("*", "Rain3D", true, false)[0]
+	check(not rain.emitting, "it does not rain indoors")
+	var shelf: Interactable3D = null
+	for n in shop.find_children("*", "Interactable3D", true, false):
+		if (n as Interactable3D).dialogue_id == "anjabi/shop_shelves":
+			shelf = n
+	check(shelf != null and Dialogue.has_method("start"), "the shelves can be examined")
+	var mat: MapExit3D = shop.find_child("ExitMat", true, false)
+	await _place3(Vector3(mat.global_position.x, 0.05, mat.global_position.z - 0.2))
+	await _frames(4)
+	check(player.target == mat, "the door mat offers Leave")
+	player.try_interact()
+	await _frames(8)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(door_at) < 4.0, "leaving returns to the Steps, at the shop door")
+	Weather.set_weather("rain")
+	WorldTime.minutes_per_second = 1.0
+
+
 ==============================================================================
 == tests/slice_test.tscn
 ==============================================================================
@@ -9302,6 +11071,456 @@ func _world() -> void:
 [ext_resource type="Script" path="res://tests/slice_test.gd" id="1"]
 
 [node name="SliceTest" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tools/bake_2d.gd
+==============================================================================
+extends Node
+## Bakes the 3D Steps district into 2D art for the Golden Sun-style prototype
+## (maps/anjabi/steps_2d.tscn). Windowed, because it renders:
+##   Godot --path . res://tools/bake_2d.tscn
+##
+## Projection: an orthographic camera pitched 45 degrees, image stretched vertically by
+## sqrt(2), so a point (x, y, z) lands at screen (x, z - y) metres: ground squares stay
+## square and walls stand straight up, the classic 3/4 oblique view. S pixels per metre.
+##
+## Writes res://art/baked2d/steps/:
+##   ground.png        everything flat (paving, walls, stairs, sea), with the shadows of
+##                     the tall things falling on it; lit for a neutral clear day
+##   ground_glow.png   emissive surfaces only (signs, windows), added at night
+##   objects/NNN.png   each model (building, lamp, tree, barrel...) alone, plus _glow
+##   heights.res       Image (FORMAT_RF): top surface height per 1/4 m, -1000 = nothing
+##   layout.json       where everything goes, lamps, interactables, people, spawns
+## and res://art/baked2d/chars/<id>.png: 8 directions x (idle, 8 walk, 8 run) sheets.
+
+const OUT := "res://art/baked2d/steps/"
+const CHARS := "res://art/baked2d/chars/"
+const S := 16
+const SS := 2
+const X0 := -46.0
+const X1 := 46.0
+const V0 := -58.0
+const V1 := 46.0
+const Z0 := -46.0
+const Z1 := 40.0
+const GRID := 4
+const CELL := Vector2i(32, 42)
+const CELL_FEET := 35
+const DIRS := 8
+
+var district: Node3D
+var vp: SubViewport
+var cam: Camera3D
+var sun: DirectionalLight3D
+var env: Environment
+
+
+func _ready() -> void:
+	MapBuilder3D.bake_mode = true
+	RenderingServer.directional_shadow_atlas_set_size(8192, true)
+	RenderingServer.global_shader_parameter_set(&"weather_wet", 0.35)
+	RenderingServer.global_shader_parameter_set(&"weather_snow", 0.0)
+	DirAccess.make_dir_recursive_absolute(OUT + "objects")
+	DirAccess.make_dir_recursive_absolute(CHARS)
+	for d: String in [OUT + "objects", CHARS]:
+		var da := DirAccess.open(d)
+		for f in da.get_files():
+			da.remove(f)
+
+	vp = SubViewport.new()
+	vp.own_world_3d = true
+	vp.transparent_bg = true
+	vp.msaa_3d = Viewport.MSAA_4X
+	vp.size = Vector2i(int((X1 - X0) * S * SS), int((V1 - V0) * S * SS / sqrt(2.0)))
+	vp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(vp)
+	district = (load("res://maps/anjabi/district.tscn") as PackedScene).instantiate()
+	vp.add_child(district)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var layout := {"S": S, "grid": GRID, "x0": X0, "v0": V0, "z0": Z0, "sea": -7.0,
+		"width": int((X1 - X0) * S), "height": int((V1 - V0) * S),
+		"objects": [], "lamps": [], "interactables": [], "people": [], "spawns": {}}
+	_collect_and_strip(layout)
+	_setup_view()
+
+	# classify direct children: models become sprites, signs ride with their model
+	var objects: Array[Node3D] = []
+	var boxes: Array[AABB] = []
+	var labels: Array[Label3D] = []
+	for c in district.get_children():
+		if c is Label3D:
+			labels.append(c)
+		elif c is Node3D and (c as Node3D).scene_file_path.ends_with(".glb"):
+			var b := _aabb(c)
+			if b.size.length() > 0.01 and b.get_center().x > X0 - 2 and b.get_center().x < X1 + 2 and b.get_center().z > Z0 - 6 and b.get_center().z < Z1 + 4:
+				objects.append(c)
+				boxes.append(b)
+	var owner_of := {}
+	for l in labels:
+		for i in objects.size():
+			if boxes[i].grow(1.6).has_point(l.global_position):
+				owner_of[l] = i
+				break
+	print("bake: %d objects, %d labels" % [objects.size(), labels.size()])
+
+	# ground: tall things cast shadows but are not drawn
+	for o in objects:
+		_shadow_only(o, true)
+	for l: Label3D in owner_of:
+		l.visible = false
+	district.entities.visible = false
+	var lit := await _render(false)
+	lit.save_png(OUT + "ground.png")
+	var glow := await _render(true)
+	if _bright(glow):
+		glow.save_png(OUT + "ground_glow.png")
+	for o in objects:
+		_shadow_only(o, false)
+
+	# each object alone
+	var keep: Array[Node] = []
+	for c in district.get_children():
+		if c.visible:
+			keep.append(c)
+	for i in objects.size():
+		for c in keep:
+			(c as Node3D).visible = c == objects[i] or owner_of.get(c, -1) == i
+		var img := await _render(false)
+		var used := img.get_used_rect()
+		if used.size.x < 1:
+			continue
+		var name := "%03d" % i
+		img.get_region(used).save_png(OUT + "objects/" + name + ".png")
+		var entry := {"file": name, "rect": [used.position.x, used.position.y, used.size.x, used.size.y],
+			"sort_z": boxes[i].get_center().z, "model": objects[i].scene_file_path.get_file().get_basename()}
+		var g := await _render(true)
+		var gr := g.get_region(used)
+		if _bright(gr):
+			gr.save_png(OUT + "objects/" + name + "_glow.png")
+			entry["glow"] = true
+		(layout["objects"] as Array).append(entry)
+	for c in keep:
+		(c as Node3D).visible = true
+
+	# heights
+	await get_tree().physics_frame
+	var heights := _heights()
+	ResourceSaver.save(heights, OUT + "heights.res")
+
+	var f := FileAccess.open(OUT + "layout.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(layout, "\t"))
+	f.close()
+
+	# character sheets
+	await _bake_people(layout)
+	f = FileAccess.open(OUT + "layout.json", FileAccess.WRITE)
+	f.store_string(JSON.stringify(layout, "\t"))
+	f.close()
+	print("bake: done")
+	get_tree().quit()
+
+
+# --- scene preparation -----------------------------------------------------------
+
+## Records lamps, interactables, people and spawns, then removes the district's own
+## lights, environment and probes so the bake controls the light.
+func _collect_and_strip(layout: Dictionary) -> void:
+	for n in district.find_children("*", "OmniLight3D", true, false):
+		var l := n as OmniLight3D
+		var p := l.global_position
+		(layout["lamps"] as Array).append({"x": p.x, "y": p.y, "z": p.z, "energy": float(l.get_meta(&"lit_energy", l.light_energy)), "range": l.omni_range})
+	for n in district.find_children("*", "Interactable3D", true, false):
+		var it := n as Interactable3D
+		if it.get_parent() is Npc3D:
+			continue
+		var p := it.global_position
+		var e := {"prompt": it.prompt, "label": it.label, "dialogue_id": it.dialogue_id, "radius": it.radius, "x": p.x, "y": p.y, "z": p.z}
+		if it is MapExit3D:
+			e["target_map"] = (it as MapExit3D).target_map
+			e["target_spawn"] = (it as MapExit3D).target_spawn
+		(layout["interactables"] as Array).append(e)
+	var people := 0
+	for n in district.entities.get_children():
+		var d := {}
+		if n is Npc3D:
+			var npc := n as Npc3D
+			d = {"name": npc.display_name, "dialogue_id": npc.dialogue_id, "coat": npc.coat.to_html(), "accent": npc.accent.to_html(),
+				"skin": npc.skin.to_html(), "hood": npc.hood, "look": _look_json(npc.look), "yaw": npc.yaw_deg,
+				"points": [[npc.global_position.x, npc.global_position.y, npc.global_position.z]]}
+		elif n is Townsfolk:
+			var t := n as Townsfolk
+			var pts := []
+			for p in t.points:
+				pts.append([p.x, p.y, p.z])
+			d = {"name": "", "dialogue_id": "", "coat": t.coat.to_html(), "accent": t.accent.to_html(), "skin": t.skin.to_html(),
+				"hood": t.hood, "look": _look_json(t.look), "yaw": t.yaw_deg, "points": pts}
+		else:
+			continue
+		d["sheet"] = "person_%02d" % people
+		people += 1
+		(layout["people"] as Array).append(d)
+	for m in district.get_node("Spawns").get_children():
+		var p := (m as Node3D).global_position
+		layout["spawns"][str(m.name)] = [p.x, p.y, p.z]
+	for t: String in ["OmniLight3D", "DirectionalLight3D", "WorldEnvironment", "ReflectionProbe", "EnvironmentController"]:
+		for n in district.find_children("*", t, true, false):
+			n.get_parent().remove_child(n)
+			n.free()
+
+
+static func _look_json(look: Dictionary) -> Dictionary:
+	var out := {}
+	for k: String in look:
+		var v: Variant = look[k]
+		out[k] = (v as Color).to_html() if v is Color else v
+	return out
+
+
+func _setup_view() -> void:
+	cam = Camera3D.new()
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.keep_aspect = Camera3D.KEEP_HEIGHT
+	cam.size = (V1 - V0) / sqrt(2.0)
+	cam.rotation_degrees = Vector3(-45, 0, 0)
+	cam.near = 1.0
+	cam.far = 500.0
+	var vc := (V0 + V1) * 0.5
+	cam.position = Vector3((X0 + X1) * 0.5, 0, vc) + Vector3(0, sin(PI / 4), cos(PI / 4)) * 200.0
+	vp.add_child(cam)
+	cam.current = true
+	sun = _sun()
+	vp.add_child(sun)
+	env = _env()
+	var we := WorldEnvironment.new()
+	we.environment = env
+	vp.add_child(we)
+
+
+static func _sun() -> DirectionalLight3D:
+	var l := DirectionalLight3D.new()
+	l.rotation_degrees = Vector3(-52, 205, 0)
+	l.light_color = Color(1.0, 0.95, 0.86)
+	l.light_energy = 1.45
+	l.shadow_enabled = true
+	l.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+	l.directional_shadow_max_distance = 600.0
+	l.shadow_blur = 1.5
+	return l
+
+
+static func _env() -> Environment:
+	var e := Environment.new()
+	e.background_mode = Environment.BG_CLEAR_COLOR
+	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	e.ambient_light_color = Color(0.6, 0.66, 0.78)
+	e.ambient_light_energy = 0.55
+	e.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	e.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	e.tonemap_exposure = 1.05
+	e.adjustment_enabled = true
+	e.adjustment_saturation = 1.15
+	e.adjustment_contrast = 1.05
+	return e
+
+
+static func _aabb(n: Node) -> AABB:
+	var out := AABB()
+	var first := true
+	for v in n.find_children("*", "VisualInstance3D", true, false):
+		var vi := v as VisualInstance3D
+		var b := vi.global_transform * vi.get_aabb()
+		out = b if first else out.merge(b)
+		first = false
+	if n is VisualInstance3D:
+		var b := (n as VisualInstance3D).global_transform * (n as VisualInstance3D).get_aabb()
+		out = b if first else out.merge(b)
+	return out
+
+
+static func _shadow_only(n: Node, on: bool) -> void:
+	for g in n.find_children("*", "GeometryInstance3D", true, false):
+		(g as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY if on else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+
+
+# --- rendering -------------------------------------------------------------------
+
+## One frame of the map viewport at final size. glow = emissive surfaces only.
+func _render(glow: bool) -> Image:
+	sun.visible = not glow
+	env.ambient_light_energy = 0.0 if glow else 0.55
+	vp.render_target_update_mode = SubViewport.UPDATE_ONCE
+	await RenderingServer.frame_post_draw
+	await RenderingServer.frame_post_draw
+	var img := vp.get_texture().get_image()
+	img.convert(Image.FORMAT_RGBA8)
+	img.resize(int((X1 - X0) * S), int((V1 - V0) * S), Image.INTERPOLATE_LANCZOS)
+	return img
+
+
+static func _bright(img: Image) -> bool:
+	var w := img.get_width()
+	var h := img.get_height()
+	for y in range(0, h, 2):
+		for x in range(0, w, 2):
+			var c := img.get_pixel(x, y)
+			if c.a > 0.3 and c.get_luminance() > 0.12:
+				return true
+	return false
+
+
+# --- heights ---------------------------------------------------------------------
+
+## Top surface height every 1/4 m: the highest of five rays (centre and +-0.1 m), so
+## thin railings are not missed.
+func _heights() -> Image:
+	var space := vp.find_world_3d().direct_space_state
+	var w := int((X1 - X0) * GRID)
+	var h := int((Z1 - Z0) * GRID)
+	var img := Image.create(w, h, false, Image.FORMAT_RF)
+	var q := PhysicsRayQueryParameters3D.new()
+	q.collision_mask = 1
+	q.collide_with_areas = false
+	var offs: Array[Vector2] = [Vector2.ZERO, Vector2(0.1, 0), Vector2(-0.1, 0), Vector2(0, 0.1), Vector2(0, -0.1)]
+	for j in h:
+		for i in w:
+			var x := X0 + (i + 0.5) / GRID
+			var z := Z0 + (j + 0.5) / GRID
+			var top := -1000.0
+			for o in offs:
+				q.from = Vector3(x + o.x, 40.0, z + o.y)
+				q.to = Vector3(x + o.x, -20.0, z + o.y)
+				var r := space.intersect_ray(q)
+				if not r.is_empty():
+					top = maxf(top, (r["position"] as Vector3).y)
+			img.set_pixel(i, j, Color(top, 0, 0))
+	return img
+
+
+# --- characters ------------------------------------------------------------------
+
+func _bake_people(layout: Dictionary) -> void:
+	var cvp := SubViewport.new()
+	cvp.own_world_3d = true
+	cvp.transparent_bg = true
+	cvp.msaa_3d = Viewport.MSAA_4X
+	var k := 4
+	cvp.size = Vector2i(CELL.x * k, int(CELL.y * k / sqrt(2.0)))
+	cvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(cvp)
+	var c := Camera3D.new()
+	c.projection = Camera3D.PROJECTION_ORTHOGONAL
+	c.keep_aspect = Camera3D.KEEP_HEIGHT
+	var top_v := -float(CELL_FEET) / S
+	var bot_v := float(CELL.y - CELL_FEET) / S
+	c.size = (bot_v - top_v) / sqrt(2.0)
+	c.rotation_degrees = Vector3(-45, 0, 0)
+	c.position = Vector3(0, 0, (top_v + bot_v) * 0.5) + Vector3(0, sin(PI / 4), cos(PI / 4)) * 20.0
+	c.near = 1.0
+	c.far = 60.0
+	cvp.add_child(c)
+	c.current = true
+	var l := _sun()
+	l.shadow_enabled = false
+	cvp.add_child(l)
+	var we := WorldEnvironment.new()
+	we.environment = _env()
+	cvp.add_child(we)
+	var specs: Array[Dictionary] = [{"sheet": "player", "coat": Color(0.5, 0.13, 0.11).to_html(), "accent": Color(0.62, 0.42, 0.2).to_html(),
+		"skin": Color(0.78, 0.6, 0.48).to_html(), "hood": false, "look": {"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05).to_html(), "long_coat": true}}]
+	for p: Dictionary in layout["people"]:
+		specs.append(p)
+	for spec in specs:
+		var f := Figure3D.new()
+		f.coat = Color.html(str(spec["coat"]))
+		f.accent = Color.html(str(spec["accent"]))
+		f.skin = Color.html(str(spec["skin"]))
+		f.hood = bool(spec["hood"])
+		var look := {}
+		for key: String in spec["look"]:
+			var v: Variant = spec["look"][key]
+			look[key] = Color.html(str(v)) if key == "hair_color" else v
+		f.configure(look)
+		cvp.add_child(f)
+		f.set_process(false)
+		await get_tree().process_frame
+		var sheet := Image.create(CELL.x * 17, CELL.y * DIRS, false, Image.FORMAT_RGBA8)
+		for d in DIRS:
+			var a := TAU * d / DIRS
+			var dir := Vector2(cos(a), sin(a))
+			f.rotation.y = atan2(-dir.x, -dir.y)
+			for col in 17:
+				_pose(f, col)
+				cvp.render_target_update_mode = SubViewport.UPDATE_ONCE
+				await RenderingServer.frame_post_draw
+				await RenderingServer.frame_post_draw
+				var img := cvp.get_texture().get_image()
+				img.convert(Image.FORMAT_RGBA8)
+				img.resize(CELL.x, CELL.y, Image.INTERPOLATE_LANCZOS)
+				_crisp(img)
+				sheet.blit_rect(img, Rect2i(Vector2i.ZERO, CELL), Vector2i(col * CELL.x, d * CELL.y))
+		sheet.save_png(CHARS + str(spec["sheet"]) + ".png")
+		f.queue_free()
+		await get_tree().process_frame
+	cvp.queue_free()
+
+
+## Column 0 idle, 1-8 walk, 9-16 run (phase steps of 1/8 cycle).
+static func _pose(f: Figure3D, col: int) -> void:
+	f._t = 0.0
+	if col == 0:
+		f._amount = 0.0
+		f._run = 0.0
+		f._phase = 0.0
+		f._speed = 0.0
+	else:
+		var run := col >= 9
+		f._amount = 1.0
+		f._run = 1.0 if run else 0.0
+		f._speed = 1.8 if run else 1.0
+		f._phase = TAU * float((col - 1) % 8) / 8.0
+	f._process(0.0)
+
+
+## Hard alpha edge and a one-pixel dark outline, so sprites read as pixel art.
+static func _crisp(img: Image) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	var solid := PackedByteArray()
+	solid.resize(w * h)
+	for y in h:
+		for x in w:
+			var c := img.get_pixel(x, y)
+			if c.a >= 0.45:
+				c.a = 1.0
+				img.set_pixel(x, y, Color(c.r, c.g, c.b, 1.0))
+				solid[y * w + x] = 1
+			else:
+				img.set_pixel(x, y, Color(0, 0, 0, 0))
+	var ink := Color(0.05, 0.04, 0.07, 1.0)
+	for y in h:
+		for x in w:
+			if solid[y * w + x] == 1:
+				continue
+			for o: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx := x + o.x
+				var ny := y + o.y
+				if nx >= 0 and ny >= 0 and nx < w and ny < h and solid[ny * w + nx] == 1:
+					img.set_pixel(x, y, ink)
+					break
+
+
+==============================================================================
+== tools/bake_2d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/bake_2d.gd" id="1"]
+
+[node name="Bake2D" type="Node"]
 script = ExtResource("1")
 
 
@@ -11166,10 +13385,14 @@ signal continue_requested
 signal new_game_requested
 signal load_requested(slot: String)
 signal quit_requested
+## PROTOTYPE: the 2D test area. Remove with the entry in show_menu().
+signal prototype_requested
 
 const TITLE := "COMETOGRAPHIA"
 const SLOT_NAMES := {"auto": "Autosave", "manual": "Manual save"}
 
+## The shelved 2D prototype (entry 15) stays in the code but is off the menu.
+var show_prototype := false
 ## A game is loaded behind the title (returned from the pause menu).
 var session_live := false
 ## False in tests: no fades or delays.
@@ -11298,6 +13521,8 @@ func show_menu() -> void:
 	_new = _item(_menu, "NEW GAME", _on_new)
 	_item(_menu, "LOAD GAME", show_load)
 	_item(_menu, "OPTIONS", show_options)
+	if show_prototype:
+		_item(_menu, "2D PROTOTYPE", func() -> void: prototype_requested.emit())
 	if OS.has_feature("pc"):
 		_item(_menu, "QUIT", func() -> void: quit_requested.emit())
 	_focus_first(_menu)
