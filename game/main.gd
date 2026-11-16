@@ -22,6 +22,9 @@ var map_id := ""
 ## "" = resume the autosave or start new (running this scene directly, tests),
 ## "new" = new game with `profile`, "load:<slot>" = load that save.
 var boot := ""
+## Play the arrival shot the next time a game starts or resumes in the town (set by
+## game/app.gd when leaving the title; tests leave it off).
+var arrival_shot := false
 ## Flags a new game starts with (the created character: player_name, player_look).
 var profile := {}
 
@@ -91,6 +94,13 @@ func load_map(id: String, spawn: String = "default") -> void:
 	if player is Player and player.walk_mask != null:
 		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
 	player.camera.reset_smoothing()
+	_arrive()
+
+
+func _arrive() -> void:
+	if arrival_shot and player is Player3D and map_id == "anjabi_town":
+		arrival_shot = false
+		(player as Player3D).camera.play_intro()
 
 
 func capture_world() -> Dictionary:
@@ -125,6 +135,7 @@ func restore_world(d: Dictionary) -> void:
 		player.global_position = Vector2(float(d.get("x", 0.0)), float(d.get("y", 0.0)))
 		player.facing = Vector2(float(d.get("fx", 0.0)), float(d.get("fy", 1.0)))
 	player.camera.reset_smoothing()
+	_arrive()
 
 
 func _enter_map(id: String) -> void:

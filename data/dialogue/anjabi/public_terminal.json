@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "A public terminal set into the stone. A chart of stars turns slowly on its screen."],
+				["", "[PLACEHOLDER: what the terminal offers comes from the director.]"]
+			]
+		}
+	}
+}

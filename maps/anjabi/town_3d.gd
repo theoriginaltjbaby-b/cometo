@@ -57,7 +57,9 @@ var _acc := 0.0
 func _ready() -> void:
 	_load_cells()
 	_materials()
+	SettlementKit.materials(self)
 	_environment()
+	SettlementKit.skyline(self, INSERT_AT)
 	_terrain()
 	_collision()
 	_sea()

@@ -175,6 +175,7 @@ func _start(boot: String, profile: Dictionary) -> void:
 	main = MAIN.instantiate()
 	main.set("boot", boot)
 	main.set("profile", profile)
+	main.set("arrival_shot", animate)
 	add_child(main)
 	move_child(main, 0)
 	var ui: GameUi = main.get("ui")

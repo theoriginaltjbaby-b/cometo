@@ -329,7 +329,8 @@ func _district() -> void:
 	# tavern keeper
 	await _place3(O + Vector3(-7.2, 3.05, -10.9))
 	check(player.target != null and player.target.label == "Tavern keeper", "tavern keeper is targeted")
-	check(ui.hud.prompt_text().contains("Tavern keeper"), "HUD prompt shows '%s'" % ui.hud.prompt_text())
+	await _frames(2)
+	check(ui.hud.prompt_text().contains("Tavern keeper"), "HUD prompt shows '%s' (dialogue %s, hud %s, target %s)" % [ui.hud.prompt_text(), Dialogue.active, ui.hud.visible, ui.hud.player.get("target")])
 	check(player.try_interact() and Dialogue.active, "talking opens dialogue")
 	var at: Vector3 = player.global_position
 	Input.action_press(&"move_down")

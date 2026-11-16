@@ -152,6 +152,12 @@ All files were created 2026-11-14 unless noted.
 | `data/dialogue/anjabi/shop_shelves.json` | Placeholder narration for the shop shelves. |
 | `docs/map_design.md` | Overworld and interiors plan: door rules, interiors per landmark, spacing and routes. |
 | `tests/screenshot_interior.gd` / `.tscn` | Windowed shots of the interiors. |
+| `maps/settlement_kit.gd` | `SettlementKit`: the settlement art direction as reusable pieces (ashlar, plaster, slate, verdigris, brass; arcade bays, balustrades, stalls, townhouses, armillary, compass inlay, terminal, lanterns, string lights, vines, pots, benches, doorsteps; the distant skyline). |
+| `art/shaders/cosmic_sky.gdshader` | The sky: ringed planet, comet, stars, nebula over a twilight gradient. No TIME, so the reflection map rebuilds only on colour changes. |
+| `art/shaders/stone_wall.gdshader` | World-space weathered ashlar for architecture (courses, per-block tint, mortar, damp feet). |
+| `art/shaders/compass_inlay.gdshader` | The brass compass rose set into the Steps. |
+| `data/dialogue/anjabi/public_terminal.json`, `townhouse_door.json` | Placeholder narration for the terminal and townhouse doors. |
+| `tests/screenshot_overhaul.gd` / `.tscn` | Windowed shots of the market quarter and the arrival shot. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -838,3 +844,75 @@ simpler surfaces.
 - To update: export Web, copy `export/web/.` into a clone of `cometo-web`, commit and
   push (set `git config http.postBuffer 524288000`; the .wasm is 40 MB). Pages rebuilds
   in about a minute. Not yet tried on an iPhone.
+
+## 20. Aesthetic overhaul: the market quarter of the Steps (2026-11-15)
+
+Reference: the director's concept render (twilight market plaza beneath a ringed
+planet). The Steps, the game's starting area, is rebuilt as the demonstration of the art
+direction; the kit that builds it (`maps/settlement_kit.gd`) is meant for every future
+area.
+
+### Cosmic identity
+- `cosmic_sky.gdshader` is now every outdoor map's sky: a colossal pink-banded ringed
+  planet low in the north, a comet, stars and a faint nebula over a twilight gradient
+  driven by the clock. The play camera looks too steeply down to see the sky, so the
+  planet appears in two ways: in reflections (sea, puddles, wet stone, glass; the
+  environment's reflections now come from the sky) and in the **arrival shot**.
+- Arrival shot (`FollowCamera.play_intro()`): when a game starts or resumes in the town
+  from the title, the camera begins low behind the player looking out over the
+  settlement to the horizon, the planet and the distant world, holds, then sweeps down
+  to the play view (6 s; any input hurries it). Off in tests (`Main.arrival_shot`).
+- Distant world (`SettlementKit.skyline()`): a plateau of gothic spires with lit
+  windows, a citadel on a far ridge, an aqueduct across the valley and the lights of a
+  far settlement, 250-470 m north. Unshaded, pre-hazed, beyond the play camera's far
+  plane: only the arrival shot draws them.
+
+### The market quarter
+- Landmark: a brass compass rose inlaid in the plaza (walkable) with an armillary sphere
+  on a column at its centre, rings turning slowly round a glowing core.
+- The terrace wall is now an arcade of six bays: stone pilasters and arches, warm
+  shopfronts recessed behind (lit windows, doors), striped rose or teal awnings,
+  lanterns; vines with white blossom trail down from the terrace above.
+- Stone balustrades with brass handrails and lantern newels replace the iron railings
+  along the terrace front and both sides of the stairs.
+- Two market stalls (an instrument seller with a small armillary and brass dishes; a
+  stall of pots and wares), rugs, crates, lavender in clay pots, merchants behind the
+  counters, two people talking by a public terminal (stone housing, brass frame, a star
+  chart glowing on its screen; examinable).
+- String lights from the balustrade to the plaza lamps; benches facing the landmark.
+- Two townhouses along the top of the terrace facing the Steps: ashlar ground floors
+  with arched doors, rose and ochre plaster, arched windows (some lit) with flower
+  boxes, a balcony, a slate gable and a verdigris dome with brass ribs, copper
+  downpipes, wall lanterns, doorstep belongings; doors can be knocked (placeholder).
+- West terrace garden: a bench, planting, and a small armillary sun instrument.
+- Materials: `stone_wall.gdshader` ashlar for all stone (including the terrace walls);
+  palette of dusty rose, ochre, indigo slate, verdigris, aged brass, warm amber glass.
+
+### Light and colour
+- Dusk is now violet twilight with warm lights instead of an all-orange golden hour:
+  ambient, sky and fog gradients shift to violet from 18:30, the low sun is rose-amber,
+  the horizon fill is gentler. Exposure unchanged (per the director's note).
+- The handheld grade now tones shadows indigo-violet and highlights amber-rose.
+
+### Navigation
+- Kept clear and tested: the stairs, the plaza's east and west exits, the terrace's
+  west exit, the walk in front of the tavern, the shop door. Stalls, benches, the
+  terminal and the armillary column are solid.
+
+### Cost
+- Desktop (Radeon Pro 570, vsync off): the Steps 354 draws / 130k primitives / 2.8 ms,
+  the terrace 392 / 184k / 3.1 ms (were 229 / 80k and 243 / 125k). Other spots
+  unchanged. Not measured on a phone.
+
+### Tests
+- Slice 162/162 (the keeper prompt check now waits two frames; it read the HUD one frame
+  early on a busier scene). Menu 42/42.
+
+### Limits
+- What the shops, terminal and houses are, and who lives there, are placeholders for
+  the director. The kit's pieces are built from primitives; authored models would lift
+  them further.
+- Only the Steps has the new architecture; the rest of the town still has the earlier
+  look (the kit is ready for it).
+- The planet is visible in play only through reflections; a lower camera would show the
+  sky but changes the HeartGold framing.

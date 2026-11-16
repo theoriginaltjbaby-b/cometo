@@ -596,7 +596,17 @@ func _environment() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.36, 0.42, 0.55)
 	env.ambient_light_energy = 0.75
-	env.reflected_light_source = Environment.REFLECTION_SOURCE_BG
+	# the cosmic sky (art/shaders/cosmic_sky.gdshader): seen in the arrival shot and in
+	# every reflection; a small radiance map rebuilt only when its colours change
+	var sky := Sky.new()
+	var sm := ShaderMaterial.new()
+	sm.shader = preload("res://art/shaders/cosmic_sky.gdshader")
+	sky.sky_material = sm
+	sky.radiance_size = Sky.RADIANCE_SIZE_64
+	sky.process_mode = Sky.PROCESS_MODE_INCREMENTAL
+	env.background_mode = Environment.BG_SKY
+	env.sky = sky
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.45
 	env.tonemap_white = 6.0

@@ -21,6 +21,7 @@ $GODOT --path . res://tests/screenshot_time.tscn -- /some/folder  # shots throug
 $GODOT --path . res://tools/bake_2d.tscn                       # rebake the 2D prototype art from the 3D district (windowed)
 $GODOT --path . res://tests/screenshot_2d.tscn -- /some/folder  # shots of the 2D prototype
 $GODOT --path . res://tests/screenshot_interior.tscn -- /some/folder  # shots of the interiors
+$GODOT --path . res://tests/screenshot_overhaul.tscn -- /some/folder  # market quarter and arrival shot
 $GODOT --path . res://tests/perf_probe.tscn                  # render cost per spot (desktop proxy)
 $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs iOS templates, Xcode, team id
 ```
@@ -32,6 +33,7 @@ $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs i
 - `maps/<region>/` one scene per location (interiors in `maps/<region>/interiors/`, on `InteriorMap3D`; plan in `docs/map_design.md`), root script `GameMap` (2D) or `GameMap3D` (3D), with `Entities` and `Spawns`. 3D maps use `Player3D`, `Npc3D`, `Interactable3D`, `MapExit3D`, which keep the 2D classes' interfaces.
 - `ui/` all screen-space controls, built in code from `UiTheme`.
 - `data/` narrative content as JSON (dialogue, quests, clues). Formats are documented at the top of `core/dialogue.gd` and `core/game_state.gd`.
+- `maps/settlement_kit.gd` is the art direction (materials and reusable architecture); build new areas from it.
 - `art_provisional/` everything drawn in code. All of it is placeholder and is meant to be replaced.
 - `tests/` headless slice test and screenshot runner.
 

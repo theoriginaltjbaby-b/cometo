@@ -25,18 +25,20 @@ const SEA := -7.0
 func _ready() -> void:
 	if insert:
 		_materials()
+		SettlementKit.materials(self)
 		slab(Vector3(-12, -12, -10), Vector3(20, PLAZA, 10), M.paving)
 		_plaza_feature()
 		slab(Vector3(-24, -12, -28), Vector3(12, TERRACE, -10), M.stone)
 		slab(Vector3(-24, TERRACE - 0.02, -28), Vector3(12, TERRACE + 0.01, -10), M.paving, false)
 		stairs(Vector3(0, PLAZA, -4), Vector3(0, 0, -1), TERRACE - PLAZA, 6.0, 4.0, M.stone)
-		railing(Vector3(-11.5, TERRACE, -10.2), Vector3(-2, TERRACE, -10.2))
-		railing(Vector3(2, TERRACE, -10.2), Vector3(12, TERRACE, -10.2))
+		SettlementKit.balustrade(self, Vector3(-11.8, TERRACE, -10.25), Vector3(-2.2, TERRACE, -10.25), true)
+		SettlementKit.balustrade(self, Vector3(2.2, TERRACE, -10.25), Vector3(11.8, TERRACE, -10.25), true)
 		_tavern()
 		_shop()
 		_props(true)
 		_people()
 		_insert_dressing()
+		_market_quarter()
 		return
 	_materials()
 	_environment()
@@ -74,6 +76,11 @@ func _ground() -> void:
 
 
 func _plaza_feature() -> void:
+	if insert:
+		# the compass rose of the Steps and the armillary that stands on its boss
+		SettlementKit.compass_inlay(self, Vector3(2, 0, 1), 4.2)
+		SettlementKit.armillary(self, Vector3(2, 0, 1), 2.3, 1.15)
+		return
 	var ring := CylinderMesh.new()
 	ring.top_radius = 4.5
 	ring.bottom_radius = 4.5
@@ -323,10 +330,17 @@ func _backdrop() -> void:
 func _props(core_only := false) -> void:
 	# plaza lamps, benches, planters, crates
 	for p: Vector3 in [Vector3(-8, 0, 8), Vector3(12, 0, 8), Vector3(-8, 0, -8), Vector3(8, 0, -3)]:
+		if insert and p.z < 0.0:
+			continue
 		lamp(p)
 	for p: Vector3 in [Vector3(-4, 0, 7), Vector3(8, 0, 7)]:
-		box(p + Vector3(0, 0.25, 0), Vector3(2.2, 0.5, 0.6), M.timber)
+		if insert:
+			SettlementKit.bench(self, p, PI)
+		else:
+			box(p + Vector3(0, 0.25, 0), Vector3(2.2, 0.5, 0.6), M.timber)
 	for p: Vector3 in [Vector3(-10, 0, -6), Vector3(17, 0, 6)]:
+		if insert and p.x < 0.0:
+			continue
 		box(p + Vector3(0, 0.4, 0), Vector3(1.8, 0.8, 1.8), M.stone)
 		tree(p + Vector3(0, 0.8, 0), 0.7)
 	box(Vector3(10.5, 0.4, 4), Vector3(0.9, 0.8, 0.9), M.timber)
@@ -336,7 +350,8 @@ func _props(core_only := false) -> void:
 	lamp(Vector3(5, TERRACE, -12.5))
 	lamp(Vector3(-20, TERRACE, -12.5), false)
 	tree(Vector3(-21, TERRACE, -25), 1.0)
-	tree(Vector3(2, TERRACE, -25.5), 0.9)
+	if not insert:
+		tree(Vector3(2, TERRACE, -25.5), 0.9)
 	if core_only:
 		return
 	# coastal vegetation along the plaza's southern lip
@@ -362,18 +377,16 @@ func _insert_dressing() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 12
 	var ferns: Array[Transform3D] = []
-	for i in 26:
-		ferns.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.4 + rng.randf() * 0.6), rng.randf() * TAU, rng.randf_range(0.8, 1.3)))
-	for i in 18:
-		ferns.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.4 + rng.randf() * 0.8), rng.randf() * TAU, rng.randf_range(0.9, 1.4)))
+	for i in 6:
+		ferns.append(xform(Vector3(rng.randf_range(-2.3, -1.9) * (1 if i % 2 == 0 else -1), PLAZA, -4.0 + rng.randf() * 0.4), rng.randf() * TAU, rng.randf_range(0.8, 1.2)))
+	for i in 14:
+		ferns.append(xform(Vector3(rng.randf_range(-23.5, -17.0), TERRACE, -27.4 + rng.randf() * 0.8), rng.randf() * TAU, rng.randf_range(0.9, 1.4)))
 	scatter("fern", ferns)
 	var fl: Array[Transform3D] = []
-	for i in 30:
-		fl.append(xform(Vector3(rng.randf_range(-23.5, 11.5), TERRACE, -27.3 + rng.randf() * 0.7), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
-	for i in 14:
-		fl.append(xform(Vector3(rng.randf_range(-11.5, 11.5), PLAZA, -9.6 + rng.randf() * 0.4), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
+	for i in 22:
+		fl.append(xform(Vector3(rng.randf_range(-23.5, -17.0), TERRACE, -27.3 + rng.randf() * 0.7), rng.randf() * TAU, rng.randf_range(0.9, 1.3)))
 	scatter("flowers", fl)
-	for p: Vector3 in [Vector3(-6, PLAZA, -9.2), Vector3(6.5, PLAZA, -9.2), Vector3(-11, PLAZA, 9.2), Vector3(18.5, PLAZA, 9.2)]:
+	for p: Vector3 in [Vector3(-11, PLAZA, 9.2), Vector3(18.5, PLAZA, 9.2)]:
 		model("planter", p)
 	model("crate_stack", Vector3(19, PLAZA, -1.6), 0.3)
 	model("barrel", Vector3(18.6, PLAZA, -3.4))
@@ -381,3 +394,62 @@ func _insert_dressing() -> void:
 	for p: Vector3 in [Vector3(-11, PLAZA, -9.0), Vector3(19, PLAZA, -9.0)]:
 		model("banner", p)
 
+
+## The market quarter of the Steps (entry 20): an arcade of shopfronts in the terrace
+## wall, market stalls, townhouses along the top of the terrace, a garden with a sun
+## instrument, a terminal, string lights, climbing plants and doorstep life.
+## Paths kept clear: the stairs (x -2..2), the plaza's east and west exits, the terrace
+## west exit (z -22..-18) and the walk in front of the tavern.
+func _market_quarter() -> void:
+	var K := SettlementKit
+	var rose: Array = [M.canvas_rose, M.canvas_cream]
+	var teal: Array = [M.canvas_teal2, M.canvas_cream]
+	# arcade: three bays either side of the stairs in the terrace wall (face z = -10)
+	var bays := [[-10.4, rose, true], [-7.2, teal, false], [-4.0, rose, true], [4.0, teal, true], [7.2, rose, false], [10.4, teal, true]]
+	for bay: Array in bays:
+		K.arcade_bay(self, bay[0], -10.0, PLAZA, 3.1, bay[1], bay[2])
+	warm_light(Vector3(-8.8, 2.2, -8.6), 1.4, 6.0)
+	warm_light(Vector3(8.8, 2.2, -8.6), 1.4, 6.0)
+	# vines trailing from the terrace balustrade down over the arcade
+	K.vines(self, Vector3(-11.8, TERRACE + 0.1, -9.95), Vector3(-2.4, TERRACE + 0.1, -9.95), Vector3(0, 0, 1), 1.6, 3)
+	K.vines(self, Vector3(2.4, TERRACE + 0.1, -9.95), Vector3(11.8, TERRACE + 0.1, -9.95), Vector3(0, 0, 1), 1.6, 4)
+	# stair side balustrades with lantern newels, lavender at the foot
+	for sx: float in [-2.25, 2.25]:
+		K.balustrade(self, Vector3(sx, PLAZA, -4.1), Vector3(sx, TERRACE, -9.9), true)
+		K.pot(self, Vector3(sx * 1.25, PLAZA, -3.6), "lavender", 1.2)
+	# market stalls in front of the arcade, out of the stairs' way
+	K.stall(self, Vector3(-8.6, PLAZA, -6.9), 0.0, rose, "instruments")
+	K.stall(self, Vector3(7.4, PLAZA, -7.0), 0.0, teal, "wares")
+	K.pot(self, Vector3(-11.2, PLAZA, -8.6), "lavender", 1.3)
+	K.pot(self, Vector3(11.0, PLAZA, -8.7), "leaf", 1.3)
+	# the public terminal beside the foot of the stairs
+	K.terminal(self, Vector3(3.6, PLAZA, -4.5), 0.0, "anjabi/public_terminal")
+	# string lights from the balustrade to the plaza lamps
+	K.string_lights(self, Vector3(-11.8, TERRACE + 1.15, -10.25), Vector3(-8, 3.0, 8), 0.9)
+	K.string_lights(self, Vector3(11.8, TERRACE + 1.15, -10.25), Vector3(12, 3.0, 8), 0.9)
+	# townhouses along the top of the terrace, east of the tavern, facing the Steps
+	var d1 := K.townhouse(self, Vector3(1.2, TERRACE, -26.3), 5.4, 3.4, 2, M.plaster_rose, "pitched", 5)
+	var d2 := K.townhouse(self, Vector3(7.6, TERRACE, -26.3), 6.8, 3.4, 3, M.plaster_ochre, "dome", 9)
+	for i in 2:
+		var d: Vector3 = [d1, d2][i]
+		K.doorstep(self, d, 20 + i)
+		var door := Interactable3D.new()
+		door.prompt = "Knock"
+		door.label = "Townhouse"
+		door.dialogue_id = "anjabi/townhouse_door"
+		door.radius = 1.1
+		door.position = d + Vector3(0, 0.9, -0.4)
+		add_child(door)
+	K.wall_lantern(self, Vector3(1.2 - 2.7, TERRACE + 2.4, -24.55), Vector3(0, 0, 1))
+	K.wall_lantern(self, Vector3(7.6 + 1.5, TERRACE + 2.4, -24.55), Vector3(0, 0, 1))
+	K.vines(self, Vector3(-1.4, TERRACE + 5.2, -24.55), Vector3(3.8, TERRACE + 5.2, -24.55), Vector3(0, 0, 1), 2.6, 6)
+	# west terrace garden: bench, planting and a brass sun instrument
+	K.bench(self, Vector3(-20.5, TERRACE, -25.2), 0.0)
+	for p: Vector3 in [Vector3(-23.3, TERRACE, -24.8), Vector3(-17.6, TERRACE, -25.0), Vector3(-23.2, TERRACE, -15.6)]:
+		K.pot(self, p, "lavender" if p.z < -20 else "leaf", 1.3)
+	K.armillary(self, Vector3(-19.2, TERRACE, -15.4), 1.0, 0.6)
+	# people living here: two merchants at the stalls, two talking by the terminal
+	townsfolk([to_global(Vector3(-8.6, PLAZA, -7.9))], Color(0.42, 0.2, 0.22), Color(0.7, 0.55, 0.3), Color(0.7, 0.52, 0.4), false, 180.0, {"hat": "brim", "satchel": false})
+	townsfolk([to_global(Vector3(7.4, PLAZA, -8.0))], Color(0.2, 0.32, 0.34), Color(0.75, 0.6, 0.35), Color(0.55, 0.4, 0.3), false, 180.0, {"hair": "long", "apron": true, "satchel": false})
+	townsfolk([to_global(Vector3(5.2, PLAZA, -3.6))], Color(0.36, 0.3, 0.44), Color(0.7, 0.52, 0.3), Color(0.76, 0.58, 0.46), false, 250.0, {"hair": "bun"})
+	townsfolk([to_global(Vector3(6.4, PLAZA, -3.9))], Color(0.48, 0.4, 0.3), Color(0.5, 0.35, 0.2), Color(0.6, 0.45, 0.35), true, 110.0, {})

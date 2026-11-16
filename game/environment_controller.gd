@@ -56,6 +56,7 @@ var _lamp_scan := 0.0
 const APPLY_EVERY := 0.1
 var _tick := 0.0
 var _precip: Array[Node] = []
+var _sky_key := Vector3(-1, 0, 0)
 
 
 func _init() -> void:
@@ -137,6 +138,7 @@ func _apply() -> void:
 	var grey := bg.get_luminance() * lerpf(1.0, 0.8, day)
 	bg = bg.lerp(Color(grey, grey * 1.02, grey * 1.06), cloud * 0.8)
 	env.background_color = bg.lightened(flash * 0.5)
+	_update_sky(t, day, cloud)
 	var amb := ambient.sample(t).lerp(Color(0.7, 0.8, 1.0), float(w["snow"]) * 0.3)
 	env.ambient_light_color = amb
 	# the handheld style reads brighter and cleaner by day; nights stay moody
@@ -170,7 +172,31 @@ func _apply() -> void:
 			n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
 
 
+## Sky colours follow the same gradients, but only every few seconds and only when they
+## have moved: each change rebuilds the reflection map.
+func _update_sky(t: float, day: float, cloud: float) -> void:
+	if env.sky == null:
+		return
+	if env.background_mode != Environment.BG_SKY:
+		env.background_mode = Environment.BG_SKY
+	var m := env.sky.sky_material as ShaderMaterial
+	if m == null:
+		return
+	var key := Vector3(t, cloud, float(w["fog"]))
+	if _sky_key.distance_to(key) < 0.01 and _sky_key.x >= 0.0:
+		return
+	_sky_key = key
+	var hz := sky.sample(t).lerp(fog_color.sample(t), 0.35)
+	var grey := hz.get_luminance()
+	hz = hz.lerp(Color(grey, grey, grey * 1.05), cloud * 0.6)
+	m.set_shader_parameter("horizon", hz)
+	m.set_shader_parameter("zenith", sky.sample(t).darkened(0.55).lerp(Color(0.09, 0.07, 0.2), 0.5 * (1.0 - day)))
+	m.set_shader_parameter("glow", fill_color.sample(t) * (0.35 + fill_energy.sample(t)))
+	m.set_shader_parameter("day", day * (1.0 - cloud * 0.3))
+
+
 func _apply_indoor() -> void:
+	env.background_mode = Environment.BG_COLOR
 	env.background_color = indoor_look["background"]
 	env.ambient_light_color = indoor_look["ambient"]
 	env.ambient_light_energy = indoor_look["ambient_energy"]
@@ -214,28 +240,28 @@ func _set_lamps(level: float) -> void:
 func _defaults() -> void:
 	var n_sky := Color(0.045, 0.06, 0.1)
 	_grad(sky, [[0.0, n_sky], [0.2, Color(0.06, 0.08, 0.15)], [0.25, Color(0.5, 0.4, 0.45)], [0.31, Color(0.5, 0.64, 0.8)],
-		[0.5, Color(0.44, 0.63, 0.86)], [0.7, Color(0.47, 0.62, 0.8)], [0.775, Color(0.8, 0.54, 0.36)],
-		[0.83, Color(0.25, 0.2, 0.32)], [0.875, n_sky], [1.0, n_sky]])
+		[0.5, Color(0.44, 0.63, 0.86)], [0.7, Color(0.47, 0.62, 0.8)], [0.775, Color(0.72, 0.5, 0.6)],
+		[0.83, Color(0.3, 0.22, 0.42)], [0.875, n_sky], [1.0, n_sky]])
 	var n_amb := Color(0.36, 0.42, 0.55)
 	_grad(ambient, [[0.0, n_amb], [0.2, Color(0.36, 0.42, 0.58)], [0.25, Color(0.52, 0.54, 0.74)], [0.33, Color(0.74, 0.78, 0.84)],
-		[0.5, Color(0.8, 0.83, 0.86)], [0.7, Color(0.82, 0.8, 0.76)], [0.775, Color(0.72, 0.66, 0.7)],
-		[0.83, Color(0.52, 0.46, 0.68)], [0.875, n_amb], [1.0, n_amb]])
+		[0.5, Color(0.8, 0.83, 0.86)], [0.7, Color(0.82, 0.8, 0.76)], [0.775, Color(0.62, 0.56, 0.78)],
+		[0.83, Color(0.48, 0.44, 0.72)], [0.875, n_amb], [1.0, n_amb]])
 	var moon := Color(0.52, 0.62, 0.86)
 	_grad(sun_color, [[0.0, moon], [SUNRISE - 0.005, moon], [SUNRISE + 0.005, Color(1.0, 0.76, 0.74)], [0.3, Color(1.0, 0.84, 0.72)],
-		[0.4, Color(1.0, 0.96, 0.9)], [0.66, Color(1.0, 0.95, 0.86)], [0.76, Color(1.0, 0.8, 0.56)],
-		[SUNSET - 0.005, Color(1.0, 0.64, 0.46)], [SUNSET + 0.005, moon], [1.0, moon]])
+		[0.4, Color(1.0, 0.96, 0.9)], [0.66, Color(1.0, 0.95, 0.86)], [0.76, Color(1.0, 0.8, 0.66)],
+		[SUNSET - 0.005, Color(1.0, 0.66, 0.58)], [SUNSET + 0.005, moon], [1.0, moon]])
 	var glow := Color(1.0, 0.55, 0.35)
 	_grad(fill_color, [[0.0, glow], [0.2, Color(1.0, 0.6, 0.62)], [0.27, Color(1.0, 0.68, 0.6)], [0.5, Color(1.0, 0.9, 0.8)],
-		[0.72, Color(1.0, 0.7, 0.42)], [0.8, Color(1.0, 0.55, 0.32)], [1.0, glow]])
+		[0.72, Color(1.0, 0.72, 0.55)], [0.8, Color(0.95, 0.55, 0.55)], [1.0, glow]])
 	var n_fog := Color(0.2, 0.25, 0.33)
 	_grad(fog_color, [[0.0, n_fog], [0.2, n_fog], [0.26, Color(0.56, 0.5, 0.6)], [0.33, Color(0.64, 0.72, 0.8)],
-		[0.5, Color(0.66, 0.74, 0.82)], [0.7, Color(0.68, 0.72, 0.76)], [0.775, Color(0.68, 0.5, 0.4)],
-		[0.83, Color(0.3, 0.27, 0.38)], [0.875, n_fog], [1.0, n_fog]])
+		[0.5, Color(0.66, 0.74, 0.82)], [0.7, Color(0.68, 0.72, 0.76)], [0.775, Color(0.58, 0.46, 0.6)],
+		[0.83, Color(0.3, 0.26, 0.42)], [0.875, n_fog], [1.0, n_fog]])
 	_curve(ambient_energy, [[0.0, 0.75], [0.2, 0.75], [SUNRISE, 1.3], [0.28, 1.0], [0.5, 1.0], [0.7, 0.95], [0.78, 1.0], [SUNSET, 1.3], [0.85, 0.95], [0.875, 0.75], [1.0, 0.75]])
 	_curve(sun_energy, [[0.0, 0.86], [SUNRISE - 0.012, 0.7], [SUNRISE, 0.0], [SUNRISE + 0.012, 0.45], [0.27, 0.7], [0.36, 1.05], [0.5, 1.2], [0.68, 1.1],
 		[0.77, 0.95], [SUNSET - 0.012, 0.55], [SUNSET, 0.0], [SUNSET + 0.012, 0.6], [0.86, 0.8], [1.0, 0.86]])
 	_curve(fill_energy, [[0.0, 0.35], [0.17, 0.2], [0.2, 0.0], [0.25, 0.32], [0.31, 0.2], [0.4, 0.0], [0.62, 0.0],
-		[0.72, 0.25], [0.785, 0.5], [0.83, 0.45], [0.875, 0.4], [1.0, 0.35]])
+		[0.72, 0.18], [0.785, 0.32], [0.83, 0.3], [0.875, 0.3], [1.0, 0.35]])
 	_curve(exposure, [[0.0, 1.45], [0.2, 1.45], [0.27, 1.25], [0.36, 1.05], [0.5, 1.0], [0.7, 1.02], [0.78, 1.25], [0.84, 1.4], [0.875, 1.45], [1.0, 1.45]])
 	_curve(daylight, [[0.0, 0.0], [0.2, 0.0], [0.3, 1.0], [0.74, 1.0], [0.85, 0.0], [1.0, 0.0]])
 	_curve(lamps, [[0.0, 1.0], [0.225, 1.0], [0.255, 0.0], [0.74, 0.0], [0.79, 1.0], [1.0, 1.0]])

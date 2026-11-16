@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "knock"}],
+	"nodes": {
+		"knock": {
+			"say": [
+				["", "A heavy timber door in a stone arch. A lamp burns behind the window, but nobody comes."],
+				["", "[PLACEHOLDER: who lives here comes from the director.]"]
+			]
+		}
+	}
+}
