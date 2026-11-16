@@ -47,6 +47,7 @@ func _ready() -> void:
 	title.new_game_requested.connect(_on_new_game)
 	title.load_requested.connect(_on_load)
 	title.quit_requested.connect(_on_quit)
+	title.prototype_requested.connect(_on_prototype)
 	var top := CanvasLayer.new()
 	top.layer = 100
 	add_child(top)
@@ -138,6 +139,17 @@ func _on_continue() -> void:
 		_enter_game()
 	else:
 		_start("load:auto", {})
+	await _fade(0.0)
+	_busy = false
+
+
+## The Golden Sun-style 2D test area: a fresh game started on the 2D Steps.
+func _on_prototype() -> void:
+	if _busy:
+		return
+	_busy = true
+	await _fade(1.0)
+	_start("proto2d", {})
 	await _fade(0.0)
 	_busy = false
 

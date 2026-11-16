@@ -133,7 +133,7 @@ func _body() -> StaticBody3D:
 ## Repeated small models in BATCHED are not instanced: they are gathered and drawn as
 ## one MultiMesh per model part per 24 m cell (see _flush_batches), and model() returns null.
 func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Node3D:
-	if model_name in BATCHED:
+	if model_name in BATCHED and not bake_mode:
 		var sv: Vector3 = s if s is Vector3 else Vector3(s, s, s)
 		batch(model_name, Transform3D(Basis(Vector3.UP, yaw) * Basis.from_scale(sv), at))
 		return null
@@ -146,6 +146,8 @@ func model(model_name: String, at: Vector3, yaw := 0.0, s: Variant = 1.0) -> Nod
 	return n
 
 
+## Set by tools/bake_2d.gd: every model stays a separate node so it can be rendered alone.
+static var bake_mode := false
 const BATCHED := ["pine", "lantern_post", "barrel", "planter", "crate_stack"]
 ## Models whose batches cast shadows (the rest are too small to matter).
 const BATCH_SHADOWS := ["pine", "lantern_post"]
@@ -184,7 +186,7 @@ func _flush_batches() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_READY:
+	if what == NOTIFICATION_READY and not bake_mode:
 		merge_static.call_deferred()
 
 

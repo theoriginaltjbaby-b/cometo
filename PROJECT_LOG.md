@@ -137,6 +137,14 @@ All files were created 2026-11-14 unless noted.
 | `audio/README.md` | The audio placeholders and the file names that replace them. |
 | `tests/menu_test.gd` / `.tscn` | Headless test of title, options, creation and the title/game flow (42 checks). |
 | `tests/screenshot_title.gd` / `.tscn` | Windowed shots of the title screens. |
+| `tools/bake_2d.gd` / `.tscn` | Windowed tool: renders the 3D Steps district into 2D art (ground, object sprites, glow layers, heights, layout, 8-direction character sheets). |
+| `art/baked2d/` | Output of the bake: `steps/` (ground.png, objects/, heights.res, layout.json) and `chars/` sheets. Generated; re-run the tool after changing the district. |
+| `maps/proto2d/map_2d.gd` | `Map2D`: builds a 2D map from a bake; height grid walking rules. |
+| `maps/proto2d/person_2d.gd` | `Person2D`: sheet-animated character on a Map2D (townsfolk, NPCs). |
+| `maps/proto2d/player_2d.gd` | `Player2D`: the player on a Map2D; walk, sprint, slide, interact, pixel-snapped camera. |
+| `maps/proto2d/environment_controller_2d.gd` | `EnvironmentController2D`: day/night tint, lamps as PointLight2D, night glow, 2D precipitation and mist. |
+| `maps/anjabi/steps_2d.tscn` | The 2D prototype map (`anjabi_steps_2d`). |
+| `tests/screenshot_2d.gd` / `.tscn` | Windowed shots of the 2D prototype. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -678,3 +686,50 @@ rails), `gondola` (tram cabin), `pine`, `fern`.
 - Character creation covers appearance only; the name is stored but not yet shown in
   dialogue. A gamepad cannot type the name.
 - One manual save slot exists; the load list is ready for more.
+
+## 15. 2D prototype, Golden Sun style (2026-11-15)
+
+A test of turning the game into 2D top-down (3/4 view) in the vein of Golden Sun. The 3D
+game is unchanged; the prototype is one extra map reachable from the title (2D PROTOTYPE).
+
+### How it is made
+- `tools/bake_2d.gd` renders the existing 3D Steps district (the standalone district map:
+  plaza, tavern terrace, pods, mine approach, coast) with an orthographic camera at 45
+  degrees, stretched so a point (x, y, z) lands at (x, z - y): ground squares stay square
+  and walls stand up. 16 px per metre.
+- Flat things (paving, walls, stairs, sea) go into one pre-rendered ground image with
+  the shadows of the tall things on it. Every model (tavern, shop, pods, lamps, trees,
+  barrels, tables, banners) is rendered alone as a sprite, with its signs. Emissive
+  parts (windows, signs, lamp glass) are rendered again on their own as glow layers.
+- Heights: the 3D colliders are ray-cast every 1/4 m into a height grid. The 2D map
+  walks on it: no ground or the sea blocks, a step over 0.35 m blocks. So terrace
+  walls, railings, buildings and the drop to the beach block, and stairs climb.
+- Characters: the in-game figure is rendered in 8 directions, idle plus 8 walk and 8
+  run frames, downscaled with a hard edge and a one-pixel dark outline.
+
+### How it plays
+- Free 8-direction movement, walk 4.2 m/s, hold Shift (or RUN) to sprint 7.4 m/s, with
+  slide along walls. Camera at 2x zoom (about 15 by 8 m, the handheld proportion),
+  snapped to whole art pixels.
+- Everything is y-sorted by where it stands, so the player passes behind the tavern,
+  lamps and trees and in front of them. Height lifts sprites on the terrace and pods.
+- The tavern keeper, the pod B-17 door, the mine warning sign and the exit to the 3D mine
+  yard all work through the existing Interactable and dialogue data.
+- Day, night and weather from the same WorldTime and Weather: a CanvasModulate tint
+  sampled from the 3D gradients, lamps as PointLight2D, windows and signs glow after
+  dark, screen-space rain, snow and mist. Saves and loads like any map.
+
+### Tests
+- Slice test 154/154 (12 new: heights, walking, the terrace wall, the stairs, the keeper,
+  night tint, save and load). Menu test 42/42.
+
+### Limits
+- Pre-rendered, not hand-drawn pixel art: the look is "rendered 3D sprites", and the
+  cobble texture is noisy at 16 px per metre. Final art would replace ground.png and the
+  sprites on the same layout.
+- The player's sheet is the default look; a created character's look is not baked.
+- Townsfolk walk without the height rules; the keeper is the only NPC in this area.
+- Bake is a manual step (re-run the tool after changing the district); output 6.1M
+  in `art/baked2d/`.
+- Signs on buildings are drawn with the building, so its sort applies to them.
+- Untested on an iPhone or in a browser; builds in `export/` predate this entry.

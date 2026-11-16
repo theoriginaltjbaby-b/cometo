@@ -17,6 +17,7 @@ var enabled := true
 
 
 func _ready() -> void:
+	add_to_group(&"interactables_2d")
 	collision_layer = 4
 	collision_mask = 0
 	monitoring = false

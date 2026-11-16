@@ -18,6 +18,8 @@ $GODOT --headless --path . -s tools/build_town_mask.gd       # rebuild the town 
 $GODOT --headless --path . -s tools/build_town_3d.gd         # then rebuild the 3D town grid (heights, types) from greybox + mask
 sh tools/package_review.sh                                   # export/COMETO_review_<date>.zip
 $GODOT --path . res://tests/screenshot_time.tscn -- /some/folder  # shots through the day and each weather
+$GODOT --path . res://tools/bake_2d.tscn                       # rebake the 2D prototype art from the 3D district (windowed)
+$GODOT --path . res://tests/screenshot_2d.tscn -- /some/folder  # shots of the 2D prototype
 $GODOT --path . res://tests/perf_probe.tscn                  # render cost per spot (desktop proxy)
 $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs iOS templates, Xcode, team id
 ```

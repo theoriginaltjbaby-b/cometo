@@ -20,6 +20,7 @@ func _ready() -> void:
 	await _run()
 	await _town()
 	await _world()
+	await _proto2d()
 	SaveManager.delete_save("test")
 	print("\n%d checks, %d failed" % [_checks, _fails])
 	get_tree().quit(1 if _fails > 0 else 0)
@@ -668,4 +669,67 @@ func _world() -> void:
 	check(player.sprinting, "the RUN toggle sprints without the key")
 	Input.action_release(&"move_left")
 	player.touch.sprint = false
+	WorldTime.minutes_per_second = 1.0
+
+
+## The Golden Sun-style 2D prototype (maps/anjabi/steps_2d.tscn, baked by tools/bake_2d.gd).
+func _proto2d() -> void:
+	main.call("new_game", "anjabi_steps_2d")
+	await _frames(5)
+	WorldTime.minutes_per_second = 0.0
+	var map: Map2D = main.get("map")
+	player = main.get("player")
+	check(map is Map2D and player is Player2D and str(main.get("map_id")) == "anjabi_steps_2d", "the 2D prototype loads as a 2D map with a 2D player")
+	var S := float(map.S)
+	check(absf(map.height_at(Vector2(2, 5) * S)) < 0.2 and absf(map.height_at(Vector2(-6, -15) * S) - 3.0) < 0.2, "the baked heights put the plaza at 0 m and the terrace at 3 m")
+	check(map.entities.get_child_count() > 30, "buildings, lamps and trees are y-sorted sprites (%d)" % map.entities.get_child_count())
+	player.position = Vector2(2, 5) * S
+	await _frames(2)
+	var x0: float = player.position.x
+	Input.action_press(&"move_right")
+	await _frames(30)
+	Input.action_release(&"move_right")
+	check(player.position.x - x0 > 20.0, "the player walks on the plaza")
+	# the terrace wall: walking north from the plaza beside the stairs is blocked
+	player.position = Vector2(-6, -8) * S
+	await _frames(2)
+	Input.action_press(&"move_up")
+	await _frames(60)
+	Input.action_release(&"move_up")
+	check(player.position.y > -10.5 * S and absf(map.height_at(player.position)) < 0.3, "the terrace wall stops the player (y = %.1f m)" % (player.position.y / S))
+	# the stairs climb to the terrace
+	player.position = Vector2(0, -3.5) * S
+	await _frames(2)
+	Input.action_press(&"move_up")
+	await _frames(90)
+	Input.action_release(&"move_up")
+	check(map.height_at(player.position) > 2.8, "the stairs lead up to the terrace (h = %.2f m)" % map.height_at(player.position))
+	var keeper: Person2D = null
+	for n in map.entities.get_children():
+		if n is Person2D and not n is Player2D and (n as Person2D).interactable != null:
+			keeper = n
+	check(keeper != null, "the tavern keeper stands on the terrace")
+	player.position = keeper.position + Vector2(0, 14)
+	await _frames(4)
+	check(player.target == keeper.interactable and player.try_interact() and Dialogue.active, "walking up to the keeper offers Talk, and talking opens the dialogue")
+	Dialogue.cancel()
+	await _frames(2)
+	# lighting follows the clock
+	var tint: CanvasModulate = map.find_children("*", "CanvasModulate", true, false)[0]
+	Weather.set_weather("clear")
+	WorldTime.set_time(13, 0)
+	await _frames(2)
+	var day := tint.color.get_luminance()
+	WorldTime.set_time(23, 0)
+	await _frames(2)
+	check(tint.color.get_luminance() < day * 0.6 and tint.color.b > tint.color.r, "night tints the 2D map dark blue")
+	# save and load in 2D
+	var at: Vector2 = player.position
+	check(SaveManager.save_game("test"), "save in the 2D prototype")
+	main.call("new_game")
+	await _frames(3)
+	check(SaveManager.load_game("test"), "load the 2D prototype")
+	await _frames(3)
+	player = main.get("player")
+	check(player is Player2D and player.position.distance_to(at) < 2.0, "load restores the 2D map and position")
 	WorldTime.minutes_per_second = 1.0

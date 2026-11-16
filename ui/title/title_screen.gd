@@ -10,6 +10,8 @@ signal continue_requested
 signal new_game_requested
 signal load_requested(slot: String)
 signal quit_requested
+## PROTOTYPE: the 2D test area. Remove with the entry in show_menu().
+signal prototype_requested
 
 const TITLE := "COMETOGRAPHIA"
 const SLOT_NAMES := {"auto": "Autosave", "manual": "Manual save"}
@@ -142,6 +144,7 @@ func show_menu() -> void:
 	_new = _item(_menu, "NEW GAME", _on_new)
 	_item(_menu, "LOAD GAME", show_load)
 	_item(_menu, "OPTIONS", show_options)
+	_item(_menu, "2D PROTOTYPE", func() -> void: prototype_requested.emit())
 	if OS.has_feature("pc"):
 		_item(_menu, "QUIT", func() -> void: quit_requested.emit())
 	_focus_first(_menu)

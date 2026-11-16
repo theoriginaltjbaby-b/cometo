@@ -5,6 +5,8 @@ extends Node
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
 	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
+	# Golden Sun-style 2D prototype baked from the 3D district (tools/bake_2d.gd)
+	"anjabi_steps_2d": "res://maps/anjabi/steps_2d.tscn",
 }
 const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
@@ -30,6 +32,10 @@ func _ready() -> void:
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
 	GameState.travel_requested.connect(_on_travel_requested)
+	$Weather/Fog.add_to_group(&"fog_overlay")
+	if boot == "proto2d":
+		new_game("anjabi_steps_2d")
+		return
 	if boot.begins_with("load:"):
 		if SaveManager.load_game(boot.trim_prefix("load:")):
 			return
@@ -38,20 +44,22 @@ func _ready() -> void:
 	new_game()
 
 
-func new_game() -> void:
+func new_game(start_map: String = START_MAP) -> void:
 	GameState.reset()
 	Journal.reset()
 	for k: String in profile:
 		GameState.set_flag(k, profile[k])
 	WorldTime.reset()
 	Weather.reset()
-	load_map(START_MAP, "default")
+	load_map(start_map, "default")
 	Journal.start_quest(START_QUEST)
 
 
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
+	if player is Player2D:
+		player.global_position = map.nearest_standable(player.global_position)
 	if player is Player and player.walk_mask != null:
 		player.global_position = player.walk_mask.nearest_walkable(player.global_position)
 	player.camera.reset_smoothing()
@@ -100,7 +108,11 @@ func _enter_map(id: String) -> void:
 	map_id = id
 	map = (load(MAPS[id]) as PackedScene).instantiate()
 	world.add_child(map)
-	if map is GameMap3D:
+	if map is Map2D:
+		player = Player2D.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch, map)
+	elif map is GameMap3D:
 		player = Player3D.new()
 		map.entities.add_child(player)
 		player.setup(ui.touch)
@@ -114,6 +126,7 @@ func _enter_map(id: String) -> void:
 	# the 2D mist overlay is for 2D maps; 3D maps carry their own fog
 	$Weather/Fog.visible = not (map is GameMap3D)
 	$Weather/Rain.visible = not (map is GameMap3D)
+	(get_node("Weather/Fog") as CanvasItem).z_index = 0
 	ui.hud.show_location(map.display_name)
 
 
