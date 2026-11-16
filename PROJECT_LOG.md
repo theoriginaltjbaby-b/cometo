@@ -825,3 +825,16 @@ simpler surfaces.
 - The shop's contents and keeper are placeholders for the director.
 - Interiors are a single camera distance; very small rooms show a lot of black.
 - Not seen on an iPhone or the web; builds in `export/` predate this entry.
+
+## 19. Web build on GitHub Pages (2026-11-15)
+
+- The web build is published at https://theoriginaltjbaby-b.github.io/cometo-web/ from a
+  separate public repo, `theoriginaltjbaby-b/cometo-web`, which holds only the exported
+  `export/web` files (no source) plus `.nojekyll`. Threads are off in the Web preset, so
+  no special headers are needed.
+- Checked in a browser: the title, character creation and the town load and run, with
+  the colour grade, in the Compatibility renderer. Starting a new game shows about
+  10 s of black while the town builds.
+- To update: export Web, copy `export/web/.` into a clone of `cometo-web`, commit and
+  push (set `git config http.postBuffer 524288000`; the .wasm is 40 MB). Pages rebuilds
+  in about a minute. Not yet tried on an iPhone.
