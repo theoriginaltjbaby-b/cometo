@@ -1,38 +1,87 @@
 {
 	"entry": [
-		{"if": {"flag": "tavern_keeper.met"}, "goto": "again"},
-		{"goto": "first"}
+		{
+			"if": {
+				"flag": "tavern_keeper.met"
+			},
+			"goto": "again"
+		},
+		{
+			"goto": "first"
+		}
 	],
 	"nodes": {
 		"first": {
-			"do": [{"set": {"tavern_keeper.met": true}}],
+			"do": [
+				{
+					"set": {
+						"tavern_keeper.met": true
+					}
+				}
+			],
 			"say": [
-				["", "Someone in a stained apron is wiping rain off the outside tables, which will not stay dry."],
-				["Tavern keeper", "Full inside. Stand under the awning if you like, nobody charges for that."]
+				[
+					"",
+					"Someone in a stained apron is wiping rain off the outside tables, which will not stay dry."
+				],
+				[
+					"Tavern keeper",
+					"Full inside. Stand under the awning if you like, nobody charges for that."
+				]
 			],
 			"goto": "menu"
 		},
 		"again": {
-			"say": [["Tavern keeper", "Still raining. Still full."]],
+			"say": [
+				[
+					"Tavern keeper",
+					"Still raining. Still full."
+				]
+			],
 			"goto": "menu"
 		},
 		"menu": {
 			"choices": [
-				{"text": "What are people saying about the mine?", "goto": "mine"},
-				{"text": "Where's the mine from here?", "goto": "where"},
-				{"text": "Nothing. Thanks.", "goto": "end"}
+				{
+					"text": "What are people saying about the mine?",
+					"goto": "mine"
+				},
+				{
+					"text": "Where's the mine from here?",
+					"goto": "where"
+				},
+				{
+					"text": "Nothing. Thanks.",
+					"goto": "end"
+				}
 			]
 		},
 		"mine": {
 			"say": [
-				["Tavern keeper", "Depends who's buying. You'll hear it a different way at every table."],
-				["Tavern keeper", "The ones who worked it don't come up here much now."]
+				[
+					"Tavern keeper",
+					"Depends who's buying. You'll hear it a different way at every table."
+				],
+				[
+					"Tavern keeper",
+					"The ones who worked it don't come up here much now."
+				]
 			],
 			"goto": "menu"
 		},
 		"where": {
-			"say": [["Tavern keeper", "Down the west stairs off the Steps. Follow the rails till the fence stops you."]],
-			"goto": "menu"
+			"say": [
+				[
+					"Tavern keeper",
+					"Down the west stairs off the Steps. Follow the rails till the fence stops you."
+				]
+			],
+			"goto": "menu",
+			"then": [
+				{
+					"clue": "mine_directions"
+				}
+			]
 		}
 	}
 }

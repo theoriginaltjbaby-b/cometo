@@ -1,0 +1,228 @@
+{
+ "id": "anjabi_steps_shop",
+ "name": "ANJABI  \u00b7  SHOP",
+ "indoor": true,
+ "legend": {
+  ".": "cobble",
+  ",": "cobble_warm",
+  "=": "plaza_band",
+  "t": "terrace",
+  "g": "grass",
+  "f": "flowers",
+  "s": "stairs",
+  "~": "water",
+  "v": "void",
+  "W": "wall_face",
+  "w": "wall_face_dark",
+  "_": "wall_top",
+  "R": "roof_slate",
+  "r": "roof_ridge",
+  "G": "roof_verdigris",
+  "P": "plaster_rose",
+  "O": "plaster_ochre",
+  "Q": "plaster_teal",
+  "H": "balustrade",
+  "h": "balustrade_v",
+  "a": "window_lit_ochre",
+  "b": "window_dark_ochre",
+  "c": "window_lit_rose",
+  "d": "window_dark_rose",
+  "e": "window_lit_teal",
+  "i": "window_dark_teal",
+  "D": "door",
+  "S": "shop_window",
+  "V": "vines",
+  "A": "awning_rose",
+  "B": "awning_teal",
+  "E": "roof_eave",
+  "^": "wall_top",
+  "I": "interior_wall",
+  "L": "shelf",
+  "K": "counter",
+  "m": "mat",
+  "F": "floor_wood"
+ },
+ "ground": [
+  "vvvvvvvvvvvv",
+  "vIIIIIIIIIIv",
+  "vIIIIIIIIIIv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vvvvvmmvvvvv"
+ ],
+ "build": [
+  "            ",
+  "            ",
+  "  LL    LL  ",
+  "            ",
+  "      KKKK  ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "detail": [
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "over": [
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "objects": [
+  {
+   "type": "decor",
+   "sprite": "rug",
+   "at": [
+    3,
+    5
+   ],
+   "offset": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "barrel",
+   "at": [
+    1,
+    8
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    10,
+    3
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    1,
+    3
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    10,
+    8
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    2,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    3,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    8,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    9,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "light",
+   "at": [
+    3,
+    5
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 20
+   }
+  },
+  {
+   "type": "light",
+   "at": [
+    8,
+    5
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 20
+   }
+  },
+  {
+   "type": "warp",
+   "at": [
+    5,
+    9
+   ],
+   "to": "anjabi_steps",
+   "spawn": "shop"
+  },
+  {
+   "type": "warp",
+   "at": [
+    6,
+    9
+   ],
+   "to": "anjabi_steps",
+   "spawn": "shop"
+  }
+ ],
+ "spawns": {
+  "default": [
+   5,
+   8,
+   "up"
+  ]
+ }
+}

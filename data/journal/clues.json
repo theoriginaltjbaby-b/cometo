@@ -14,5 +14,9 @@
 	"sealed_outside": {
 		"title": "Welded from outside",
 		"text": "The mine door is welded shut on the outside, the bead still bright. Rescue stretchers sit beside it, never unwrapped."
+	},
+	"mine_directions": {
+		"title": "The way to the mine",
+		"text": "The tavern keeper: down the west stairs off the Steps, then follow the rails until the fence stops you."
 	}
 }

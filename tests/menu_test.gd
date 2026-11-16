@@ -183,6 +183,8 @@ func _ready() -> void:
 
 func _boot() -> void:
 	app = (load("res://game/app.tscn") as PackedScene).instantiate()
+	# this test covers the title flow into the 3D town; tests/slice2d_test.gd covers the 2D slice
+	app.set("start_map", "anjabi_town")
 	app.set("animate", false)
 	app.set("fade_time", 0.0)
 	add_child(app)

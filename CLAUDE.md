@@ -1,5 +1,7 @@
 # COMETO
 
+Branch `2d`: the native 2D tile-based rebuild (PROJECT_LOG entry 23 on). The 3D game is preserved at tag `3d-final` and on branch `3d-conversion`; its code is still present here and still tested. New 2D work goes in `world2d/` (maps and actors), `render2d/` (art provider) and `data/maps2d/` (map data).
+
 Handheld sci-fi CRPG in fixed-camera 3D with a HeartGold-style handheld look (`ArtStyle.handheld`: low-res crisp 3D render, steep camera, chibi people). Godot 4.7, GDScript only, Mobile renderer, iPhone first (landscape).
 The game boots into the title screen (`game/app.tscn`); a new game starts in the 3D town (`anjabi_town`, `maps/anjabi/town_3d.tscn`) on the Steps. The Steps and tavern terrace are a detailed insert inside the town (`maps/anjabi/district.tscn` with `insert = true`, placed at `INSERT_AT`); the mine yard is `anjabi_mine` (`maps/anjabi/mine_3d.tscn`). Every map is 3D. 3D maps extend `MapBuilder3D` (`maps/map_builder_3d.gd`).
 Separate from the older 3D project in `~/cometographia-2`; nothing is shared.
@@ -11,6 +13,8 @@ GODOT=/Applications/Godot_mono-1.app/Contents/MacOS/Godot   # NOTE 2026-11-14: t
 $GODOT --path .                                              # play
 $GODOT --headless --path . --import                          # after adding scripts or assets
 $GODOT --headless --path . res://tests/slice_test.tscn       # end-to-end test, exit code 0 = pass
+$GODOT --headless --path . res://tests/slice2d_test.tscn     # the 2D vertical slice
+$GODOT --path . res://tests/screenshot_slice2d.tscn -- /some/folder  # shots of the 2D slice
 $GODOT --headless --path . res://tests/menu_test.tscn        # title, options, creation and title/game flow
 $GODOT --path . res://tests/screenshot.tscn -- /some/folder  # windowed visual check, writes PNGs
 $GODOT --path . res://tests/screenshot_3d.tscn -- /some/folder  # windowed shots of the 3D district

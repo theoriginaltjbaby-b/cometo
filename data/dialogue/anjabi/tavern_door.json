@@ -1,0 +1,21 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "A heavy door under the tavern sign. Warm light and a wall of voices behind it."
+    ],
+    [
+     "",
+     "It is full inside, as the keeper said."
+    ]
+   ]
+  }
+ }
+}

@@ -9,6 +9,9 @@ const MAPS := {
 	"anjabi_shop": "res://maps/anjabi/interiors/shop.tscn",
 	# Golden Sun-style 2D prototype baked from the 3D district (tools/bake_2d.gd)
 	"anjabi_steps_2d": "res://maps/anjabi/steps_2d.tscn",
+	# the 2D tile-based rebuild (branch 2d): the Steps vertical slice
+	"anjabi_steps": "res://world2d/maps/steps.tscn",
+	"anjabi_steps_shop": "res://world2d/maps/shop.tscn",
 }
 const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
@@ -25,6 +28,12 @@ var boot := ""
 ## Play the arrival shot the next time a game starts or resumes in the town (set by
 ## game/app.gd when leaving the title; tests leave it off).
 var arrival_shot := false
+## The map a new game starts on (game/app.gd sets the 2D slice; tests that build
+## main.tscn directly keep the 3D town).
+var start_map := START_MAP
+## Tile maps render here at their native pixel size (240x135 at the reference size)
+## and are scaled up by a whole number, so pixels stay square and crisp.
+var view2d: SubViewport
 ## Flags a new game starts with (the created character: player_name, player_look).
 var profile := {}
 
@@ -59,6 +68,21 @@ func _ready() -> void:
 		vp.audio_listener_enable_3d = true
 		box.add_child(vp)
 		view3d = vp
+	var layer2 := CanvasLayer.new()
+	layer2.layer = -1
+	add_child(layer2)
+	var box2 := SubViewportContainer.new()
+	box2.stretch = true
+	box2.stretch_shrink = 2
+	box2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	box2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer2.add_child(box2)
+	box2.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	view2d = SubViewport.new()
+	view2d.snap_2d_transforms_to_pixel = true
+	view2d.snap_2d_vertices_to_pixel = true
+	view2d.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+	box2.add_child(view2d)
 	SaveManager.world = self
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
@@ -75,20 +99,22 @@ func _ready() -> void:
 	new_game()
 
 
-func new_game(start_map: String = START_MAP) -> void:
+func new_game(first_map: String = "") -> void:
 	GameState.reset()
 	Journal.reset()
 	for k: String in profile:
 		GameState.set_flag(k, profile[k])
 	WorldTime.reset()
 	Weather.reset()
-	load_map(start_map, "default")
+	load_map(first_map if first_map != "" else start_map, "default")
 	Journal.start_quest(START_QUEST)
 
 
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
+	if player is GridPlayer:
+		player.place(map.tile_of(player.position), map.spawn_facing(spawn))
 	if player is Player2D:
 		player.global_position = map.nearest_standable(player.global_position)
 	if player is Player and player.walk_mask != null:
@@ -146,8 +172,15 @@ func _enter_map(id: String) -> void:
 		map.queue_free()
 	map_id = id
 	map = (load(MAPS[id]) as PackedScene).instantiate()
-	(view3d if map is GameMap3D else world).add_child(map)
-	if map is Map2D:
+	if map is TileWorld:
+		view2d.add_child(map)
+	else:
+		(view3d if map is GameMap3D else world).add_child(map)
+	if map is TileWorld:
+		player = GridPlayer.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch, map)
+	elif map is Map2D:
 		player = Player2D.new()
 		map.entities.add_child(player)
 		player.setup(ui.touch, map)

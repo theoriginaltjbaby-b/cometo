@@ -1,0 +1,15 @@
+{
+ "tavern_keeper": {
+  "name": "Tavern keeper",
+  "dialogue": "anjabi/tavern_keeper",
+  "look": {
+   "coat": "#66382f",
+   "accent": "#d9b36a",
+   "skin": "#9a6e54",
+   "hair": "short",
+   "hair_color": "#59504a",
+   "apron": true,
+   "long_coat": false
+  }
+ }
+}

@@ -169,7 +169,7 @@ func _run() -> void:
 	map = main.get("map")
 	cart = map.get_node("Entities/OreCart")
 	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(30, 0.05, 9)) < 0.3, "load restores the player position")
-	check(Journal.clues.size() == 4 and Journal.is_complete("quiet_mine"), "load restores the journal")
+	check(Journal.has_clue("closure_notice") and Journal.has_clue("early_recall") and Journal.has_clue("power_cut") and Journal.has_clue("sealed_outside") and Journal.is_complete("quiet_mine"), "load restores the journal")
 	check(cart.state() == "trench" and cart.global_position.distance_to(Vector3(40, 0, 16)) < 0.1, "load restores the puzzle state")
 	await _place3(Vector3(40, 0.05, 14.0))
 	Input.action_press(&"move_down")

@@ -18,6 +18,8 @@ const MAIN := preload("res://game/main.tscn")
 var fade_time := 0.6
 ## False in tests: no title fade-in.
 var animate := true
+## Where NEW GAME starts: the 2D vertical slice on this branch.
+var start_map := "anjabi_steps"
 
 var main: Node
 var title: TitleScreen
@@ -176,6 +178,7 @@ func _start(boot: String, profile: Dictionary) -> void:
 	main.set("boot", boot)
 	main.set("profile", profile)
 	main.set("arrival_shot", animate)
+	main.set("start_map", start_map)
 	add_child(main)
 	move_child(main, 0)
 	var ui: GameUi = main.get("ui")

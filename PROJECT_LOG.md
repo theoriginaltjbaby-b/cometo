@@ -159,6 +159,17 @@ All files were created 2026-11-14 unless noted.
 | `art/shaders/compass_inlay.gdshader` | The brass compass rose set into the Steps. |
 | `data/dialogue/anjabi/public_terminal.json`, `townhouse_door.json` | Placeholder narration for the terminal and townhouse doors. |
 | `tests/screenshot_overhaul.gd` / `.tscn` | Windowed shots of the market quarter and the arrival shot. |
+| `render2d/pixel_art.gd` | `PixelArt` (2D branch): the art provider. Names to textures for tiles, props and 16x32 character sheets; generated placeholders in the settlement palette, overridden by any PNG in `art/pixel/`. |
+| `world2d/tile_world.gd` | `TileWorld`: a 2D tile map built from `data/maps2d/*.json` (ground, build, detail, over layers; props, decor, NPCs, walkers, warps, signs, lights); collision, occupancy and door queries. |
+| `world2d/grid_actor.gd` | `GridActor`: FireRed-style tile-by-tile movement and sheet animation. |
+| `world2d/grid_player.gd` | `GridPlayer`: the player on a TileWorld (turn on tap, walk, run, bump, interact, doors). |
+| `world2d/grid_npc.gd` | `GridNpc`: data-driven NPCs (data/npcs2d.json) and wandering townsfolk. |
+| `world2d/maps/steps.tscn`, `shop.tscn` | The 2D vertical slice: the Steps (`anjabi_steps`) and the shop (`anjabi_steps_shop`). |
+| `data/maps2d/steps.json`, `shop.json`, `tiles.json` | Map layouts, objects and spawns; the tile catalogue (which tile names are solid). |
+| `data/npcs2d.json` | NPC definitions for 2D maps (name, dialogue, look). |
+| `data/dialogue/anjabi/tavern_door.json`, `road_out.json` | Placeholder narration for the slice (tavern door; the roads out of the slice). |
+| `tests/slice2d_test.gd` / `.tscn` | Headless test of the 2D vertical slice (34 checks). |
+| `tests/screenshot_slice2d.gd` / `.tscn` | Windowed shots of the 2D slice. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -950,3 +961,76 @@ ochre, muted teal, verdigris, indigo slate, aged brass, deep violet, warm amber 
   migration path (tag + `2d` branch, vertical slice of the Steps first, 3D untouched).
 - No code changed. Awaiting the director's decisions on art source, movement, scale and
   branching.
+
+## 23. 2D rebuild: the Steps vertical slice (2026-11-15, branch `2d`)
+
+Baseline: tag `3d-final` (the 3D game as of entry 22); branch `2d` created from it. The 3D
+implementation is untouched and still runs (its tests pass). Nothing was deleted.
+
+### Architecture (logic independent of rendering)
+- **Data**: maps are JSON (`data/maps2d/`): four character-grid layers (ground, build,
+  detail, over) and a list of objects (props with footprints, flat decor, NPCs by id,
+  walkers, door warps, signs, lights) and spawns. NPCs are defined in
+  `data/npcs2d.json`. Dialogue, quests, clues, saves, the clock and weather are the
+  existing systems, unchanged.
+- **World** (`world2d/`): `TileWorld` builds TileMapLayers and answers gameplay
+  questions (can enter, what is on that tile, where does this door go). `GridActor`,
+  `GridPlayer`, `GridNpc` move tile by tile and know nothing about how art is made.
+- **Art** (`render2d/pixel_art.gd`): the only place names become pictures. Placeholder
+  tiles, props and characters are generated in code in the settlement palette; a PNG in
+  `art/pixel/tiles|props|chars/<name>.png` replaces any of them with no code change.
+- **View**: tile maps render in their own SubViewport at native pixel size (240 px, 15
+  tiles wide; about 15 x 8 tiles at the 480x270 reference), scaled up 2x inside the
+  interface, then by a whole number to the window (`stretch/scale_mode = integer`), with
+  2D transforms snapped to pixels. Taller windows simply show more rows.
+- `main.gd` routes `TileWorld` maps to the 2D view and spawns a `GridPlayer`; the title,
+  character creation, menus, HUD, journal, dialogue box, clock, saves and travel all work
+  unchanged. `App.start_map` makes NEW GAME start on the 2D Steps; tests that build
+  `main.tscn` directly still start in the 3D town.
+
+### The slice
+- **Movement**: FireRed/HeartGold style. Tap a direction to turn in place, hold to walk
+  (0.24 s per tile, gliding), hold run to run (0.13 s per tile), steps chain with no pause,
+  walking into a wall plays a bump. Four directions, idle, two-frame-per-step walk and
+  run cycles; 16x32 adult figures. Touch drag and the RUN toggle map to the same.
+- **The Steps** (40 x 30 tiles): the tavern (ochre), two townhouses (rose; teal with a
+  verdigris dome) along the terrace top; a garden with a tree, cypress and bench; the
+  terrace with a stone balustrade; the arcade wall below with six shopfronts, striped
+  awnings and banners; the central stairs under a stone arch; the plaza with a brass
+  compass rose and the armillary landmark, two market stalls with merchants and a rug,
+  a public terminal, lamps, benches, string lights, lavender; the shop with its awning
+  and lit windows; a balustrade over the sea wall to the south; arched passages west and
+  east (roads beyond the slice, placeholder signs).
+- **Depth**: props and people share a y-sorted layer (behind a lamp when north of it, in
+  front when south); eaves and arches are on an overhead layer drawn above the player.
+- **NPC and dialogue**: the tavern keeper (data-defined) turns to face you; the existing
+  dialogue runs in the existing dialogue box.
+- **Quest step**: asking the keeper the way to the mine records a new clue,
+  `mine_directions` (the keeper's own words), in the journal. This is the slice's quest
+  interaction; it also applies in the 3D game.
+- **Interior**: the shop door warps into the shop interior (lamplit, no weather, shelves
+  examinable); the mat leads back out onto the step in front of the door.
+- **Lighting**: the existing 2D controller: the clock tints the map (dawn rose, day,
+  violet dusk, blue night), lamps and stall lanterns are 2D lights, lit windows and
+  shopfronts glow at night, rain/snow/mist overlays follow the weather; interiors are
+  steady lamplight.
+
+### Tests
+- New `tests/slice2d_test.gd`: 34/34 (start, view size, turning, gliding steps, tile
+  snapping, running vs walking, collision with walls, landmark, balustrade, stairs,
+  overhead arch, y-sorting, NPC blocking, talking, quest clue, door in and out, interior
+  light, night lighting, save and load, title -> 2D slice).
+- Existing: slice 162/162, menu 42/42. Two test expectations changed, by design: the 3D
+  slice test counted exactly 4 clues (the keeper now gives a fifth; it now checks the
+  four mine clues by name), and the menu test now asks the app for the 3D town since NEW
+  GAME starts the 2D slice.
+
+### Limits
+- All 2D art is generated placeholder art. The character-creation preview still shows
+  the 3D figure (the 2D sprite takes the chosen colours and hair).
+- Only the Steps and the shop exist in 2D; the roads out are signs. The 3D maps are not
+  linked from the 2D slice.
+- Maps are written as JSON grids for now; authoring in Godot's TileMap editor is a later
+  step (the tile names and catalogue carry over).
+- Not built for web or Mac yet on this branch; the GitHub Pages build is still the 3D
+  game.

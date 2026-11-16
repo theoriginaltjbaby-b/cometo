@@ -1,0 +1,17 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: this road leads beyond the vertical slice. The rest of Anjabi is not built in 2D yet.]"
+    ]
+   ]
+  }
+ }
+}

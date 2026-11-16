@@ -1,0 +1,74 @@
+{
+ "_note": {
+  "about": "Tile names used by data/maps2d/*.json. solid: blocks movement (ground and build layers). Art for each name comes from render2d/pixel_art.gd or art/pixel/tiles/<name>.png."
+ },
+ "awning_rose": {},
+ "awning_teal": {},
+ "balustrade": {
+  "solid": true
+ },
+ "balustrade_v": {
+  "solid": true
+ },
+ "cobble": {},
+ "cobble_warm": {},
+ "counter": {
+  "solid": true
+ },
+ "door": {},
+ "floor_wood": {},
+ "flowers": {},
+ "grass": {},
+ "interior_wall": {
+  "solid": true
+ },
+ "mat": {},
+ "plaster_ochre": {
+  "solid": true
+ },
+ "plaster_rose": {
+  "solid": true
+ },
+ "plaster_teal": {
+  "solid": true
+ },
+ "plaza_band": {},
+ "roof_eave": {},
+ "roof_ridge": {
+  "solid": true
+ },
+ "roof_slate": {
+  "solid": true
+ },
+ "roof_verdigris": {
+  "solid": true
+ },
+ "shelf": {
+  "solid": true
+ },
+ "shop_window": {},
+ "stairs": {},
+ "terrace": {},
+ "vines": {},
+ "void": {
+  "solid": true
+ },
+ "wall_face": {
+  "solid": true
+ },
+ "wall_face_dark": {
+  "solid": true
+ },
+ "wall_top": {
+  "solid": true
+ },
+ "water": {
+  "solid": true
+ },
+ "window_dark_ochre": {},
+ "window_dark_rose": {},
+ "window_dark_teal": {},
+ "window_lit_ochre": {},
+ "window_lit_rose": {},
+ "window_lit_teal": {}
+}

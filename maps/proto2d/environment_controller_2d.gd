@@ -46,6 +46,22 @@ func add_lamp(at: Vector2, energy: float, range_px: float) -> void:
 func _apply() -> void:
 	if not is_inside_tree():
 		return
+	if indoor:
+		# interiors: steady lamplight, no sky or weather, glow on
+		_tint.color = Color(0.82, 0.74, 0.8)
+		for l in _lamps2d:
+			l.energy = float(l.get_meta(&"lit_energy"))
+			l.visible = true
+		for n in get_tree().get_nodes_in_group(&"night_glow"):
+			(n as CanvasItem).modulate = Color(1, 1, 1, 0.5)
+			(n as CanvasItem).visible = true
+		for n in get_tree().get_nodes_in_group(&"precipitation"):
+			n.call(&"set_precipitation", 0.0, 0.0)
+		for n in get_tree().get_nodes_in_group(&"fog_overlay"):
+			var fm := (n as CanvasItem).material as ShaderMaterial
+			if fm != null:
+				fm.set_shader_parameter("fog_amount", 0.0)
+		return
 	var t := WorldTime.day_fraction()
 	var day := daylight.sample(t)
 	var cloud: float = w["cloud"]

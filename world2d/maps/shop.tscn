@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world2d/tile_world.gd" id="1"]
+
+[node name="TileWorld" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_steps_shop"
+map_file = "res://data/maps2d/shop.json"
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true

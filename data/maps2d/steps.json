@@ -1,0 +1,876 @@
+{
+ "id": "anjabi_steps",
+ "name": "ANJABI  \u00b7  THE STEPS",
+ "indoor": false,
+ "legend": {
+  ".": "cobble",
+  ",": "cobble_warm",
+  "=": "plaza_band",
+  "t": "terrace",
+  "g": "grass",
+  "f": "flowers",
+  "s": "stairs",
+  "~": "water",
+  "v": "void",
+  "W": "wall_face",
+  "w": "wall_face_dark",
+  "_": "wall_top",
+  "R": "roof_slate",
+  "r": "roof_ridge",
+  "G": "roof_verdigris",
+  "P": "plaster_rose",
+  "O": "plaster_ochre",
+  "Q": "plaster_teal",
+  "H": "balustrade",
+  "h": "balustrade_v",
+  "a": "window_lit_ochre",
+  "b": "window_dark_ochre",
+  "c": "window_lit_rose",
+  "d": "window_dark_rose",
+  "e": "window_lit_teal",
+  "i": "window_dark_teal",
+  "D": "door",
+  "S": "shop_window",
+  "V": "vines",
+  "A": "awning_rose",
+  "B": "awning_teal",
+  "E": "roof_eave",
+  "^": "wall_top",
+  "I": "interior_wall",
+  "L": "shelf",
+  "K": "counter",
+  "m": "mat",
+  "F": "floor_wood"
+ },
+ "ground": [
+  "ggggggggggggggfggggggfgggggggggggggggggg",
+  "ggggggggggggggggggggfggggggggggggggggggg",
+  "gggggggggggggggggggfgggggggggggggggggggg",
+  "ggggggggggggggggggfggggggggggggggggggggg",
+  "gggggggggggggggggfgggggggggggggggggggggg",
+  "ggggggggggggggggfggggggggggggggggggggggg",
+  "gggggggggggggggfgggggggggggggggggggggggg",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  ".......,..........,==........,..........",
+  ".....,..........,..==......,..........,.",
+  "...,..........,....==....,..........,...",
+  ".,..........,......==..,..........,.....",
+  "..........,..........,..........,.......",
+  "........,..........,..........,.........",
+  "======,==========,....======,==========,",
+  "....,..........,..........,..........,..",
+  "..,..........,..........,..........,....",
+  ",..........,.......==.,..........,......",
+  ".........,.........=,..........,........",
+  ".......,..........,==........,..........",
+  "........................................",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+ ],
+ "build": [
+  "w rrrrrrrrrrrr                GGGGGGGG w",
+  "w RRRRRRRRRRRR        rrrrrrr GGGGGGGG w",
+  "w RRRRRRRRRRRR        RRRRRRR GGGGGGGG w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w                                      w",
+  "w                                      w",
+  "w                                      w",
+  "wHHHHHHHHHHHHHHHHH    HHHHHHHHHHHHHHHHHw",
+  "wWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWw",
+  "wWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWw",
+  "w                              rrrrrrrrw",
+  "w                              RRRRRRRRw",
+  "w                              PPPPPPPPw",
+  "wW                             PPPPPPPPw",
+  "                               PPPP PPPw",
+  "                                       w",
+  "                                       w",
+  "wW                                     w",
+  "w                                       ",
+  "w                                       ",
+  "w                                       ",
+  "w                                      w",
+  "wHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHw",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+ ],
+ "detail": [
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                      V     V           ",
+  "   a b    a a          c d c   e i  e   ",
+  "   a a    b a                  e    e   ",
+  "    a  D   a            D  c      D     ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  " V               V    V               V ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                BBBBBB  ",
+  "                                SS   S  ",
+  "                                S  D S  ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        "
+ ],
+ "over": [
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "  EEEEEEEEEEEE        EEEEEEE EEEEEEEE  ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                 ^^^^^^                 ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                               EEEEEEEE ",
+  "                                        ",
+  " ^                                      ",
+  " ^                                      ",
+  " ^                                      ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        "
+ ],
+ "objects": [
+  {
+   "type": "decor",
+   "sprite": "compass",
+   "at": [
+    17,
+    17
+   ],
+   "offset": [
+    8,
+    0
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "armillary",
+   "at": [
+    19,
+    19
+   ],
+   "size": [
+    2,
+    1
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 5,
+    "height": 40
+   }
+  },
+  {
+   "type": "decor",
+   "sprite": "rug",
+   "at": [
+    3,
+    15
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "stall_rose",
+   "at": [
+    3,
+    14
+   ],
+   "size": [
+    3,
+    1
+   ],
+   "light": {
+    "energy": 0.8,
+    "range": 4,
+    "height": 28
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "stall_teal",
+   "at": [
+    26,
+    14
+   ],
+   "size": [
+    3,
+    1
+   ],
+   "light": {
+    "energy": 0.8,
+    "range": 4,
+    "height": 28
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    4,
+    13
+   ],
+   "area": [
+    4,
+    13,
+    1,
+    1
+   ],
+   "facing": "down",
+   "look": {
+    "coat": "#6b2f37",
+    "accent": "#c49a52",
+    "skin": "#b48a6c",
+    "hair": "short",
+    "hat": "brim",
+    "long_coat": true
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    27,
+    13
+   ],
+   "area": [
+    27,
+    13,
+    1,
+    1
+   ],
+   "facing": "down",
+   "look": {
+    "coat": "#2f5556",
+    "accent": "#c8a060",
+    "skin": "#8e6248",
+    "hair": "long",
+    "hair_color": "#3a2820",
+    "apron": true,
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    24,
+    15
+   ],
+   "area": [
+    24,
+    15,
+    1,
+    1
+   ],
+   "facing": "right",
+   "look": {
+    "coat": "#4a3d5c",
+    "accent": "#b98a48",
+    "skin": "#c9a084",
+    "hair": "bun",
+    "hair_color": "#2a1c18"
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    25,
+    15
+   ],
+   "area": [
+    25,
+    15,
+    1,
+    1
+   ],
+   "facing": "left",
+   "look": {
+    "coat": "#6e5a44",
+    "accent": "#7a5432",
+    "skin": "#9c7258",
+    "hair": "short",
+    "hair_color": "#1e1814",
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    10,
+    20
+   ],
+   "area": [
+    6,
+    18,
+    10,
+    5
+   ],
+   "look": {
+    "coat": "#7a4a52",
+    "accent": "#c4a46a",
+    "skin": "#d0a888",
+    "hair": "long",
+    "hair_color": "#5a3a28"
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    27,
+    21
+   ],
+   "area": [
+    23,
+    19,
+    8,
+    4
+   ],
+   "look": {
+    "coat": "#3e4a6a",
+    "accent": "#a07a40",
+    "skin": "#7a5440",
+    "hair": "short",
+    "hat": "cap",
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    28,
+    8
+   ],
+   "area": [
+    24,
+    7,
+    12,
+    3
+   ],
+   "look": {
+    "coat": "#5a6e60",
+    "accent": "#c09858",
+    "skin": "#b88c70",
+    "hair": "bun",
+    "hair_color": "#4a3020"
+   }
+  },
+  {
+   "type": "npc",
+   "id": "tavern_keeper",
+   "at": [
+    9,
+    8
+   ],
+   "facing": "down"
+  },
+  {
+   "type": "sign",
+   "at": [
+    7,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Main Tavern",
+   "dialogue": "anjabi/tavern_door"
+  },
+  {
+   "type": "sign",
+   "at": [
+    24,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Townhouse",
+   "dialogue": "anjabi/townhouse_door"
+  },
+  {
+   "type": "sign",
+   "at": [
+    34,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Townhouse",
+   "dialogue": "anjabi/townhouse_door"
+  },
+  {
+   "type": "warp",
+   "at": [
+    35,
+    17
+   ],
+   "to": "anjabi_steps_shop",
+   "spawn": "default",
+   "prompt": "Enter",
+   "label": "Shop"
+  },
+  {
+   "type": "prop",
+   "sprite": "terminal",
+   "at": [
+    23,
+    13
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    23,
+    13
+   ],
+   "prompt": "Look",
+   "label": "Terminal",
+   "dialogue": "anjabi/public_terminal"
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    17,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    22,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_leaf",
+   "at": [
+    1,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_leaf",
+   "at": [
+    38,
+    24
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    8,
+    17
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    29,
+    19
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    8,
+    24
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    31,
+    24
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    16,
+    7
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    23,
+    7
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    12,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    25,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "barrel",
+   "at": [
+    30,
+    16
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    30,
+    17
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    2,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "tree",
+   "at": [
+    2,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "cypress",
+   "at": [
+    36,
+    20
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "tree",
+   "at": [
+    15,
+    1
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "cypress",
+   "at": [
+    20,
+    2
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    17,
+    5
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    29,
+    6
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "dome",
+   "at": [
+    30,
+    0
+   ],
+   "offset": [
+    0,
+    -6
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "decor",
+   "sprite": "string_lights",
+   "at": [
+    8,
+    13
+   ],
+   "offset": [
+    0,
+    2
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "decor",
+   "sprite": "string_lights",
+   "at": [
+    20,
+    15
+   ],
+   "offset": [
+    4,
+    4
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "prop",
+   "sprite": "notice",
+   "at": [
+    0,
+    18
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    0,
+    18
+   ],
+   "prompt": "Read",
+   "label": "Road into town",
+   "dialogue": "anjabi/road_out"
+  },
+  {
+   "type": "prop",
+   "sprite": "notice",
+   "at": [
+    39,
+    22
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    39,
+    22
+   ],
+   "prompt": "Read",
+   "label": "Way to the docks",
+   "dialogue": "anjabi/road_out"
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    2,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    6,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    10,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    14,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    23,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    27,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    5,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_teal",
+   "at": [
+    9,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    13,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_teal",
+   "at": [
+    26,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    30,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  }
+ ],
+ "spawns": {
+  "default": [
+   19,
+   22,
+   "up"
+  ],
+  "shop": [
+   35,
+   18,
+   "down"
+  ]
+ }
+}
