@@ -28,6 +28,7 @@ COMETO - all source files. Index:
   core/weather_manager.gd
   core/world_calendar.gd
   core/world_time_manager.gd
+  data/npcs2d.json
   data/dialogue/anjabi/cart_bridge.json
   data/dialogue/anjabi/cart_buffer.json
   data/dialogue/anjabi/cliff_edge.json
@@ -39,12 +40,17 @@ COMETO - all source files. Index:
   data/dialogue/anjabi/notice.json
   data/dialogue/anjabi/pod_b17.json
   data/dialogue/anjabi/public_terminal.json
+  data/dialogue/anjabi/road_out.json
   data/dialogue/anjabi/shop_shelves.json
+  data/dialogue/anjabi/tavern_door.json
   data/dialogue/anjabi/tavern_keeper.json
   data/dialogue/anjabi/townhouse_door.json
   data/dialogue/anjabi/trench.json
   data/journal/clues.json
   data/journal/quests.json
+  data/maps2d/shop.json
+  data/maps2d/steps.json
+  data/maps2d/tiles.json
   game/app.gd
   game/app.tscn
   game/environment_controller.gd
@@ -89,6 +95,7 @@ COMETO - all source files. Index:
   maps/proto2d/map_2d.gd
   maps/proto2d/person_2d.gd
   maps/proto2d/player_2d.gd
+  render2d/pixel_art.gd
   tests/menu_test.gd
   tests/menu_test.tscn
   tests/overview.gd
@@ -105,12 +112,16 @@ COMETO - all source files. Index:
   tests/screenshot_interior.tscn
   tests/screenshot_overhaul.gd
   tests/screenshot_overhaul.tscn
+  tests/screenshot_slice2d.gd
+  tests/screenshot_slice2d.tscn
   tests/screenshot_time.gd
   tests/screenshot_time.tscn
   tests/screenshot_title.gd
   tests/screenshot_title.tscn
   tests/screenshot_town.gd
   tests/screenshot_town.tscn
+  tests/slice2d_test.gd
+  tests/slice2d_test.tscn
   tests/slice_test.gd
   tests/slice_test.tscn
   tools/bake_2d.gd
@@ -134,6 +145,12 @@ COMETO - all source files. Index:
   ui/title/title_backdrop.gd
   ui/title/title_screen.gd
   ui/title/title_ship.gd
+  world2d/grid_actor.gd
+  world2d/grid_npc.gd
+  world2d/grid_player.gd
+  world2d/tile_world.gd
+  world2d/maps/shop.tscn
+  world2d/maps/steps.tscn
 
 
 ==============================================================================
@@ -169,6 +186,8 @@ Settings="*res://core/settings.gd"
 Audio="*res://core/audio_manager.gd"
 
 [display]
+
+window/stretch/scale_mode="integer"
 
 window/size/viewport_width=480
 window/size/viewport_height=270
@@ -4018,6 +4037,25 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ==============================================================================
+== data/npcs2d.json
+==============================================================================
+{
+ "tavern_keeper": {
+  "name": "Tavern keeper",
+  "dialogue": "anjabi/tavern_keeper",
+  "look": {
+   "coat": "#66382f",
+   "accent": "#d9b36a",
+   "skin": "#9a6e54",
+   "hair": "short",
+   "hair_color": "#59504a",
+   "apron": true,
+   "long_coat": false
+  }
+ }
+}
+
+==============================================================================
 == data/dialogue/anjabi/cart_bridge.json
 ==============================================================================
 {
@@ -4325,6 +4363,27 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ==============================================================================
+== data/dialogue/anjabi/road_out.json
+==============================================================================
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: this road leads beyond the vertical slice. The rest of Anjabi is not built in 2D yet.]"
+    ]
+   ]
+  }
+ }
+}
+
+==============================================================================
 == data/dialogue/anjabi/shop_shelves.json
 ==============================================================================
 {
@@ -4341,47 +4400,120 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 ==============================================================================
+== data/dialogue/anjabi/tavern_door.json
+==============================================================================
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "A heavy door under the tavern sign. Warm light and a wall of voices behind it."
+    ],
+    [
+     "",
+     "It is full inside, as the keeper said."
+    ]
+   ]
+  }
+ }
+}
+
+==============================================================================
 == data/dialogue/anjabi/tavern_keeper.json
 ==============================================================================
 {
 	"entry": [
-		{"if": {"flag": "tavern_keeper.met"}, "goto": "again"},
-		{"goto": "first"}
+		{
+			"if": {
+				"flag": "tavern_keeper.met"
+			},
+			"goto": "again"
+		},
+		{
+			"goto": "first"
+		}
 	],
 	"nodes": {
 		"first": {
-			"do": [{"set": {"tavern_keeper.met": true}}],
+			"do": [
+				{
+					"set": {
+						"tavern_keeper.met": true
+					}
+				}
+			],
 			"say": [
-				["", "Someone in a stained apron is wiping rain off the outside tables, which will not stay dry."],
-				["Tavern keeper", "Full inside. Stand under the awning if you like, nobody charges for that."]
+				[
+					"",
+					"Someone in a stained apron is wiping rain off the outside tables, which will not stay dry."
+				],
+				[
+					"Tavern keeper",
+					"Full inside. Stand under the awning if you like, nobody charges for that."
+				]
 			],
 			"goto": "menu"
 		},
 		"again": {
-			"say": [["Tavern keeper", "Still raining. Still full."]],
+			"say": [
+				[
+					"Tavern keeper",
+					"Still raining. Still full."
+				]
+			],
 			"goto": "menu"
 		},
 		"menu": {
 			"choices": [
-				{"text": "What are people saying about the mine?", "goto": "mine"},
-				{"text": "Where's the mine from here?", "goto": "where"},
-				{"text": "Nothing. Thanks.", "goto": "end"}
+				{
+					"text": "What are people saying about the mine?",
+					"goto": "mine"
+				},
+				{
+					"text": "Where's the mine from here?",
+					"goto": "where"
+				},
+				{
+					"text": "Nothing. Thanks.",
+					"goto": "end"
+				}
 			]
 		},
 		"mine": {
 			"say": [
-				["Tavern keeper", "Depends who's buying. You'll hear it a different way at every table."],
-				["Tavern keeper", "The ones who worked it don't come up here much now."]
+				[
+					"Tavern keeper",
+					"Depends who's buying. You'll hear it a different way at every table."
+				],
+				[
+					"Tavern keeper",
+					"The ones who worked it don't come up here much now."
+				]
 			],
 			"goto": "menu"
 		},
 		"where": {
-			"say": [["Tavern keeper", "Down the west stairs off the Steps. Follow the rails till the fence stops you."]],
-			"goto": "menu"
+			"say": [
+				[
+					"Tavern keeper",
+					"Down the west stairs off the Steps. Follow the rails till the fence stops you."
+				]
+			],
+			"goto": "menu",
+			"then": [
+				{
+					"clue": "mine_directions"
+				}
+			]
 		}
 	}
 }
-
 
 ==============================================================================
 == data/dialogue/anjabi/townhouse_door.json
@@ -4434,9 +4566,12 @@ func _unhandled_input(event: InputEvent) -> void:
 	"sealed_outside": {
 		"title": "Welded from outside",
 		"text": "The mine door is welded shut on the outside, the bead still bright. Rescue stretchers sit beside it, never unwrapped."
+	},
+	"mine_directions": {
+		"title": "The way to the mine",
+		"text": "The tavern keeper: down the west stairs off the Steps, then follow the rails until the fence stops you."
 	}
 }
-
 
 ==============================================================================
 == data/journal/quests.json
@@ -4454,6 +4589,1196 @@ func _unhandled_input(event: InputEvent) -> void:
 	}
 }
 
+
+==============================================================================
+== data/maps2d/shop.json
+==============================================================================
+{
+ "id": "anjabi_steps_shop",
+ "name": "ANJABI  \u00b7  SHOP",
+ "indoor": true,
+ "legend": {
+  ".": "cobble",
+  ",": "cobble_warm",
+  "=": "plaza_band",
+  "t": "terrace",
+  "g": "grass",
+  "f": "flowers",
+  "s": "stairs",
+  "~": "water",
+  "v": "void",
+  "W": "wall_face",
+  "w": "wall_face_dark",
+  "_": "wall_top",
+  "R": "roof_slate",
+  "r": "roof_ridge",
+  "G": "roof_verdigris",
+  "P": "plaster_rose",
+  "O": "plaster_ochre",
+  "Q": "plaster_teal",
+  "H": "balustrade",
+  "h": "balustrade_v",
+  "a": "window_lit_ochre",
+  "b": "window_dark_ochre",
+  "c": "window_lit_rose",
+  "d": "window_dark_rose",
+  "e": "window_lit_teal",
+  "i": "window_dark_teal",
+  "D": "door",
+  "S": "shop_window",
+  "V": "vines",
+  "A": "awning_rose",
+  "B": "awning_teal",
+  "E": "roof_eave",
+  "^": "wall_top",
+  "I": "interior_wall",
+  "L": "shelf",
+  "K": "counter",
+  "m": "mat",
+  "F": "floor_wood"
+ },
+ "ground": [
+  "vvvvvvvvvvvv",
+  "vIIIIIIIIIIv",
+  "vIIIIIIIIIIv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vFFFFFFFFFFv",
+  "vvvvvmmvvvvv"
+ ],
+ "build": [
+  "            ",
+  "            ",
+  "  LL    LL  ",
+  "            ",
+  "      KKKK  ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "detail": [
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "over": [
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            ",
+  "            "
+ ],
+ "objects": [
+  {
+   "type": "decor",
+   "sprite": "rug",
+   "at": [
+    3,
+    5
+   ],
+   "offset": [
+    0,
+    0
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "barrel",
+   "at": [
+    1,
+    8
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    10,
+    3
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    1,
+    3
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    10,
+    8
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    2,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    3,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    8,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "sign",
+   "at": [
+    9,
+    2
+   ],
+   "prompt": "Look",
+   "label": "Shelves",
+   "dialogue": "anjabi/shop_shelves"
+  },
+  {
+   "type": "light",
+   "at": [
+    3,
+    5
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 20
+   }
+  },
+  {
+   "type": "light",
+   "at": [
+    8,
+    5
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 20
+   }
+  },
+  {
+   "type": "warp",
+   "at": [
+    5,
+    9
+   ],
+   "to": "anjabi_steps",
+   "spawn": "shop"
+  },
+  {
+   "type": "warp",
+   "at": [
+    6,
+    9
+   ],
+   "to": "anjabi_steps",
+   "spawn": "shop"
+  }
+ ],
+ "spawns": {
+  "default": [
+   5,
+   8,
+   "up"
+  ]
+ }
+}
+
+==============================================================================
+== data/maps2d/steps.json
+==============================================================================
+{
+ "id": "anjabi_steps",
+ "name": "ANJABI  \u00b7  THE STEPS",
+ "indoor": false,
+ "legend": {
+  ".": "cobble",
+  ",": "cobble_warm",
+  "=": "plaza_band",
+  "t": "terrace",
+  "g": "grass",
+  "f": "flowers",
+  "s": "stairs",
+  "~": "water",
+  "v": "void",
+  "W": "wall_face",
+  "w": "wall_face_dark",
+  "_": "wall_top",
+  "R": "roof_slate",
+  "r": "roof_ridge",
+  "G": "roof_verdigris",
+  "P": "plaster_rose",
+  "O": "plaster_ochre",
+  "Q": "plaster_teal",
+  "H": "balustrade",
+  "h": "balustrade_v",
+  "a": "window_lit_ochre",
+  "b": "window_dark_ochre",
+  "c": "window_lit_rose",
+  "d": "window_dark_rose",
+  "e": "window_lit_teal",
+  "i": "window_dark_teal",
+  "D": "door",
+  "S": "shop_window",
+  "V": "vines",
+  "A": "awning_rose",
+  "B": "awning_teal",
+  "E": "roof_eave",
+  "^": "wall_top",
+  "I": "interior_wall",
+  "L": "shelf",
+  "K": "counter",
+  "m": "mat",
+  "F": "floor_wood"
+ },
+ "ground": [
+  "ggggggggggggggfggggggfgggggggggggggggggg",
+  "ggggggggggggggggggggfggggggggggggggggggg",
+  "gggggggggggggggggggfgggggggggggggggggggg",
+  "ggggggggggggggggggfggggggggggggggggggggg",
+  "gggggggggggggggggfgggggggggggggggggggggg",
+  "ggggggggggggggggfggggggggggggggggggggggg",
+  "gggggggggggggggfgggggggggggggggggggggggg",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "tttttttttttttttttttttttttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  "ttttttttttttttttttsssstttttttttttttttttt",
+  ".......,..........,==........,..........",
+  ".....,..........,..==......,..........,.",
+  "...,..........,....==....,..........,...",
+  ".,..........,......==..,..........,.....",
+  "..........,..........,..........,.......",
+  "........,..........,..........,.........",
+  "======,==========,....======,==========,",
+  "....,..........,..........,..........,..",
+  "..,..........,..........,..........,....",
+  ",..........,.......==.,..........,......",
+  ".........,.........=,..........,........",
+  ".......,..........,==........,..........",
+  "........................................",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+ ],
+ "build": [
+  "w rrrrrrrrrrrr                GGGGGGGG w",
+  "w RRRRRRRRRRRR        rrrrrrr GGGGGGGG w",
+  "w RRRRRRRRRRRR        RRRRRRR GGGGGGGG w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w OOOOOOOOOOOO        PPPPPPP QQQQQQQQ w",
+  "w                                      w",
+  "w                                      w",
+  "w                                      w",
+  "wHHHHHHHHHHHHHHHHH    HHHHHHHHHHHHHHHHHw",
+  "wWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWw",
+  "wWWWWWWWWWWWWWWWWW    WWWWWWWWWWWWWWWWWw",
+  "w                              rrrrrrrrw",
+  "w                              RRRRRRRRw",
+  "w                              PPPPPPPPw",
+  "wW                             PPPPPPPPw",
+  "                               PPPP PPPw",
+  "                                       w",
+  "                                       w",
+  "wW                                     w",
+  "w                                       ",
+  "w                                       ",
+  "w                                       ",
+  "w                                      w",
+  "wHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHw",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
+  "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+ ],
+ "detail": [
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                      V     V           ",
+  "   a b    a a          c d c   e i  e   ",
+  "   a a    b a                  e    e   ",
+  "    a  D   a            D  c      D     ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  " V               V    V               V ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                BBBBBB  ",
+  "                                SS   S  ",
+  "                                S  D S  ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        "
+ ],
+ "over": [
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "  EEEEEEEEEEEE        EEEEEEE EEEEEEEE  ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                 ^^^^^^                 ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                               EEEEEEEE ",
+  "                                        ",
+  " ^                                      ",
+  " ^                                      ",
+  " ^                                      ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        ",
+  "                                        "
+ ],
+ "objects": [
+  {
+   "type": "decor",
+   "sprite": "compass",
+   "at": [
+    17,
+    17
+   ],
+   "offset": [
+    8,
+    0
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "armillary",
+   "at": [
+    19,
+    19
+   ],
+   "size": [
+    2,
+    1
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 5,
+    "height": 40
+   }
+  },
+  {
+   "type": "decor",
+   "sprite": "rug",
+   "at": [
+    3,
+    15
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "stall_rose",
+   "at": [
+    3,
+    14
+   ],
+   "size": [
+    3,
+    1
+   ],
+   "light": {
+    "energy": 0.8,
+    "range": 4,
+    "height": 28
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "stall_teal",
+   "at": [
+    26,
+    14
+   ],
+   "size": [
+    3,
+    1
+   ],
+   "light": {
+    "energy": 0.8,
+    "range": 4,
+    "height": 28
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    4,
+    13
+   ],
+   "area": [
+    4,
+    13,
+    1,
+    1
+   ],
+   "facing": "down",
+   "look": {
+    "coat": "#6b2f37",
+    "accent": "#c49a52",
+    "skin": "#b48a6c",
+    "hair": "short",
+    "hat": "brim",
+    "long_coat": true
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    27,
+    13
+   ],
+   "area": [
+    27,
+    13,
+    1,
+    1
+   ],
+   "facing": "down",
+   "look": {
+    "coat": "#2f5556",
+    "accent": "#c8a060",
+    "skin": "#8e6248",
+    "hair": "long",
+    "hair_color": "#3a2820",
+    "apron": true,
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    24,
+    15
+   ],
+   "area": [
+    24,
+    15,
+    1,
+    1
+   ],
+   "facing": "right",
+   "look": {
+    "coat": "#4a3d5c",
+    "accent": "#b98a48",
+    "skin": "#c9a084",
+    "hair": "bun",
+    "hair_color": "#2a1c18"
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    25,
+    15
+   ],
+   "area": [
+    25,
+    15,
+    1,
+    1
+   ],
+   "facing": "left",
+   "look": {
+    "coat": "#6e5a44",
+    "accent": "#7a5432",
+    "skin": "#9c7258",
+    "hair": "short",
+    "hair_color": "#1e1814",
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    10,
+    20
+   ],
+   "area": [
+    6,
+    18,
+    10,
+    5
+   ],
+   "look": {
+    "coat": "#7a4a52",
+    "accent": "#c4a46a",
+    "skin": "#d0a888",
+    "hair": "long",
+    "hair_color": "#5a3a28"
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    27,
+    21
+   ],
+   "area": [
+    23,
+    19,
+    8,
+    4
+   ],
+   "look": {
+    "coat": "#3e4a6a",
+    "accent": "#a07a40",
+    "skin": "#7a5440",
+    "hair": "short",
+    "hat": "cap",
+    "long_coat": false
+   }
+  },
+  {
+   "type": "walker",
+   "at": [
+    28,
+    8
+   ],
+   "area": [
+    24,
+    7,
+    12,
+    3
+   ],
+   "look": {
+    "coat": "#5a6e60",
+    "accent": "#c09858",
+    "skin": "#b88c70",
+    "hair": "bun",
+    "hair_color": "#4a3020"
+   }
+  },
+  {
+   "type": "npc",
+   "id": "tavern_keeper",
+   "at": [
+    9,
+    8
+   ],
+   "facing": "down"
+  },
+  {
+   "type": "sign",
+   "at": [
+    7,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Main Tavern",
+   "dialogue": "anjabi/tavern_door"
+  },
+  {
+   "type": "sign",
+   "at": [
+    24,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Townhouse",
+   "dialogue": "anjabi/townhouse_door"
+  },
+  {
+   "type": "sign",
+   "at": [
+    34,
+    6
+   ],
+   "prompt": "Knock",
+   "label": "Townhouse",
+   "dialogue": "anjabi/townhouse_door"
+  },
+  {
+   "type": "warp",
+   "at": [
+    35,
+    17
+   ],
+   "to": "anjabi_steps_shop",
+   "spawn": "default",
+   "prompt": "Enter",
+   "label": "Shop"
+  },
+  {
+   "type": "prop",
+   "sprite": "terminal",
+   "at": [
+    23,
+    13
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    23,
+    13
+   ],
+   "prompt": "Look",
+   "label": "Terminal",
+   "dialogue": "anjabi/public_terminal"
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    17,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    22,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_leaf",
+   "at": [
+    1,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_leaf",
+   "at": [
+    38,
+    24
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    8,
+    17
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    29,
+    19
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    8,
+    24
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    31,
+    24
+   ],
+   "light": {
+    "energy": 1.3,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    16,
+    7
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "lamp",
+   "at": [
+    23,
+    7
+   ],
+   "light": {
+    "energy": 1.2,
+    "range": 6,
+    "height": 40
+   }
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    12,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    25,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "barrel",
+   "at": [
+    30,
+    16
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    30,
+    17
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "crates",
+   "at": [
+    2,
+    13
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "tree",
+   "at": [
+    2,
+    22
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "cypress",
+   "at": [
+    36,
+    20
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "tree",
+   "at": [
+    15,
+    1
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "cypress",
+   "at": [
+    20,
+    2
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "bench",
+   "at": [
+    17,
+    5
+   ],
+   "size": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "prop",
+   "sprite": "pot_lavender",
+   "at": [
+    29,
+    6
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "dome",
+   "at": [
+    30,
+    0
+   ],
+   "offset": [
+    0,
+    -6
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "decor",
+   "sprite": "string_lights",
+   "at": [
+    8,
+    13
+   ],
+   "offset": [
+    0,
+    2
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "decor",
+   "sprite": "string_lights",
+   "at": [
+    20,
+    15
+   ],
+   "offset": [
+    4,
+    4
+   ],
+   "layer": "over"
+  },
+  {
+   "type": "prop",
+   "sprite": "notice",
+   "at": [
+    0,
+    18
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    0,
+    18
+   ],
+   "prompt": "Read",
+   "label": "Road into town",
+   "dialogue": "anjabi/road_out"
+  },
+  {
+   "type": "prop",
+   "sprite": "notice",
+   "at": [
+    39,
+    22
+   ]
+  },
+  {
+   "type": "sign",
+   "at": [
+    39,
+    22
+   ],
+   "prompt": "Read",
+   "label": "Way to the docks",
+   "dialogue": "anjabi/road_out"
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    2,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    6,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    10,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    14,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    23,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "arcade_bay",
+   "at": [
+    27,
+    11
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    5,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_teal",
+   "at": [
+    9,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    13,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_teal",
+   "at": [
+    26,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  },
+  {
+   "type": "decor",
+   "sprite": "banner_rose",
+   "at": [
+    30,
+    11
+   ],
+   "offset": [
+    2,
+    1
+   ]
+  }
+ ],
+ "spawns": {
+  "default": [
+   19,
+   22,
+   "up"
+  ],
+  "shop": [
+   35,
+   18,
+   "down"
+  ]
+ }
+}
+
+==============================================================================
+== data/maps2d/tiles.json
+==============================================================================
+{
+ "_note": {
+  "about": "Tile names used by data/maps2d/*.json. solid: blocks movement (ground and build layers). Art for each name comes from render2d/pixel_art.gd or art/pixel/tiles/<name>.png."
+ },
+ "awning_rose": {},
+ "awning_teal": {},
+ "balustrade": {
+  "solid": true
+ },
+ "balustrade_v": {
+  "solid": true
+ },
+ "cobble": {},
+ "cobble_warm": {},
+ "counter": {
+  "solid": true
+ },
+ "door": {},
+ "floor_wood": {},
+ "flowers": {},
+ "grass": {},
+ "interior_wall": {
+  "solid": true
+ },
+ "mat": {},
+ "plaster_ochre": {
+  "solid": true
+ },
+ "plaster_rose": {
+  "solid": true
+ },
+ "plaster_teal": {
+  "solid": true
+ },
+ "plaza_band": {},
+ "roof_eave": {},
+ "roof_ridge": {
+  "solid": true
+ },
+ "roof_slate": {
+  "solid": true
+ },
+ "roof_verdigris": {
+  "solid": true
+ },
+ "shelf": {
+  "solid": true
+ },
+ "shop_window": {},
+ "stairs": {},
+ "terrace": {},
+ "vines": {},
+ "void": {
+  "solid": true
+ },
+ "wall_face": {
+  "solid": true
+ },
+ "wall_face_dark": {
+  "solid": true
+ },
+ "wall_top": {
+  "solid": true
+ },
+ "water": {
+  "solid": true
+ },
+ "window_dark_ochre": {},
+ "window_dark_rose": {},
+ "window_dark_teal": {},
+ "window_lit_ochre": {},
+ "window_lit_rose": {},
+ "window_lit_teal": {}
+}
 
 ==============================================================================
 == game/app.gd
@@ -4478,6 +5803,8 @@ const MAIN := preload("res://game/main.tscn")
 var fade_time := 0.6
 ## False in tests: no title fade-in.
 var animate := true
+## Where NEW GAME starts: the 2D vertical slice on this branch.
+var start_map := "anjabi_steps"
 
 var main: Node
 var title: TitleScreen
@@ -4636,6 +5963,7 @@ func _start(boot: String, profile: Dictionary) -> void:
 	main.set("boot", boot)
 	main.set("profile", profile)
 	main.set("arrival_shot", animate)
+	main.set("start_map", start_map)
 	add_child(main)
 	move_child(main, 0)
 	var ui: GameUi = main.get("ui")
@@ -5004,6 +6332,9 @@ const MAPS := {
 	"anjabi_shop": "res://maps/anjabi/interiors/shop.tscn",
 	# Golden Sun-style 2D prototype baked from the 3D district (tools/bake_2d.gd)
 	"anjabi_steps_2d": "res://maps/anjabi/steps_2d.tscn",
+	# the 2D tile-based rebuild (branch 2d): the Steps vertical slice
+	"anjabi_steps": "res://world2d/maps/steps.tscn",
+	"anjabi_steps_shop": "res://world2d/maps/shop.tscn",
 }
 const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"
@@ -5020,6 +6351,12 @@ var boot := ""
 ## Play the arrival shot the next time a game starts or resumes in the town (set by
 ## game/app.gd when leaving the title; tests leave it off).
 var arrival_shot := false
+## The map a new game starts on (game/app.gd sets the 2D slice; tests that build
+## main.tscn directly keep the 3D town).
+var start_map := START_MAP
+## Tile maps render here at their native pixel size (240x135 at the reference size)
+## and are scaled up by a whole number, so pixels stay square and crisp.
+var view2d: SubViewport
 ## Flags a new game starts with (the created character: player_name, player_look).
 var profile := {}
 
@@ -5054,6 +6391,21 @@ func _ready() -> void:
 		vp.audio_listener_enable_3d = true
 		box.add_child(vp)
 		view3d = vp
+	var layer2 := CanvasLayer.new()
+	layer2.layer = -1
+	add_child(layer2)
+	var box2 := SubViewportContainer.new()
+	box2.stretch = true
+	box2.stretch_shrink = 2
+	box2.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	box2.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer2.add_child(box2)
+	box2.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	view2d = SubViewport.new()
+	view2d.snap_2d_transforms_to_pixel = true
+	view2d.snap_2d_vertices_to_pixel = true
+	view2d.canvas_item_default_texture_filter = Viewport.DEFAULT_CANVAS_ITEM_TEXTURE_FILTER_NEAREST
+	box2.add_child(view2d)
 	SaveManager.world = self
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
@@ -5070,20 +6422,22 @@ func _ready() -> void:
 	new_game()
 
 
-func new_game(start_map: String = START_MAP) -> void:
+func new_game(first_map: String = "") -> void:
 	GameState.reset()
 	Journal.reset()
 	for k: String in profile:
 		GameState.set_flag(k, profile[k])
 	WorldTime.reset()
 	Weather.reset()
-	load_map(start_map, "default")
+	load_map(first_map if first_map != "" else start_map, "default")
 	Journal.start_quest(START_QUEST)
 
 
 func load_map(id: String, spawn: String = "default") -> void:
 	_enter_map(id)
 	player.global_position = map.spawn_position(spawn)
+	if player is GridPlayer:
+		player.place(map.tile_of(player.position), map.spawn_facing(spawn))
 	if player is Player2D:
 		player.global_position = map.nearest_standable(player.global_position)
 	if player is Player and player.walk_mask != null:
@@ -5141,8 +6495,15 @@ func _enter_map(id: String) -> void:
 		map.queue_free()
 	map_id = id
 	map = (load(MAPS[id]) as PackedScene).instantiate()
-	(view3d if map is GameMap3D else world).add_child(map)
-	if map is Map2D:
+	if map is TileWorld:
+		view2d.add_child(map)
+	else:
+		(view3d if map is GameMap3D else world).add_child(map)
+	if map is TileWorld:
+		player = GridPlayer.new()
+		map.entities.add_child(player)
+		player.setup(ui.touch, map)
+	elif map is Map2D:
 		player = Player2D.new()
 		map.entities.add_child(player)
 		player.setup(ui.touch, map)
@@ -10095,6 +11456,22 @@ func add_lamp(at: Vector2, energy: float, range_px: float) -> void:
 func _apply() -> void:
 	if not is_inside_tree():
 		return
+	if indoor:
+		# interiors: steady lamplight, no sky or weather, glow on
+		_tint.color = Color(0.82, 0.74, 0.8)
+		for l in _lamps2d:
+			l.energy = float(l.get_meta(&"lit_energy"))
+			l.visible = true
+		for n in get_tree().get_nodes_in_group(&"night_glow"):
+			(n as CanvasItem).modulate = Color(1, 1, 1, 0.5)
+			(n as CanvasItem).visible = true
+		for n in get_tree().get_nodes_in_group(&"precipitation"):
+			n.call(&"set_precipitation", 0.0, 0.0)
+		for n in get_tree().get_nodes_in_group(&"fog_overlay"):
+			var fm := (n as CanvasItem).material as ShaderMaterial
+			if fm != null:
+				fm.set_shader_parameter("fog_amount", 0.0)
+		return
 	var t := WorldTime.day_fraction()
 	var day := daylight.sample(t)
 	var cloud: float = w["cloud"]
@@ -10524,6 +11901,925 @@ func _update_target() -> void:
 
 
 ==============================================================================
+== render2d/pixel_art.gd
+==============================================================================
+class_name PixelArt
+## The 2D art provider. Gameplay and map data only ever name things ("cobble",
+## "lamp", "stall_rose", a character look); this class turns names into textures.
+##
+## Replacing the art: drop a PNG into res://art/pixel/ with the same name
+## (tiles: art/pixel/tiles/<name>.png, 16x16; props: art/pixel/props/<name>.png;
+## characters: art/pixel/chars/<id>.png, 16x32 frames in the sheet layout below) and it
+## is used instead of the generated placeholder. No gameplay code changes.
+##
+## PLACEHOLDER ART: everything generated here is temporary programmer art in the
+## Anjabi settlement palette (dusty rose, warm stone, ochre, muted teal, verdigris,
+## indigo slate, aged brass, deep violet, warm amber light).
+
+const T := 16
+const OVERRIDE := "res://art/pixel/"
+
+## Character sheet layout: 16x32 frames; columns idle, walk 1-4, run 1-4;
+## rows facing down, up, left, right.
+const FRAME := Vector2i(16, 32)
+const COLS := 9
+const DIRS := ["down", "up", "left", "right"]
+
+# --- palette --------------------------------------------------------------------
+const INK := Color("1c1622")
+const STONE_HI := Color("a6948f")
+const STONE := Color("85746f")
+const STONE_LO := Color("62545a")
+const MORTAR := Color("3e3340")
+const COBBLE := Color("8b7a79")
+const COBBLE_LO := Color("6d5f62")
+const PAVE := Color("9e8c84")
+const ROSE := Color("a8716c")
+const ROSE_LO := Color("865a5c")
+const OCHRE := Color("ae8a5a")
+const OCHRE_LO := Color("8a6a46")
+const TEAL := Color("5d8582")
+const TEAL_LO := Color("466866")
+const SLATE := Color("3d3754")
+const SLATE_HI := Color("57507a")
+const SLATE_LO := Color("2a253c")
+const VERD := Color("4f8c7e")
+const VERD_HI := Color("74b09e")
+const BRASS := Color("aa7e3e")
+const BRASS_HI := Color("dcb064")
+const BRASS_LO := Color("5e4322")
+const WOOD := Color("5c3a28")
+const WOOD_HI := Color("7c5136")
+const CANVAS_ROSE := Color("8e3542")
+const CANVAS_TEAL := Color("2f6a6c")
+const CREAM := Color("d6c29c")
+const GLASS := Color("ffcf7a")
+const GLASS_CORE := Color("fff0c0")
+const GLASS_DARK := Color("2b2840")
+const GRASS := Color("3f5f50")
+const GRASS_HI := Color("547a63")
+const GRASS_LO := Color("2e4a40")
+const WATER := Color("1f2d46")
+const WATER_HI := Color("35507a")
+const LEAF := Color("3d6a48")
+const LEAF_HI := Color("5a8a5a")
+const BLOSSOM := Color("ece4d6")
+const LAVENDER := Color("8d6bb6")
+const POT := Color("9c5c3c")
+const SCREEN := Color("5fe0ea")
+const VOID := Color("0c0a12")
+
+static var _tiles := {}
+static var _props := {}
+static var _sheets := {}
+
+
+# --- public ---------------------------------------------------------------------
+
+## A 16x16 tile image by name (override PNG if present, else generated).
+static func tile(name: String) -> Image:
+	if not _tiles.has(name):
+		var img := _load_override("tiles/" + name)
+		if img == null:
+			img = _blank(T, T)
+			_draw_tile(img, name)
+		_tiles[name] = img
+	return _tiles[name]
+
+
+## The emissive part of a tile (windows, shopfronts) or null.
+static func tile_glow(name: String) -> Image:
+	return _glow_of(tile(name)) if name in GLOW_TILES else null
+
+
+const GLOW_TILES := ["window_lit", "window_lit_rose", "window_lit_ochre", "window_lit_teal", "shop_window"]
+
+
+## A prop texture by name, origin at the bottom-centre of its footprint.
+static func prop(name: String) -> Texture2D:
+	if not _props.has(name):
+		var img := _load_override("props/" + name)
+		if img == null:
+			img = _draw_prop(name)
+		_props[name] = ImageTexture.create_from_image(img)
+	return _props[name]
+
+
+## The emissive part of a prop (lantern glass, screens), or null.
+static func prop_glow(name: String) -> Texture2D:
+	var key := name + "#glow"
+	if not _props.has(key):
+		var src := (prop(name) as ImageTexture).get_image()
+		var g := _glow_of(src)
+		_props[key] = ImageTexture.create_from_image(g) if g != null else null
+	return _props[key]
+
+
+## A character sheet for a look: {coat, skin, hair, hair_color, long_coat, accent,
+## hat, apron}. Colours may be Color or HTML strings. `id` names an override file.
+static func character(look: Dictionary, id := "") -> Texture2D:
+	var key := id if id != "" else str(look)
+	if not _sheets.has(key):
+		var img: Image = null
+		if id != "":
+			img = _load_override("chars/" + id)
+		if img == null:
+			img = _draw_character(look)
+		_sheets[key] = ImageTexture.create_from_image(img)
+	return _sheets[key]
+
+
+# --- helpers --------------------------------------------------------------------
+
+static func _load_override(rel: String) -> Image:
+	var path := OVERRIDE + rel + ".png"
+	if ResourceLoader.exists(path):
+		var t := load(path) as Texture2D
+		if t != null:
+			return t.get_image()
+	return null
+
+
+static func _blank(w: int, h: int) -> Image:
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	return img
+
+
+static func h2(x: int, y: int, s: int = 0) -> float:
+	var n := x * 374761393 + y * 668265263 + s * 2246822519
+	n = (n ^ (n >> 13)) * 1274126177
+	return float((n ^ (n >> 16)) & 0xffff) / 65535.0
+
+
+static func px(img: Image, x: int, y: int, c: Color) -> void:
+	if x >= 0 and y >= 0 and x < img.get_width() and y < img.get_height():
+		if c.a >= 0.999:
+			img.set_pixel(x, y, c)
+		elif c.a > 0.0:
+			img.set_pixel(x, y, img.get_pixel(x, y).blend(c))
+
+
+static func rect(img: Image, x: int, y: int, w: int, h: int, c: Color) -> void:
+	for j in h:
+		for i in w:
+			px(img, x + i, y + j, c)
+
+
+static func hline(img: Image, x: int, y: int, w: int, c: Color) -> void:
+	rect(img, x, y, w, 1, c)
+
+
+static func vline(img: Image, x: int, y: int, h: int, c: Color) -> void:
+	rect(img, x, y, 1, h, c)
+
+
+static func ellipse(img: Image, cx: float, cy: float, rx: float, ry: float, c: Color) -> void:
+	for y in range(int(cy - ry) - 1, int(cy + ry) + 2):
+		for x in range(int(cx - rx) - 1, int(cx + rx) + 2):
+			var dx := (x + 0.5 - cx) / rx
+			var dy := (y + 0.5 - cy) / ry
+			if dx * dx + dy * dy <= 1.0:
+				px(img, x, y, c)
+
+
+static func ring(img: Image, cx: float, cy: float, rx: float, ry: float, w: float, c: Color) -> void:
+	for y in range(int(cy - ry) - 2, int(cy + ry) + 3):
+		for x in range(int(cx - rx) - 2, int(cx + rx) + 3):
+			var dx := (x + 0.5 - cx) / rx
+			var dy := (y + 0.5 - cy) / ry
+			var d := sqrt(dx * dx + dy * dy)
+			if absf(d - 1.0) * minf(rx, ry) <= w * 0.5:
+				px(img, x, y, c)
+
+
+## A dark one-pixel outline around every opaque shape.
+static func outline(img: Image, c: Color = INK) -> void:
+	var w := img.get_width()
+	var h := img.get_height()
+	var src := img.duplicate() as Image
+	for y in h:
+		for x in w:
+			if src.get_pixel(x, y).a > 0.5:
+				continue
+			for o: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+				var nx := x + o.x
+				var ny := y + o.y
+				if nx >= 0 and ny >= 0 and nx < w and ny < h and src.get_pixel(nx, ny).a > 0.5:
+					img.set_pixel(x, y, c)
+					break
+
+
+## Keeps only bright warm or cyan pixels (lamp glass, lit windows, screens).
+static func _glow_of(src: Image) -> Image:
+	var g := _blank(src.get_width(), src.get_height())
+	var any := false
+	for y in src.get_height():
+		for x in src.get_width():
+			var c := src.get_pixel(x, y)
+			if c.a > 0.5 and c.get_luminance() > 0.68 and (c.r > 0.9 or c.b > 0.85) and c.s > 0.25:
+				g.set_pixel(x, y, Color(c.r, c.g, c.b, 1.0))
+				any = true
+	return g if any else null
+
+
+# --- tiles ----------------------------------------------------------------------
+
+static func _draw_tile(img: Image, name: String) -> void:
+	match name:
+		"cobble":
+			_cobbles(img, COBBLE, COBBLE_LO, MORTAR, 0)
+		"cobble_warm":
+			_cobbles(img, Color("94807a"), COBBLE_LO, MORTAR, 3)
+		"plaza_band":
+			_flags(img, PAVE, STONE_LO, 1)
+		"terrace":
+			_flags(img, Color("8f7d7a"), MORTAR, 2)
+		"grass":
+			img.fill(GRASS)
+			for i in 26:
+				var x := int(h2(i, 1, 7) * 16)
+				var y := int(h2(i, 2, 7) * 16)
+				px(img, x, y, GRASS_HI if i % 3 else GRASS_LO)
+				if i % 5 == 0:
+					px(img, x, y - 1, GRASS_HI)
+		"flowers":
+			_draw_tile(img, "grass")
+			for i in 7:
+				var x := 1 + int(h2(i, 3, 9) * 14)
+				var y := 1 + int(h2(i, 4, 9) * 14)
+				px(img, x, y, [LAVENDER, BLOSSOM, ROSE, LAVENDER][i % 4])
+				px(img, x, y + 1, LEAF)
+		"stairs":
+			for y in 16:
+				var k := y % 4
+				var c := STONE_HI if k == 0 else (STONE if k < 3 else MORTAR)
+				hline(img, 0, y, 16, c)
+			for y in range(0, 16, 4):
+				for x in 16:
+					if h2(x, y, 5) < 0.15:
+						px(img, x, y + 1, STONE_LO)
+		"water":
+			img.fill(WATER)
+			for i in 10:
+				var x := int(h2(i, 5, 11) * 14)
+				var y := int(h2(i, 6, 11) * 16)
+				hline(img, x, y, 2 + i % 3, WATER_HI)
+		"floor_wood":
+			for y in 16:
+				var plank := y / 4
+				var c := WOOD_HI if plank % 2 == 0 else WOOD
+				hline(img, 0, y, 16, c)
+				if y % 4 == 3:
+					hline(img, 0, y, 16, Color("3e2618"))
+			for p in 4:
+				vline(img, int(h2(p, 8, 2) * 15), p * 4, 3, Color("3e2618"))
+		"floor_tile":
+			_flags(img, Color("6e6070"), Color("4a3e4c"), 4)
+		"mat":
+			img.fill(CANVAS_ROSE)
+			rect(img, 1, 1, 14, 14, Color("a64454"))
+			rect(img, 3, 3, 10, 10, CANVAS_ROSE)
+		"void":
+			img.fill(VOID)
+		"wall_face":
+			_ashlar(img, STONE, STONE_LO, MORTAR)
+		"wall_face_dark":
+			_ashlar(img, STONE_LO, Color("4a3e46"), MORTAR)
+		"wall_top":
+			img.fill(STONE_HI)
+			hline(img, 0, 13, 16, STONE)
+			hline(img, 0, 14, 16, STONE_LO)
+			hline(img, 0, 15, 16, MORTAR)
+			for x in range(0, 16, 8):
+				vline(img, x + int(h2(x, 0, 3) * 3), 0, 13, STONE)
+		"plaster_rose", "plaster_ochre", "plaster_teal":
+			var base: Color = {"plaster_rose": ROSE, "plaster_ochre": OCHRE, "plaster_teal": TEAL}[name]
+			var lo: Color = {"plaster_rose": ROSE_LO, "plaster_ochre": OCHRE_LO, "plaster_teal": TEAL_LO}[name]
+			img.fill(base)
+			for i in 14:
+				px(img, int(h2(i, 1, 13) * 16), int(h2(i, 2, 13) * 16), lo)
+			hline(img, 0, 15, 16, lo)
+		"interior_wall":
+			img.fill(Color("5a4a5e"))
+			for y in range(0, 16, 4):
+				hline(img, 0, y, 16, Color("4a3c50"))
+			hline(img, 0, 13, 16, WOOD)
+			hline(img, 0, 14, 16, WOOD_HI)
+			hline(img, 0, 15, 16, Color("3e2618"))
+		"roof_slate":
+			img.fill(SLATE)
+			for row in 4:
+				var y := row * 4
+				hline(img, 0, y + 3, 16, SLATE_LO)
+				var off := (row % 2) * 4
+				for x in range(off, 16, 8):
+					vline(img, x, y, 3, SLATE_LO)
+				hline(img, 0, y, 16, SLATE_HI if row % 2 == 0 else SLATE)
+		"roof_ridge":
+			_draw_tile(img, "roof_slate")
+			rect(img, 0, 0, 16, 3, SLATE_HI)
+			hline(img, 0, 3, 16, SLATE_LO)
+			for x in range(1, 16, 4):
+				px(img, x, 1, BRASS_LO)
+		"roof_eave":
+			img.fill(Color(0, 0, 0, 0))
+			rect(img, 0, 0, 16, 6, SLATE)
+			hline(img, 0, 0, 16, SLATE_HI)
+			hline(img, 0, 5, 16, SLATE_LO)
+			hline(img, 0, 6, 16, BRASS_LO)
+			rect(img, 0, 7, 16, 3, Color(0.05, 0.03, 0.08, 0.45))
+		"roof_verdigris":
+			img.fill(VERD)
+			for row in 4:
+				hline(img, 0, row * 4 + 3, 16, Color("3e7064"))
+				for x in range((row % 2) * 3, 16, 6):
+					px(img, x, row * 4 + 1, VERD_HI)
+		"window_lit", "window_lit_rose", "window_lit_ochre", "window_lit_teal", "window_dark", "window_dark_rose", "window_dark_ochre", "window_dark_teal":
+			var lit := name.begins_with("window_lit")
+			var wall := ""
+			if name.ends_with("rose"):
+				wall = "plaster_rose"
+			elif name.ends_with("ochre"):
+				wall = "plaster_ochre"
+			elif name.ends_with("teal"):
+				wall = "plaster_teal"
+			if wall != "":
+				img.blit_rect(tile(wall), Rect2i(0, 0, 16, 16), Vector2i.ZERO)
+			_window(img, lit)
+		"door":
+			rect(img, 3, 2, 10, 14, MORTAR)
+			ellipse(img, 8, 5, 5, 4, MORTAR)
+			rect(img, 4, 4, 8, 12, WOOD)
+			ellipse(img, 8, 5.5, 4, 3, WOOD)
+			for x in [6, 9]:
+				vline(img, x, 3, 13, Color("3e2618"))
+			px(img, 10, 10, BRASS_HI)
+			hline(img, 2, 15, 12, STONE_HI)
+		"shop_window":
+			rect(img, 1, 3, 14, 11, MORTAR)
+			rect(img, 2, 4, 12, 9, GLASS)
+			rect(img, 4, 6, 8, 5, GLASS_CORE)
+			vline(img, 8, 4, 9, BRASS_LO)
+			hline(img, 2, 8, 12, BRASS_LO)
+			for i in 3:
+				px(img, 4 + i * 3, 11, POT)
+		"vines":
+			for i in 22:
+				var x := int(h2(i, 1, 21) * 16)
+				var y := int(pow(h2(i, 2, 21), 1.6) * 16)
+				px(img, x, y, LEAF if i % 3 else LEAF_HI)
+				px(img, x + 1, y, LEAF)
+				if i % 4 == 0:
+					px(img, x, y + 1, BLOSSOM)
+			for x in range(0, 16, 5):
+				vline(img, x + 1, 0, 3 + int(h2(x, 3, 21) * 8), LEAF)
+		"awning_rose", "awning_teal":
+			var c := CANVAS_ROSE if name == "awning_rose" else CANVAS_TEAL
+			for x in 16:
+				var stripe := (x / 4) % 2 == 0
+				vline(img, x, 0, 9, c if stripe else CREAM)
+				px(img, x, 9, c if stripe else CREAM)
+			for x in range(0, 16, 4):
+				px(img, x + 2, 10, c)
+			hline(img, 0, 0, 16, Color(1, 1, 1, 0.15))
+			rect(img, 0, 11, 16, 3, Color(0.05, 0.03, 0.08, 0.35))
+		"balustrade", "balustrade_v":
+			# top view of a stone balustrade: a capped rail and its shadow
+			if name == "balustrade":
+				rect(img, 0, 5, 16, 5, STONE_HI)
+				hline(img, 0, 5, 16, Color("bfaea8"))
+				hline(img, 0, 9, 16, STONE_LO)
+				hline(img, 0, 7, 16, BRASS)
+				rect(img, 0, 10, 16, 3, STONE)
+				for x in range(1, 16, 4):
+					vline(img, x, 10, 3, STONE_LO)
+				rect(img, 0, 13, 16, 2, Color(0.05, 0.03, 0.08, 0.4))
+			else:
+				rect(img, 5, 0, 5, 16, STONE_HI)
+				vline(img, 7, 0, 16, BRASS)
+				vline(img, 10, 0, 16, Color(0.05, 0.03, 0.08, 0.4))
+		"counter":
+			rect(img, 0, 2, 16, 4, WOOD_HI)
+			hline(img, 0, 2, 16, Color("9a6a46"))
+			rect(img, 0, 6, 16, 10, WOOD)
+			for x in range(2, 16, 5):
+				vline(img, x, 7, 8, Color("3e2618"))
+			hline(img, 0, 15, 16, Color("3e2618"))
+		"shelf":
+			img.fill(WOOD)
+			for y in [4, 9, 14]:
+				hline(img, 0, y, 16, WOOD_HI)
+			for i in 9:
+				var x := 1 + (i * 5) % 14
+				var y: int = [1, 6, 11][i % 3]
+				rect(img, x, y, 2, 3, [POT, BRASS, TEAL, CREAM, LAVENDER][i % 5])
+		_:
+			img.fill(Color("ff00ff"))
+
+
+static func _cobbles(img: Image, base: Color, lo: Color, mortar: Color, s: int) -> void:
+	img.fill(mortar)
+	# stones of 4-6 px in staggered rows, each with a lit top-left and a dark lip
+	var y := 0
+	var row := 0
+	while y < 16:
+		var hgt := 4 + int(h2(row, s, 1) * 2)
+		var x := -int(h2(row, s, 2) * 4)
+		while x < 16:
+			var wid := 4 + int(h2(x + 20, row, s) * 3)
+			var c := base.lerp(lo, h2(x + 7, row + 3, s) * 0.7)
+			c = c.lerp(ROSE, 0.12 * h2(x, row, s + 9))
+			rect(img, x + 1, y + 1, wid - 1, hgt - 1, c)
+			hline(img, x + 1, y + 1, wid - 2, c.lightened(0.12))
+			hline(img, x + 1, y + hgt - 1, wid - 1, c.darkened(0.18))
+			x += wid
+		y += hgt
+		row += 1
+
+
+static func _flags(img: Image, base: Color, joint: Color, s: int) -> void:
+	img.fill(base)
+	for i in 30:
+		px(img, int(h2(i, 1, s) * 16), int(h2(i, 2, s) * 16), base.darkened(0.08 + 0.08 * h2(i, 3, s)))
+	hline(img, 0, 15, 16, joint)
+	vline(img, 15, 0, 8, joint)
+	vline(img, 7, 8, 8, joint)
+	hline(img, 0, 7, 16, joint.lerp(base, 0.4))
+
+
+static func _ashlar(img: Image, base: Color, lo: Color, mortar: Color) -> void:
+	img.fill(mortar)
+	for row in 3:
+		var y := row * 5 + 1
+		var off := (row % 2) * 5
+		var x := off - 10
+		while x < 16:
+			var wid := 9 + int(h2(x + 30, row, 4) * 2)
+			var c := base.lerp(lo, h2(x, row, 6) * 0.6)
+			rect(img, x + 1, y, wid - 1, 4, c)
+			hline(img, x + 1, y, wid - 2, c.lightened(0.1))
+			x += wid
+	for i in 6:
+		px(img, int(h2(i, 9, 4) * 16), int(h2(i, 8, 4) * 16), lo.darkened(0.2))
+
+
+static func _window(img: Image, lit: bool) -> void:
+	# arched window in a stone surround with a brass mullion and a sill
+	ellipse(img, 8, 5, 4.5, 4, MORTAR)
+	rect(img, 3, 5, 10, 8, MORTAR)
+	var g := GLASS if lit else GLASS_DARK
+	ellipse(img, 8, 5.5, 3.5, 3, g)
+	rect(img, 4, 5, 8, 7, g)
+	if lit:
+		rect(img, 6, 6, 4, 4, GLASS_CORE)
+	else:
+		px(img, 5, 6, Color("4a4670"))
+	vline(img, 8, 3, 9, BRASS_LO)
+	hline(img, 4, 8, 8, BRASS_LO)
+	hline(img, 2, 13, 12, STONE_HI)
+	hline(img, 2, 14, 12, STONE_LO)
+
+
+# --- props ----------------------------------------------------------------------
+
+static func _draw_prop(name: String) -> Image:
+	match name:
+		"lamp":
+			var img := _blank(16, 48)
+			rect(img, 6, 40, 4, 6, BRASS_LO)
+			rect(img, 5, 45, 6, 2, STONE_LO)
+			vline(img, 7, 14, 28, BRASS_LO)
+			vline(img, 8, 14, 28, BRASS)
+			rect(img, 4, 4, 8, 10, BRASS_LO)
+			rect(img, 5, 5, 6, 8, GLASS)
+			rect(img, 6, 7, 4, 4, GLASS_CORE)
+			rect(img, 3, 2, 10, 2, BRASS)
+			px(img, 7, 1, BRASS_HI)
+			px(img, 8, 1, BRASS_HI)
+			outline(img)
+			return img
+		"stall_rose", "stall_teal":
+			return _stall(CANVAS_ROSE if name == "stall_rose" else CANVAS_TEAL, name == "stall_rose")
+		"armillary":
+			var img := _blank(32, 56)
+			# plinth and fluted column
+			rect(img, 7, 48, 18, 6, STONE_LO)
+			rect(img, 8, 47, 16, 2, STONE_HI)
+			rect(img, 12, 26, 8, 22, STONE)
+			for x in [13, 16, 19]:
+				vline(img, x, 27, 20, STONE_LO)
+			rect(img, 10, 24, 12, 3, BRASS)
+			# brass rings round a glowing core
+			ring(img, 16, 13, 11, 11, 1.4, BRASS)
+			ring(img, 16, 13, 11, 4, 1.2, BRASS_HI)
+			ring(img, 16, 13, 4, 11, 1.2, BRASS)
+			ring(img, 16, 13, 8, 9, 1.0, BRASS_LO)
+			ellipse(img, 16, 13, 3.2, 3.2, GLASS)
+			ellipse(img, 16, 13, 1.8, 1.8, GLASS_CORE)
+			outline(img)
+			return img
+		"compass":
+			return _compass()
+		"tree":
+			var img := _blank(32, 44)
+			rect(img, 14, 30, 4, 12, WOOD)
+			ellipse(img, 16, 18, 13, 13, LEAF)
+			for i in 40:
+				var a := h2(i, 1, 31) * TAU
+				var r := h2(i, 2, 31) * 11.0
+				px(img, int(16 + cos(a) * r), int(18 + sin(a) * r * 0.95), LEAF_HI if sin(a) < 0.2 else GRASS_LO)
+			for i in 6:
+				px(img, int(8 + h2(i, 3, 31) * 16), int(9 + h2(i, 4, 31) * 16), BLOSSOM)
+			ellipse(img, 16, 41, 7, 2.5, Color(0.05, 0.03, 0.08, 0.35))
+			outline(img)
+			return img
+		"cypress":
+			var img := _blank(16, 44)
+			rect(img, 7, 36, 2, 6, WOOD)
+			for y in 34:
+				var w := sin(float(y) / 34.0 * PI) * 5.5 + 1.0
+				hline(img, int(8 - w), y + 2, int(w * 2), LEAF if y % 3 else GRASS_LO)
+				px(img, int(8 - w + 1), y + 2, LEAF_HI)
+			outline(img)
+			return img
+		"barrel":
+			var img := _blank(16, 20)
+			rect(img, 3, 4, 10, 14, WOOD)
+			for x in [5, 8, 11]:
+				vline(img, x, 5, 12, WOOD_HI)
+			for y in [6, 15]:
+				hline(img, 3, y, 10, BRASS_LO)
+			ellipse(img, 8, 4, 5, 2, Color("6e4630"))
+			outline(img)
+			return img
+		"crates":
+			var img := _blank(16, 22)
+			rect(img, 1, 9, 14, 11, WOOD)
+			rect(img, 4, 2, 9, 8, WOOD_HI)
+			for c: Rect2i in [Rect2i(1, 9, 14, 11), Rect2i(4, 2, 9, 8)]:
+				hline(img, c.position.x, c.position.y, c.size.x, Color("9a6a46"))
+				vline(img, c.position.x + c.size.x / 2, c.position.y, c.size.y, Color("3e2618"))
+			outline(img)
+			return img
+		"pot_lavender", "pot_leaf":
+			var img := _blank(16, 24)
+			rect(img, 4, 15, 8, 8, POT)
+			hline(img, 3, 15, 10, Color("b8714a"))
+			vline(img, 5, 16, 6, Color("b8714a"))
+			if name == "pot_lavender":
+				for i in 9:
+					var x := 4 + i
+					var hgt := 6 + int(h2(i, 1, 41) * 6)
+					vline(img, x, 15 - hgt, hgt, LEAF)
+					rect(img, x, 15 - hgt, 1, 3, LAVENDER)
+			else:
+				ellipse(img, 8, 10, 6, 5, LEAF)
+				ellipse(img, 7, 9, 3, 2, LEAF_HI)
+			outline(img)
+			return img
+		"bench":
+			var img := _blank(32, 16)
+			rect(img, 2, 10, 4, 5, STONE)
+			rect(img, 26, 10, 4, 5, STONE)
+			rect(img, 1, 6, 30, 4, WOOD_HI)
+			for x in range(1, 31, 5):
+				vline(img, x, 6, 4, WOOD)
+			rect(img, 1, 2, 30, 3, WOOD)
+			outline(img)
+			return img
+		"terminal":
+			var img := _blank(16, 32)
+			rect(img, 2, 8, 12, 22, STONE)
+			rect(img, 1, 6, 14, 3, STONE_HI)
+			rect(img, 3, 10, 10, 8, BRASS_LO)
+			rect(img, 4, 11, 8, 6, SCREEN)
+			for i in 5:
+				px(img, 5 + int(h2(i, 1, 51) * 6), 12 + int(h2(i, 2, 51) * 4), Color("e0ffff"))
+			rect(img, 4, 20, 8, 2, BRASS)
+			outline(img)
+			return img
+		"arcade_bay":
+			return _arcade_bay()
+		"banner_rose", "banner_teal":
+			var img := _blank(12, 30)
+			var c := CANVAS_ROSE if name == "banner_rose" else CANVAS_TEAL
+			hline(img, 0, 0, 12, BRASS)
+			rect(img, 1, 1, 10, 25, c)
+			for y in range(26, 29):
+				hline(img, 1 + (y - 26), y, 10 - (y - 26) * 2, c)
+			ring(img, 6, 11, 3, 3, 1.0, BRASS_HI)
+			px(img, 6, 11, BRASS_HI)
+			vline(img, 6, 16, 6, BRASS_HI)
+			return img
+		"dome":
+			var img := _blank(64, 40)
+			rect(img, 4, 32, 56, 6, STONE_HI)
+			hline(img, 4, 37, 56, STONE_LO)
+			for y in 30:
+				var w := sqrt(maxf(0.0, 1.0 - pow((30.0 - y) / 30.0, 2.0))) * 26.0
+				hline(img, int(32 - w), y + 2, int(w * 2), VERD)
+				px(img, int(32 - w), y + 2, Color("3e7064"))
+				px(img, int(32 - w + 3), y + 2, VERD_HI)
+			for k in [-16, 0, 16]:
+				for y in 30:
+					var x := 32 + int(k * sqrt(maxf(0.0, 1.0 - pow((30.0 - y) / 30.0, 2.0))))
+					px(img, x, y + 2, BRASS_LO)
+			vline(img, 32, 0, 4, BRASS_HI)
+			outline(img)
+			return img
+		"string_lights":
+			var img := _blank(160, 24)
+			for x in 160:
+				var t := float(x) / 159.0
+				var y := int(3 + 14.0 * 4.0 * t * (1.0 - t))
+				px(img, x, y, BRASS_LO)
+				if x % 10 == 5:
+					px(img, x, y + 1, GLASS)
+					px(img, x, y + 2, GLASS_CORE)
+			return img
+		"rug":
+			var img := _blank(48, 32)
+			rect(img, 0, 0, 48, 32, CANVAS_ROSE)
+			rect(img, 2, 2, 44, 28, Color("a64454"))
+			rect(img, 5, 5, 38, 22, CANVAS_ROSE)
+			for i in 4:
+				ring(img, 24, 16, 6 + i * 3, 4 + i * 2, 0.8, CREAM if i % 2 else BRASS)
+			return img
+		"notice":
+			var img := _blank(16, 24)
+			vline(img, 3, 8, 15, WOOD)
+			vline(img, 12, 8, 15, WOOD)
+			rect(img, 1, 2, 14, 10, WOOD_HI)
+			rect(img, 2, 3, 12, 8, CREAM)
+			for y in [5, 7, 9]:
+				hline(img, 4, y, 8, STONE_LO)
+			outline(img)
+			return img
+		"shadow_arch":
+			var img := _blank(48, 16)
+			rect(img, 0, 0, 48, 16, Color(0.05, 0.03, 0.1, 0.35))
+			return img
+	var bad := _blank(16, 16)
+	bad.fill(Color("ff00ff"))
+	return bad
+
+
+static func _stall(c: Color, instruments: bool) -> Image:
+	var img := _blank(48, 44)
+	# counter
+	rect(img, 3, 26, 42, 14, WOOD)
+	rect(img, 2, 24, 44, 3, WOOD_HI)
+	for x in range(6, 44, 8):
+		vline(img, x, 27, 12, Color("3e2618"))
+	# goods on the counter
+	if instruments:
+		ring(img, 12, 19, 5, 5, 1.0, BRASS_HI)
+		ring(img, 12, 19, 5, 2, 1.0, BRASS)
+		px(img, 12, 19, GLASS)
+		rect(img, 21, 20, 8, 4, BRASS_LO)
+		hline(img, 21, 20, 8, BRASS_HI)
+		ellipse(img, 35, 22, 4, 2, BRASS)
+	else:
+		for i in 5:
+			rect(img, 6 + i * 8, 18, 5, 6, [POT, TEAL, CREAM, POT, LAVENDER][i])
+			hline(img, 6 + i * 8, 18, 5, Color(1, 1, 1, 0.25))
+	# poles and striped canopy
+	vline(img, 3, 6, 34, WOOD_HI)
+	vline(img, 44, 6, 34, WOOD_HI)
+	for x in 48:
+		var stripe := (x / 6) % 2 == 0
+		vline(img, x, 2, 9, c if stripe else CREAM)
+		if x % 6 == 3:
+			px(img, x, 11, c if stripe else CREAM)
+	hline(img, 0, 2, 48, Color(1, 1, 1, 0.2))
+	rect(img, 0, 12, 48, 3, Color(0.05, 0.03, 0.08, 0.35))
+	# hanging lantern
+	vline(img, 40, 11, 3, BRASS_LO)
+	rect(img, 38, 14, 5, 6, BRASS_LO)
+	rect(img, 39, 15, 3, 4, GLASS)
+	outline(img)
+	return img
+
+
+static func _compass() -> Image:
+	var img := _blank(80, 80)
+	var c := Vector2(40, 40)
+	for y in 80:
+		for x in 80:
+			var d := Vector2(x + 0.5, y + 0.5) - c
+			var r := d.length() / 38.0
+			if r > 1.0:
+				continue
+			var col := Color("6e6066")
+			if r > 0.78 and r < 0.93:
+				col = Color("3a3040")
+				var a := atan2(d.y, d.x)
+				if absf(fposmod(a / (TAU / 32.0), 1.0) - 0.5) > 0.38 and r > 0.82 and r < 0.9:
+					col = BRASS
+			for rr: float in [0.78, 0.93, 0.99, 0.36]:
+				if absf(r - rr) < 0.018:
+					col = BRASS_HI
+			# eight-point star
+			var ang := atan2(d.y, d.x)
+			var k := TAU / 8.0
+			var idx := int(floor((ang + k * 0.5) / k))
+			var sa := fposmod(ang + k * 0.5, k) - k * 0.5
+			var len := 0.76 if posmod(idx, 2) == 0 else 0.46
+			var width := (1.0 - r / len) * 0.21
+			if r < len and absf(sa) * r * 2.6 < width:
+				col = BRASS if sa > 0.0 else BRASS_LO
+			if r < 0.07:
+				col = BRASS_HI
+			img.set_pixel(x, y, col)
+	return img
+
+
+static func _arcade_bay() -> Image:
+	# one bay of the terrace arcade, 48x32: pilasters, an arch, a warm shopfront
+	var img := _blank(48, 32)
+	# recess: dark warm interior
+	rect(img, 9, 8, 30, 24, Color("2a1a18"))
+	ellipse(img, 24, 10, 15, 9, Color("2a1a18"))
+	# lit window, door
+	rect(img, 12, 14, 11, 10, GLASS)
+	rect(img, 14, 16, 7, 6, GLASS_CORE)
+	vline(img, 17, 14, 10, BRASS_LO)
+	rect(img, 27, 12, 9, 20, WOOD)
+	ellipse(img, 31.5, 13, 4.5, 3, WOOD)
+	px(img, 34, 22, BRASS_HI)
+	# arch ring and keystone
+	ring(img, 24, 10, 16, 10, 2.0, STONE_HI)
+	rect(img, 22, 0, 4, 3, STONE_HI)
+	# pilasters
+	for x0 in [0, 41]:
+		rect(img, x0, 0, 7, 32, STONE)
+		vline(img, x0, 0, 32, STONE_HI)
+		vline(img, x0 + 6, 0, 32, STONE_LO)
+		for y in range(4, 32, 6):
+			hline(img, x0, y, 7, MORTAR)
+	# striped awning across the arch
+	for x in range(8, 40):
+		var stripe := (x / 4) % 2 == 0
+		vline(img, x, 6, 5, CANVAS_ROSE if stripe else CREAM)
+	rect(img, 8, 11, 32, 2, Color(0.05, 0.03, 0.08, 0.35))
+	return img
+
+
+# --- characters -----------------------------------------------------------------
+
+static func _col(v: Variant, fallback: Color) -> Color:
+	if v is Color:
+		return v
+	if v is String and str(v) != "":
+		return Color.html(str(v))
+	return fallback
+
+
+## A 16x32 adult figure in 4 directions x (idle, walk 1-4, run 1-4).
+static func _draw_character(look: Dictionary) -> Image:
+	var sheet := _blank(FRAME.x * COLS, FRAME.y * 4)
+	var spec := {
+		"coat": _col(look.get("coat", null), Color("80211c")),
+		"accent": _col(look.get("accent", null), BRASS),
+		"skin": _col(look.get("skin", null), Color("c89a7a")),
+		"hair_color": _col(look.get("hair_color", null), Color("1a0f0d")),
+		"hair": str(look.get("hair", "bun")),
+		"long": bool(look.get("long_coat", true)),
+		"hat": str(look.get("hat", "")),
+		"apron": bool(look.get("apron", false)),
+	}
+	for d in 4:
+		for col in COLS:
+			var f := _blank(FRAME.x, FRAME.y)
+			var run := col >= 5
+			var step := 0 if col == 0 else (col - 1) % 4
+			_figure(f, spec, DIRS[d], col == 0, run, step)
+			outline(f)
+			sheet.blit_rect(f, Rect2i(Vector2i.ZERO, FRAME), Vector2i(col * FRAME.x, d * FRAME.y))
+	return sheet
+
+
+static func _figure(img: Image, s: Dictionary, dir: String, idle: bool, run: bool, step: int) -> void:
+	var coat: Color = s["coat"]
+	var coat_lo := coat.darkened(0.3)
+	var coat_hi := coat.lightened(0.15)
+	var skin: Color = s["skin"]
+	var skin_lo := skin.darkened(0.18)
+	var hair: Color = s["hair_color"]
+	var accent: Color = s["accent"]
+	var boot := Color("231a1c")
+	var trouser := Color("2e2834")
+	# gait: steps 0 and 2 are contact poses (legs apart), 1 and 3 are passing (bob up)
+	var bob := 0 if idle else (1 if step % 2 == 1 else 0)
+	var spread := 0 if idle or step % 2 == 1 else (2 if run else 1)
+	var lead := 1 if step == 0 else -1
+	var lean := 1 if run and not idle else 0
+	var y0 := 2 - bob
+	var side := dir == "left" or dir == "right"
+	var flip := dir == "left"
+	var X := func(x: int) -> int: return 15 - x if flip else x
+	# shadow
+	ellipse(img, 8, 30.5, 5, 1.6, Color(0.05, 0.03, 0.08, 0.4))
+	# legs and boots
+	if side:
+		var fx := 7 + lean
+		var a := fx + spread * lead
+		var b := fx - spread * lead
+		for lx: int in [b, a]:
+			rect(img, X.call(lx), y0 + 20, 2, 7, trouser)
+			rect(img, X.call(lx) - (1 if flip else 0), y0 + 26, 3, 2, boot)
+	else:
+		var l_off := spread * lead
+		rect(img, 5, y0 + 20 + maxi(0, -l_off), 2, 7 - absi(l_off), trouser)
+		rect(img, 9, y0 + 20 + maxi(0, l_off), 2, 7 - absi(l_off), trouser)
+		rect(img, 5, y0 + 26, 2, 2, boot)
+		rect(img, 9, y0 + 26, 2, 2, boot)
+	# coat body and skirt
+	var skirt := 7 if s["long"] else 4
+	if side:
+		rect(img, X.call(5 + lean) - (4 if flip else 0), y0 + 10, 5, 10, coat)
+		rect(img, X.call(4 + lean) - (6 if flip else 0), y0 + 18, 7, skirt, coat)
+		vline(img, X.call(4 + lean), y0 + 18, skirt, coat_lo)
+		vline(img, X.call(8 + lean), y0 + 11, 7 + skirt, coat_hi)
+	else:
+		rect(img, 4, y0 + 10, 8, 10, coat)
+		rect(img, 3, y0 + 18, 10, skirt, coat)
+		vline(img, 3, y0 + 18, skirt, coat_lo)
+		vline(img, 12, y0 + 18, skirt, coat_lo)
+		vline(img, 4, y0 + 11, 7, coat_hi)
+		if dir == "down":
+			# lapels, belt, buttons
+			vline(img, 7, y0 + 11, 7, coat_lo)
+			vline(img, 8, y0 + 11, 7, coat_lo)
+			hline(img, 4, y0 + 17, 8, accent.darkened(0.2))
+			px(img, 8, y0 + 13, accent)
+			px(img, 8, y0 + 15, accent)
+			if s["apron"]:
+				rect(img, 5, y0 + 17, 6, 7, CREAM)
+		else:
+			vline(img, 8, y0 + 18, skirt, coat_lo)
+	# shoulders and arms
+	var swing := 0 if idle else (2 if run else 1) * (1 if step < 2 else -1) * (0 if step % 2 == 1 else 1)
+	if side:
+		var ax: int = X.call(7 + lean + (swing if not flip else -swing))
+		rect(img, ax, y0 + 11, 2, 7 if not run else 5, coat_lo)
+		rect(img, ax, y0 + (18 if not run else 16), 2, 2, skin)
+	else:
+		rect(img, 2, y0 + 11 + maxi(0, swing), 2, 7, coat_lo)
+		rect(img, 12, y0 + 11 + maxi(0, -swing), 2, 7, coat_lo)
+		rect(img, 2, y0 + 18 + maxi(0, swing), 2, 2, skin)
+		rect(img, 12, y0 + 18 + maxi(0, -swing), 2, 2, skin)
+	# scarf / collar
+	rect(img, 5 if not side else X.call(5 + lean) - (4 if flip else 0), y0 + 9, 6 if not side else 5, 2, accent)
+	# head (adult proportions: about a fifth of the height)
+	var hx := 5 + (lean if side else 0)
+	if side and flip:
+		hx = 16 - hx - 6
+	rect(img, hx, y0 + 2, 6, 7, skin)
+	vline(img, hx + (0 if flip else 5) if side else hx + 5, y0 + 3, 6, skin_lo)
+	var style: String = s["hair"]
+	if dir == "up":
+		rect(img, hx, y0 + 1, 6, 7, hair)
+		if style == "bun":
+			rect(img, hx + 2, y0, 2, 2, hair)
+		elif style == "long":
+			rect(img, hx, y0 + 7, 6, 4, hair)
+	else:
+		rect(img, hx, y0 + 1, 6, 2, hair)
+		if dir == "down":
+			px(img, hx, y0 + 3, hair)
+			px(img, hx + 5, y0 + 3, hair)
+			px(img, hx + 1, y0 + 5, INK)
+			px(img, hx + 4, y0 + 5, INK)
+			px(img, hx + 2, y0 + 7, skin_lo)
+			px(img, hx + 3, y0 + 7, skin_lo)
+			if style == "long":
+				vline(img, hx - 1, y0 + 2, 8, hair)
+				vline(img, hx + 6, y0 + 2, 8, hair)
+		else:
+			var back := hx + (5 if flip else 0)
+			vline(img, back, y0 + 2, 5, hair)
+			rect(img, hx + (4 if flip else 0), y0 + 1, 2, 2, hair)
+			var eye := hx + (1 if flip else 4)
+			px(img, eye, y0 + 5, INK)
+			px(img, hx + (-1 if flip else 6), y0 + 5, skin)
+			if style == "long":
+				vline(img, back, y0 + 7, 4, hair)
+		if style == "bun" and dir != "up":
+			rect(img, hx + (4 if flip else 0) if side else hx + 2, y0, 2, 2, hair)
+	match s["hat"]:
+		"hardhat":
+			rect(img, hx - 1, y0, 8, 3, Color("d8a020"))
+			hline(img, hx - 1, y0 + 3, 8, Color("a87818"))
+			if dir != "up":
+				px(img, hx + 3, y0 + 1, GLASS_CORE)
+		"brim", "cap":
+			rect(img, hx - (1 if s["hat"] == "brim" else 0), y0 + 1, 8 if s["hat"] == "brim" else 6, 1, accent.darkened(0.4))
+			rect(img, hx, y0 - 1, 6, 2, accent.darkened(0.3))
+
+
+==============================================================================
 == tests/menu_test.gd
 ==============================================================================
 extends Node
@@ -10711,6 +13007,8 @@ func _ready() -> void:
 
 func _boot() -> void:
 	app = (load("res://game/app.tscn") as PackedScene).instantiate()
+	# this test covers the title flow into the 3D town; tests/slice2d_test.gd covers the 2D slice
+	app.set("start_map", "anjabi_town")
 	app.set("animate", false)
 	app.set("fade_time", 0.0)
 	add_child(app)
@@ -11219,6 +13517,72 @@ script = ExtResource("1")
 
 
 ==============================================================================
+== tests/screenshot_slice2d.gd
+==============================================================================
+extends Node
+## Windowed shots of the 2D vertical slice (the Steps and the shop).
+##   Godot --path . res://tests/screenshot_slice2d.tscn -- /some/folder
+
+func _ready() -> void:
+	var dir := "user://"
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty():
+		dir = args[0]
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()
+	main.set("start_map", "anjabi_steps")
+	add_child(main)
+	WorldTime.minutes_per_second = 0.0
+	await get_tree().create_timer(1.0).timeout
+	var shots := [["s2_01_plaza_dusk", [19, 22], 18, 50, "clear"], ["s2_02_market_night", [6, 17], 21, 30, "clear"],
+		["s2_03_terrace_day", [11, 8], 11, 0, "clear"], ["s2_04_shopfront_rain", [34, 19], 22, 0, "rain"],
+		["s2_05_stairs_arch", [19, 11], 16, 30, "cloudy"], ["s2_06_plaza_morning", [14, 19], 8, 0, "fog"]]
+	for s: Array in shots:
+		WorldTime.set_time(s[2], s[3])
+		Weather.set_weather(s[4])
+		for n in get_tree().get_nodes_in_group(&"environment_controller"):
+			n.call(&"snap")
+		var p: GridPlayer = main.get("player")
+		var map: TileWorld = main.get("map")
+		p.place(Vector2i(s[1][0], s[1][1]), "down")
+		await get_tree().create_timer(0.8).timeout
+		await _shot(dir, s[0])
+	WorldTime.set_time(13, 0)
+	main.call("load_map", "anjabi_steps_shop", "default")
+	await get_tree().create_timer(1.0).timeout
+	await _shot(dir, "s2_07_shop")
+	main.call("load_map", "anjabi_steps", "default")
+	await get_tree().create_timer(0.6).timeout
+	var pl: GridPlayer = main.get("player")
+	Input.action_press(&"move_left")
+	await get_tree().create_timer(0.35).timeout
+	await _shot(dir, "s2_08_walk")
+	Input.action_press(&"sprint")
+	await get_tree().create_timer(0.3).timeout
+	await _shot(dir, "s2_09_run")
+	Input.action_release(&"sprint")
+	Input.action_release(&"move_left")
+	get_tree().quit()
+
+
+func _shot(dir: String, name: String) -> void:
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(dir.path_join(name + ".png"))
+
+
+==============================================================================
+== tests/screenshot_slice2d.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/screenshot_slice2d.gd" id="1"]
+
+[node name="Screenshot3D" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
 == tests/screenshot_time.gd
 ==============================================================================
 extends Node
@@ -11378,6 +13742,243 @@ func _ready() -> void:
 [ext_resource type="Script" path="res://tests/screenshot_town.gd" id="1"]
 
 [node name="ScreenshotTown" type="Node"]
+script = ExtResource("1")
+
+
+==============================================================================
+== tests/slice2d_test.gd
+==============================================================================
+extends Node
+## Headless test of the 2D tile-based vertical slice (branch 2d): the Steps and the
+## shop. Grid movement, turning, running, collision, depth sorting, the NPC and its
+## dialogue, the quest step, doors in and out, lighting, saves, and the title flow.
+##   Godot --headless --path . res://tests/slice2d_test.tscn
+
+const DIR := "user://test_slice2d"
+
+var _fails := 0
+var _checks := 0
+var main: Node
+var p: GridPlayer
+var world: TileWorld
+
+
+func _ready() -> void:
+	DirAccess.make_dir_recursive_absolute(DIR)
+	SaveManager.dir = DIR
+	SaveManager.autosave_enabled = false
+	SaveManager.boot_from_autosave = false
+	main = (load("res://game/main.tscn") as PackedScene).instantiate()
+	main.set("start_map", "anjabi_steps")
+	add_child(main)
+	await _frames(6)
+	WorldTime.minutes_per_second = 0.0
+	world = main.get("map")
+	p = main.get("player")
+	check(world is TileWorld and p is GridPlayer and str(main.get("map_id")) == "anjabi_steps", "a new game starts on the 2D Steps with a grid player")
+	check(world.size == Vector2i(40, 30), "the Steps map is 40 x 30 tiles")
+	check(p.tile == Vector2i(19, 22) and p.dir_name() == "up", "the player spawns south of the compass facing it")
+	var vp := world.get_viewport() as SubViewport
+	var box := vp.get_parent() as SubViewportContainer
+	check(vp != null and vp.size.x == 240 and box.stretch_shrink == 2, "the world renders 240 px (15 tiles) wide and is scaled up 2x (%s)" % str(vp.size if vp else ""))
+	check(Journal.quests.has("quiet_mine"), "the opening quest begins")
+
+	# a tap turns without moving; holding walks one tile per step, smoothly
+	await _tap(&"move_left", 2)
+	check(p.tile == Vector2i(19, 22) and p.dir_name() == "left", "a tap turns in place")
+	var mid := false
+	Input.action_press(&"move_left")
+	var t_end := Time.get_ticks_msec() + 600
+	while Time.get_ticks_msec() < t_end:
+		await get_tree().process_frame
+		if p.is_moving() and fposmod(p.position.x - 8.0, 16.0) > 2.0 and fposmod(p.position.x - 8.0, 16.0) < 14.0:
+			mid = true
+	Input.action_release(&"move_left")
+	await _settle()
+	check(mid, "a step glides between tiles")
+	check(p.tile.y == 22 and p.tile.x <= 17 and p.tile.x >= 15, "holding walks tile by tile (now at %s)" % str(p.tile))
+	check(fposmod(p.position.x - 8.0, 16.0) < 0.01, "the player stops exactly on a tile")
+	# running covers more ground in the same time
+	p.place(Vector2i(10, 21), "right")
+	await _frames(2)
+	var x0 := p.tile.x
+	await _hold(&"move_right", 0.5)
+	var walked := p.tile.x - x0
+	p.place(Vector2i(10, 21), "right")
+	await _frames(2)
+	Input.action_press(&"sprint")
+	await _hold(&"move_right", 0.5)
+	Input.action_release(&"sprint")
+	var ran := p.tile.x - 10
+	check(ran > walked, "running covers more tiles than walking (%d vs %d)" % [ran, walked])
+
+	# collision: the terrace wall, the balustrade, props, the map edge
+	p.place(Vector2i(10, 13), "up")
+	await _hold(&"move_up", 0.6)
+	check(p.tile == Vector2i(10, 13), "the terrace wall blocks")
+	p.place(Vector2i(20, 21), "up")
+	await _hold(&"move_up", 0.4)
+	check(p.tile == Vector2i(20, 20) or p.tile == Vector2i(20, 21), "the armillary's plinth blocks (at %s)" % str(p.tile))
+	check(world.is_solid(Vector2i(19, 19)) and world.is_solid(Vector2i(8, 17)), "landmark and lamps are solid")
+	p.place(Vector2i(10, 24), "down")
+	await _hold(&"move_down", 0.4)
+	check(p.tile == Vector2i(10, 24), "the south balustrade blocks")
+	# the stairs climb to the terrace under the arch
+	p.place(Vector2i(19, 13), "up")
+	await _hold(&"move_up", 1.6)
+	check(p.tile.y <= 9 and p.tile.x == 19, "the stairs lead up to the terrace (at %s)" % str(p.tile))
+	var arch: TileMapLayer = world.get_node("Over")
+	check(arch.get_cell_source_id(Vector2i(19, 10)) >= 0 and arch.z_index > p.z_index, "an arch over the stairs is drawn above the player")
+
+	# depth sorting: north of a lamp the player is drawn behind it, south in front
+	var lamp: Node2D = null
+	for n in world.entities.get_children():
+		if n.name.begins_with("Prop_lamp") and world.tile_of(n.position) == Vector2i(8, 17):
+			lamp = n
+	check(lamp != null and world.entities.y_sort_enabled, "props and people share a y-sorted layer")
+	p.place(Vector2i(8, 16), "down")
+	check(p.position.y < lamp.position.y, "standing north of the lamp sorts behind it")
+	p.place(Vector2i(8, 18), "up")
+	check(p.position.y > lamp.position.y, "standing south of the lamp sorts in front of it")
+
+	# the tavern keeper: talk, dialogue, the quest step
+	var keeper: GridNpc = world.entities.get_node("Npc_tavern_keeper")
+	check(keeper != null and keeper.tile == Vector2i(9, 8), "the tavern keeper stands on the terrace")
+	check(not world.can_enter(Vector2i(9, 8)), "people block their tile")
+	p.place(Vector2i(9, 9), "up")
+	await _frames(3)
+	check(p.target == keeper.interactable and main.get("ui").hud.prompt_text().contains("Tavern keeper"), "facing the keeper offers Talk")
+	p.try_interact()
+	await _frames(2)
+	check(Dialogue.active and keeper.dir_name() == "down", "talking opens the dialogue and the keeper turns to the player")
+	await _talk(["Where"])
+	check(Journal.has_clue("mine_directions") and GameState.get_flag("tavern_keeper.met") == true, "asking the way records a clue in the journal (quest step)")
+
+	# the shop door: in, look, out
+	p.place(Vector2i(35, 18), "up")
+	await _frames(3)
+	check(p.target != null and p.target.label == "Shop", "the shop door offers Enter")
+	await _hold(&"move_up", 0.4)
+	await _frames(6)
+	p = main.get("player")
+	world = main.get("map")
+	check(str(main.get("map_id")) == "anjabi_steps_shop" and p.tile == Vector2i(5, 8), "stepping into the door enters the shop")
+	check(world.indoor and world.lighting.indoor, "the shop is lit as an interior")
+	p.place(Vector2i(2, 3), "up")
+	await _frames(3)
+	check(p.target != null and p.target.label == "Shelves", "the shelves can be examined")
+	p.place(Vector2i(5, 8), "down")
+	await _hold(&"move_down", 0.4)
+	await _frames(6)
+	p = main.get("player")
+	world = main.get("map")
+	check(str(main.get("map_id")) == "anjabi_steps" and p.tile == Vector2i(35, 18) and p.dir_name() == "down", "the mat leads back out in front of the shop door")
+
+	# lighting follows the clock
+	var tint: CanvasModulate = world.find_children("*", "CanvasModulate", true, false)[0]
+	Weather.set_weather("clear")
+	WorldTime.set_time(13, 0)
+	await _frames(3)
+	var day := tint.color.get_luminance()
+	WorldTime.set_time(23, 0)
+	await _frames(3)
+	var lamps := world.find_children("*", "PointLight2D", true, false)
+	check(tint.color.get_luminance() < day * 0.6 and lamps.size() >= 6 and (lamps[0] as PointLight2D).visible, "night darkens the Steps and the lamps light")
+
+	# save and load
+	p.place(Vector2i(12, 20), "left")
+	await _frames(2)
+	check(SaveManager.save_game("s2"), "save on the 2D Steps")
+	main.call("load_map", "anjabi_steps_shop", "default")
+	await _frames(4)
+	check(SaveManager.load_game("s2"), "load the save")
+	await _frames(4)
+	p = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_steps" and p.tile == Vector2i(12, 20) and Journal.has_clue("mine_directions"), "load restores map, tile and journal")
+
+	# the title starts the 2D slice
+	main.queue_free()
+	await _frames(3)
+	var app: Node = (load("res://game/app.tscn") as PackedScene).instantiate()
+	app.set("animate", false)
+	app.set("fade_time", 0.0)
+	add_child(app)
+	await _frames(4)
+	var title: TitleScreen = app.get("title")
+	title.choose("NEW GAME")
+	await _frames(4)
+	(app.get("creation") as CharacterCreation).done.emit({"player_name": "", "player_look": {"hair": "long", "coat": "#1f3555"}})
+	await _frames(8)
+	var m2: Node = app.get("main")
+	check(m2 != null and str(m2.get("map_id")) == "anjabi_steps" and m2.get("player") is GridPlayer, "NEW GAME from the title starts the 2D slice")
+	app.queue_free()
+	await _frames(2)
+	SaveManager.delete_save("s2")
+	print("\n%d checks, %d failed" % [_checks, _fails])
+	get_tree().quit(1 if _fails > 0 else 0)
+
+
+func _tap(a: StringName, frames: int) -> void:
+	Input.action_press(a)
+	await _frames(frames)
+	Input.action_release(a)
+	await _settle()
+
+
+func _hold(a: StringName, seconds: float) -> void:
+	Input.action_press(a)
+	await get_tree().create_timer(seconds).timeout
+	Input.action_release(a)
+	await _settle()
+
+
+func _settle() -> void:
+	for i in 60:
+		await get_tree().process_frame
+		if not is_instance_valid(p) or not p.is_moving():
+			break
+	await _frames(2)
+
+
+func _talk(prefer: Array) -> void:
+	var want := prefer.duplicate()
+	for i in 200:
+		if not Dialogue.active:
+			break
+		var opts := Dialogue.choice_texts()
+		if opts.is_empty():
+			Dialogue.advance()
+		else:
+			var pick := opts.size() - 1
+			for j in opts.size():
+				if not want.is_empty() and opts[j].contains(str(want[0])):
+					pick = j
+					want.pop_front()
+					break
+			Dialogue.choose(pick)
+		await get_tree().process_frame
+
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().process_frame
+
+
+func check(ok: bool, what: String) -> void:
+	_checks += 1
+	if not ok:
+		_fails += 1
+	print("%s  %s" % ["PASS" if ok else "FAIL", what])
+
+
+==============================================================================
+== tests/slice2d_test.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/slice2d_test.gd" id="1"]
+
+[node name="SliceTest" type="Node"]
 script = ExtResource("1")
 
 
@@ -11555,7 +14156,7 @@ func _run() -> void:
 	map = main.get("map")
 	cart = map.get_node("Entities/OreCart")
 	check(str(main.get("map_id")) == "anjabi_mine" and player.global_position.distance_to(Vector3(30, 0.05, 9)) < 0.3, "load restores the player position")
-	check(Journal.clues.size() == 4 and Journal.is_complete("quiet_mine"), "load restores the journal")
+	check(Journal.has_clue("closure_notice") and Journal.has_clue("early_recall") and Journal.has_clue("power_cut") and Journal.has_clue("sealed_outside") and Journal.is_complete("quiet_mine"), "load restores the journal")
 	check(cart.state() == "trench" and cart.global_position.distance_to(Vector3(40, 0, 16)) < 0.1, "load restores the puzzle state")
 	await _place3(Vector3(40, 0.05, 14.0))
 	Input.action_press(&"move_down")
@@ -14926,3 +17527,665 @@ func _draw() -> void:
 
 func _poly(pts: Array, c: Color) -> void:
 	draw_colored_polygon(PackedVector2Array(pts), c)
+
+
+==============================================================================
+== world2d/grid_actor.gd
+==============================================================================
+class_name GridActor
+extends Node2D
+## Someone who moves tile by tile on a TileWorld, FireRed style: a step glides from
+## one tile to the next over `walk_time` (or `run_time`), the sheet's walk or run frames
+## alternate feet on successive steps, and turning in place is instant.
+## Sheets come from PixelArt.character(look): columns idle, walk 1-4, run 1-4; rows
+## down, up, left, right; 16x32 frames standing on the tile's bottom centre.
+
+signal stepped(tile: Vector2i)
+
+const DIR := {"down": Vector2i(0, 1), "up": Vector2i(0, -1), "left": Vector2i(-1, 0), "right": Vector2i(1, 0)}
+
+var world: TileWorld
+var look: Dictionary = {}
+var sheet_id := ""
+var tile := Vector2i.ZERO
+## Facing as a unit vector (Vector2 so saves and the HUD treat it like the 2D player).
+var facing := Vector2(0, 1)
+var walk_time := 0.24
+var run_time := 0.13
+
+var sprite: Sprite2D
+var _moving := false
+var _from := Vector2.ZERO
+var _to := Vector2.ZERO
+var _t := 0.0
+var _dur := 0.24
+var _running := false
+var _foot := 0
+var _bump := 0.0
+
+
+func _ready() -> void:
+	sprite = Sprite2D.new()
+	sprite.texture = PixelArt.character(look, sheet_id)
+	sprite.hframes = PixelArt.COLS
+	sprite.vframes = 4
+	sprite.centered = false
+	sprite.offset = Vector2(-8, -31)
+	add_child(sprite)
+	if world != null:
+		tile = world.tile_of(position)
+		position = world.foot(tile)
+		world.claim(tile, self)
+	_pose()
+
+
+func place(t: Vector2i, face: String = "down") -> void:
+	if world != null and is_inside_tree():
+		world.release(tile, self)
+	tile = t
+	facing = Vector2(DIR.get(face, Vector2i(0, 1)))
+	_moving = false
+	if world != null:
+		position = world.foot(t)
+		if is_inside_tree():
+			world.claim(t, self)
+	if sprite != null:
+		_pose()
+
+
+func is_moving() -> bool:
+	return _moving
+
+
+func face(d: Vector2i) -> void:
+	facing = Vector2(d)
+	_pose()
+
+
+func dir_name() -> String:
+	var d := Vector2i(roundi(facing.x), roundi(facing.y))
+	for k: String in DIR:
+		if DIR[k] == d:
+			return k
+	return "down"
+
+
+## Begin a step in direction d. Returns false (and turns to face it) if blocked.
+func try_step(d: Vector2i, run := false) -> bool:
+	facing = Vector2(d)
+	var next := tile + d
+	if world == null or not world.can_enter(next, self):
+		_pose()
+		return false
+	world.claim(next, self)
+	_from = position
+	_to = world.foot(next)
+	_t = 0.0
+	_dur = run_time if run else walk_time
+	_running = run
+	_moving = true
+	_foot = (_foot + 1) % 2
+	return true
+
+
+func _process(delta: float) -> void:
+	if _bump > 0.0:
+		_bump -= delta
+	if not _moving:
+		return
+	_t += delta / _dur
+	if _t >= 1.0:
+		world.release(tile, self)
+		tile = world.tile_of(_to)
+		position = _to
+		_moving = false
+		_pose()
+		stepped.emit(tile)
+		_on_arrived()
+		return
+	position = _from.lerp(_to, _t)
+	_pose()
+
+
+## Override: called when a step completes (doors, chaining).
+func _on_arrived() -> void:
+	pass
+
+
+func _pose() -> void:
+	if sprite == null:
+		return
+	var row: int = ["down", "up", "left", "right"].find(dir_name())
+	var col := 0
+	if _moving:
+		# two frames per step, alternating feet: contact then passing
+		var half := 0 if _t < 0.5 else 1
+		col = (5 if _running else 1) + _foot * 2 + half
+	elif _bump > 0.0:
+		col = 1 + _foot * 2
+	sprite.frame = row * PixelArt.COLS + col
+
+
+==============================================================================
+== world2d/grid_npc.gd
+==============================================================================
+class_name GridNpc
+extends GridActor
+## A person on a TileWorld. Talkable NPCs come from data/npcs2d.json (name, dialogue,
+## look) and turn to face whoever speaks to them. Walkers wander a rectangle a step at
+## a time. Schedules (WorldTime) and factions attach here later; nothing in this class
+## draws except through GridActor and PixelArt.
+
+var npc_id := ""
+var display_name := ""
+var dialogue_id := ""
+var interactable: Interactable
+## Tiles a walker may wander (empty = stands still).
+var wander := Rect2i()
+var _wait := 0.0
+
+
+func _ready() -> void:
+	walk_time = 0.32
+	super._ready()
+	if dialogue_id != "":
+		interactable = Interactable.new()
+		interactable.prompt = "Talk"
+		interactable.label = display_name
+		interactable.dialogue_id = dialogue_id
+		add_child(interactable)
+		interactable.interacted.connect(_on_talk)
+	_wait = randf_range(0.5, 3.0)
+
+
+func _on_talk(by: Node2D) -> void:
+	var d := (by.position - position)
+	if absf(d.x) > absf(d.y):
+		face(Vector2i(signi(int(signf(d.x))), 0))
+	else:
+		face(Vector2i(0, signi(int(signf(d.y)))))
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	if wander.size == Vector2i.ZERO or _moving or Dialogue.active:
+		return
+	_wait -= delta
+	if _wait > 0.0:
+		return
+	_wait = randf_range(1.2, 4.0)
+	var dirs: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+	var d: Vector2i = dirs[randi() % 4]
+	if wander.has_point(tile + d):
+		try_step(d)
+	else:
+		face(d)
+
+
+==============================================================================
+== world2d/grid_player.gd
+==============================================================================
+class_name GridPlayer
+extends GridActor
+## The player on a TileWorld. Same outward interface as the other players (target,
+## facing, try_interact, setup, camera, sprinting, touch) so main, the HUD and saves
+## drive it alike. FireRed controls: tap a direction to turn, hold to walk, hold run
+## (Shift / pad B / RUN) to run; walking into a wall plays a bump; steps chain with no
+## pause while a direction is held. Doors trigger on arrival.
+
+signal target_changed(target: Interactable)
+
+## A tap shorter than this only turns the player.
+const TURN_TIME := 0.09
+
+var touch: TouchControls
+var target: Interactable
+var sprinting := false
+var camera: Camera2D
+var _held := Vector2i.ZERO
+var _held_t := 0.0
+var _arrived_warp := false
+
+
+func setup(touch_controls: TouchControls, m: TileWorld) -> void:
+	touch = touch_controls
+	world = m
+	camera = Camera2D.new()
+	camera.limit_left = 0
+	camera.limit_top = 0
+	camera.limit_right = int(m.bounds.size.x)
+	camera.limit_bottom = int(m.bounds.size.y)
+	camera.offset = Vector2(0, -8)
+	add_child(camera)
+	camera.make_current()
+	tile = m.tile_of(position)
+	position = m.foot(tile)
+	m.claim(tile, self)
+
+
+func _input_dir() -> Vector2i:
+	if Dialogue.active:
+		return Vector2i.ZERO
+	var v := Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
+	if v.length() < 0.3 and touch != null:
+		v = touch.vector
+	if v.length() < 0.3:
+		return Vector2i.ZERO
+	if absf(v.x) > absf(v.y):
+		return Vector2i(signi(int(signf(v.x))), 0)
+	return Vector2i(0, signi(int(signf(v.y))))
+
+
+func _physics_process(delta: float) -> void:
+	if world == null:
+		return
+	# a position set from outside (load, spawn) snaps to its tile
+	if not _moving and position != world.foot(tile):
+		world.release(tile, self)
+		tile = world.tile_of(position)
+		position = world.foot(tile)
+		world.claim(tile, self)
+	var d := _input_dir()
+	sprinting = d != Vector2i.ZERO and (Input.is_action_pressed(&"sprint") or (touch != null and touch.sprint))
+	if d != _held:
+		_held = d
+		_held_t = 0.0
+	else:
+		_held_t += delta
+	if not _moving and d != Vector2i.ZERO:
+		var facing_i := Vector2i(roundi(facing.x), roundi(facing.y))
+		if d != facing_i and _held_t < TURN_TIME:
+			face(d)
+		elif not try_step(d, sprinting):
+			if _bump <= 0.0:
+				_bump = 0.25
+			_pose()
+	_update_target()
+
+
+func _on_arrived() -> void:
+	var w := world.warp_at(tile)
+	if not w.is_empty():
+		GameState.travel_requested.emit(str(w["map"]), str(w["spawn"]))
+		return
+	# keep walking with no pause while the direction is still held
+	var d := _input_dir()
+	if d != Vector2i.ZERO and d == Vector2i(roundi(facing.x), roundi(facing.y)):
+		try_step(d, sprinting)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"interact") and try_interact():
+		get_viewport().set_input_as_handled()
+
+
+func try_interact() -> bool:
+	if Dialogue.active or _moving or target == null or not target.is_available():
+		return false
+	target.interact(self)
+	return true
+
+
+func face_now() -> void:
+	_pose()
+
+
+func _update_target() -> void:
+	var best: Interactable = null
+	if not _moving:
+		best = world.interactable_at(tile + Vector2i(roundi(facing.x), roundi(facing.y)))
+	if best != target:
+		target = best
+		target_changed.emit(target)
+
+
+==============================================================================
+== world2d/tile_world.gd
+==============================================================================
+class_name TileWorld
+extends GameMap
+## A 2D tile map built from a data file (data/maps2d/<name>.json). The file names
+## tiles and objects; PixelArt turns the names into pictures; this class builds the
+## layers and answers the gameplay questions (can I step here, what is in that tile,
+## where does this door go). Nothing here knows how anything is drawn.
+##
+## Map file:
+##   legend   char -> tile name (shared by all layers; " " = empty)
+##   ground, build, detail, over   rows of chars, one char per 16 px tile
+##     ground: floor; build: walls, roofs, rails (solid per data/maps2d/tiles.json);
+##     detail: windows, doors, vines, awnings (drawn on build, never solid);
+##     over: drawn above people (eaves, arches you walk under)
+##   objects  props, decor, npcs, walkers, warps, signs, lights (see _object())
+##   spawns   name -> [x, y, facing]
+##   indoor   true for interiors (fixed lamplight, no weather)
+##
+## Coordinates: tile (x, y); a person or prop stands on its tile's bottom centre, so
+## y-sorting by node position puts whoever is further south in front.
+
+const T := 16
+const LAYERS := ["ground", "build", "detail", "over"]
+
+@export_file("*.json") var map_file := ""
+
+var data: Dictionary = {}
+var size := Vector2i.ZERO
+var indoor := false
+var lighting: EnvironmentController2D
+
+var _solid := {}
+var _blocked := {}
+var _actors := {}
+var _signs := {}
+var _warps := {}
+var _layers := {}
+static var _catalogue := {}
+
+
+func _ready() -> void:
+	data = Data.load_dict(map_file)
+	if _catalogue.is_empty():
+		_catalogue = Data.load_dict("res://data/maps2d/tiles.json")
+	indoor = bool(data.get("indoor", false))
+	if display_name == "":
+		display_name = str(data.get("name", ""))
+	var rows: Array = data["ground"]
+	size = Vector2i(str(rows[0]).length(), rows.size())
+	bounds = Rect2(Vector2.ZERO, Vector2(size * T))
+	var bg := ColorRect.new()
+	bg.color = PixelArt.VOID
+	bg.position = Vector2(-T * 20, -T * 20)
+	bg.size = Vector2(size * T) + Vector2(T * 40, T * 40)
+	bg.z_index = -30
+	add_child(bg)
+	_build_layers()
+	entities.y_sort_enabled = true
+	entities.z_index = 0
+	for o: Dictionary in data.get("objects", []):
+		_object(o)
+	var spawns := Node2D.new()
+	spawns.name = "Spawns"
+	add_child(spawns)
+	for k: String in data.get("spawns", {}):
+		var s: Array = data["spawns"][k]
+		var m := Marker2D.new()
+		m.name = k
+		m.position = foot(Vector2i(int(s[0]), int(s[1])))
+		m.set_meta(&"facing", str(s[2]) if s.size() > 2 else "down")
+		spawns.add_child(m)
+	lighting = EnvironmentController2D.new()
+	lighting.name = "Lighting"
+	lighting.indoor = indoor
+	add_child(lighting)
+	for o: Dictionary in data.get("objects", []):
+		if o.has("light"):
+			var l: Dictionary = o["light"]
+			var at := _tile(o["at"])
+			lighting.add_lamp(foot(at) + Vector2(0, -float(l.get("height", 30))), float(l.get("energy", 1.0)), float(l.get("range", 5.0)) * T)
+
+
+# --- building ---------------------------------------------------------------------
+
+func _build_layers() -> void:
+	var legend: Dictionary = data["legend"]
+	# one atlas holding every tile the map uses
+	var names: Array[String] = []
+	for layer: String in LAYERS:
+		for row: String in data.get(layer, []):
+			for ch in row:
+				if ch != " " and legend.has(ch) and not str(legend[ch]) in names:
+					names.append(str(legend[ch]))
+	var atlas_img := Image.create(T * names.size(), T * 2, false, Image.FORMAT_RGBA8)
+	atlas_img.fill(Color(0, 0, 0, 0))
+	var has_glow := false
+	for i in names.size():
+		atlas_img.blit_rect(PixelArt.tile(names[i]), Rect2i(0, 0, T, T), Vector2i(i * T, 0))
+		var g := PixelArt.tile_glow(names[i])
+		if g != null:
+			atlas_img.blit_rect(g, Rect2i(0, 0, T, T), Vector2i(i * T, T))
+			has_glow = true
+	var ts := TileSet.new()
+	ts.tile_size = Vector2i(T, T)
+	var src := TileSetAtlasSource.new()
+	src.texture = ImageTexture.create_from_image(atlas_img)
+	src.texture_region_size = Vector2i(T, T)
+	for i in names.size():
+		src.create_tile(Vector2i(i, 0))
+		src.create_tile(Vector2i(i, 1))
+	ts.add_source(src, 0)
+	var z := {"ground": -12, "build": -11, "detail": -10, "over": 20}
+	for layer: String in LAYERS:
+		var tl := TileMapLayer.new()
+		tl.name = layer.capitalize()
+		tl.tile_set = ts
+		tl.z_index = z[layer]
+		add_child(tl)
+		_layers[layer] = tl
+		var rows: Array = data.get(layer, [])
+		for y in rows.size():
+			var row: String = rows[y]
+			for x in row.length():
+				var ch := row[x]
+				if ch == " " or not legend.has(ch):
+					continue
+				var name := str(legend[ch])
+				tl.set_cell(Vector2i(x, y), 0, Vector2i(names.find(name), 0))
+				if layer != "over" and layer != "detail" and bool((_catalogue.get(name, {}) as Dictionary).get("solid", false)):
+					_solid[Vector2i(x, y)] = true
+	if has_glow:
+		# lit windows again, additively, shining against the night tint
+		var glow := TileMapLayer.new()
+		glow.name = "Glow"
+		glow.tile_set = ts
+		glow.z_index = -9
+		var m := CanvasItemMaterial.new()
+		m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+		m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		glow.material = m
+		glow.add_to_group(&"night_glow")
+		add_child(glow)
+		for layer: String in ["build", "detail"]:
+			var rows: Array = data.get(layer, [])
+			for y in rows.size():
+				var row: String = rows[y]
+				for x in row.length():
+					var ch := row[x]
+					if legend.has(ch) and PixelArt.tile_glow(str(legend[ch])) != null:
+						glow.set_cell(Vector2i(x, y), 0, Vector2i(names.find(str(legend[ch])), 1))
+
+
+## Props stand in Entities (y-sorted); decor lies flat under or over everyone.
+func _object(o: Dictionary) -> void:
+	var at := _tile(o["at"])
+	match str(o.get("type", "prop")):
+		"prop":
+			var foot_size := _tile(o.get("size", [1, 1]))
+			var node := Node2D.new()
+			node.name = "Prop_" + str(o["sprite"])
+			node.position = Vector2(at.x * T + foot_size.x * T * 0.5, (at.y + foot_size.y) * T)
+			var tex := PixelArt.prop(str(o["sprite"]))
+			var sp := Sprite2D.new()
+			sp.texture = tex
+			sp.centered = false
+			sp.offset = Vector2(-tex.get_width() * 0.5, -tex.get_height()) + _vec(o.get("offset", [0, 0]))
+			node.add_child(sp)
+			_add_glow(node, str(o["sprite"]), sp.offset)
+			entities.add_child(node)
+			if bool(o.get("solid", true)):
+				for j in foot_size.y:
+					for i in foot_size.x:
+						_blocked[at + Vector2i(i, j)] = true
+		"decor":
+			var tex := PixelArt.prop(str(o["sprite"]))
+			var sp := Sprite2D.new()
+			sp.name = "Decor_" + str(o["sprite"])
+			sp.texture = tex
+			sp.centered = false
+			sp.position = Vector2(at * T) + _vec(o.get("offset", [0, 0]))
+			sp.z_index = 21 if str(o.get("layer", "under")) == "over" else -8
+			add_child(sp)
+			_add_glow(sp, str(o["sprite"]), Vector2.ZERO)
+		"npc":
+			var def: Dictionary = (Data.load_dict("res://data/npcs2d.json") as Dictionary).get(str(o["id"]), {})
+			var npc := GridNpc.new()
+			npc.name = "Npc_" + str(o["id"])
+			npc.npc_id = str(o["id"])
+			npc.display_name = str(def.get("name", "Someone"))
+			npc.dialogue_id = str(def.get("dialogue", ""))
+			npc.look = def.get("look", {})
+			npc.world = self
+			npc.place(at, str(o.get("facing", "down")))
+			entities.add_child(npc)
+		"walker":
+			var w := GridNpc.new()
+			w.name = "Walker"
+			w.look = o.get("look", {})
+			w.world = self
+			var a: Array = o["area"]
+			w.wander = Rect2i(int(a[0]), int(a[1]), int(a[2]), int(a[3]))
+			w.place(at, str(o.get("facing", "down")))
+			entities.add_child(w)
+		"warp":
+			_warps[at] = {"map": str(o["to"]), "spawn": str(o.get("spawn", "default"))}
+			if o.has("label"):
+				_sign(at, str(o.get("prompt", "Enter")), str(o["label"]), "", str(o["to"]), str(o.get("spawn", "default")))
+		"sign":
+			_sign(at, str(o.get("prompt", "Look")), str(o.get("label", "")), str(o.get("dialogue", "")), "", "")
+		"light":
+			pass
+
+
+func _sign(at: Vector2i, prompt: String, label: String, dialogue: String, to_map: String, to_spawn: String) -> void:
+	var it := Interactable.new()
+	it.name = "Sign_%d_%d" % [at.x, at.y]
+	it.prompt = prompt
+	it.label = label
+	it.dialogue_id = dialogue
+	it.position = foot(at) - Vector2(0, 8)
+	if to_map != "":
+		it.interacted.connect(func(_by: Node2D) -> void: GameState.travel_requested.emit(to_map, to_spawn))
+	add_child(it)
+	_signs[at] = it
+
+
+func _add_glow(parent: Node2D, sprite: String, offset: Vector2) -> void:
+	var g := PixelArt.prop_glow(sprite)
+	if g == null:
+		return
+	var gs := Sprite2D.new()
+	gs.texture = g
+	gs.centered = false
+	gs.offset = offset
+	var m := CanvasItemMaterial.new()
+	m.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	m.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	gs.material = m
+	gs.add_to_group(&"night_glow")
+	parent.add_child(gs)
+
+
+static func _tile(v: Variant) -> Vector2i:
+	var a: Array = v
+	return Vector2i(int(a[0]), int(a[1]))
+
+
+static func _vec(v: Variant) -> Vector2:
+	var a: Array = v
+	return Vector2(float(a[0]), float(a[1]))
+
+
+# --- gameplay queries -------------------------------------------------------------
+
+## Where a person standing on `t` is drawn from: the tile's bottom centre.
+func foot(t: Vector2i) -> Vector2:
+	return Vector2(t.x * T + T * 0.5, t.y * T + T - 1)
+
+
+func tile_of(p: Vector2) -> Vector2i:
+	return Vector2i(floori(p.x / T), floori((p.y - 1) / T))
+
+
+func in_bounds(t: Vector2i) -> bool:
+	return t.x >= 0 and t.y >= 0 and t.x < size.x and t.y < size.y
+
+
+## True if nothing stops a step onto `t` (walls, props, people, the map edge).
+func can_enter(t: Vector2i, who: Node = null) -> bool:
+	if not in_bounds(t) or _solid.has(t) or _blocked.has(t):
+		return false
+	var a: Node = _actors.get(t, null)
+	return a == null or a == who or not is_instance_valid(a)
+
+
+func is_solid(t: Vector2i) -> bool:
+	return _solid.has(t) or _blocked.has(t)
+
+
+## People claim tiles as they step so two never meet in one.
+func claim(t: Vector2i, who: Node) -> void:
+	_actors[t] = who
+
+
+func release(t: Vector2i, who: Node) -> void:
+	if _actors.get(t, null) == who:
+		_actors.erase(t)
+
+
+func actor_at(t: Vector2i) -> Node:
+	var a: Node = _actors.get(t, null)
+	return a if is_instance_valid(a) else null
+
+
+## Whatever can be used on tile `t`: a person's or a sign's Interactable.
+func interactable_at(t: Vector2i) -> Interactable:
+	var a := actor_at(t)
+	if a is GridNpc and (a as GridNpc).interactable != null:
+		return (a as GridNpc).interactable
+	return _signs.get(t, null)
+
+
+func warp_at(t: Vector2i) -> Dictionary:
+	return _warps.get(t, {})
+
+
+func spawn_position(spawn: String) -> Vector2:
+	var m := get_node_or_null("Spawns/" + spawn) as Node2D
+	if m == null:
+		m = get_node_or_null("Spawns/default") as Node2D
+	return m.position if m != null else foot(Vector2i(1, 1))
+
+
+func spawn_facing(spawn: String) -> String:
+	var m := get_node_or_null("Spawns/" + spawn) as Node2D
+	return str(m.get_meta(&"facing", "down")) if m != null else "down"
+
+
+==============================================================================
+== world2d/maps/shop.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world2d/tile_world.gd" id="1"]
+
+[node name="TileWorld" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_steps_shop"
+map_file = "res://data/maps2d/shop.json"
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true
+
+
+==============================================================================
+== world2d/maps/steps.tscn
+==============================================================================
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://world2d/tile_world.gd" id="1"]
+
+[node name="TileWorld" type="Node2D"]
+script = ExtResource("1")
+map_id = "anjabi_steps"
+map_file = "res://data/maps2d/steps.json"
+
+[node name="Entities" type="Node2D" parent="."]
+y_sort_enabled = true

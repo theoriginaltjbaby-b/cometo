@@ -150,6 +150,7 @@ All files were created 2026-11-14 unless noted.
 | `maps/interior_map_3d.gd` | `InteriorMap3D`: base for Pokemon-style interiors (cut-away room, exit mat, indoor light). |
 | `maps/anjabi/interiors/shop.gd` / `.tscn` | 12 Shop interior (`anjabi_shop`), the first interior. |
 | `data/dialogue/anjabi/shop_shelves.json` | Placeholder narration for the shop shelves. |
+| `HANDOFF.md` | Start-here briefing for a new agent: what the game is, current state, running and testing, architecture, how-tos, rules, open threads. |
 | `docs/2d_migration_assessment.md` | Audit of the project and the proposed path to a native 2D tile-based rebuild (for review; nothing converted). |
 | `docs/map_design.md` | Overworld and interiors plan: door rules, interiors per landmark, spacing and routes. |
 | `tests/screenshot_interior.gd` / `.tscn` | Windowed shots of the interiors. |
@@ -1036,3 +1037,9 @@ implementation is untouched and still runs (its tests pass). Nothing was deleted
   launched). The GitHub Pages site (https://theoriginaltjbaby-b.github.io/cometo-web/)
   now serves the 2D slice, replacing the 3D web build at the director's request; the 3D
   web build is still in the site repo's history and in `export/web/`.
+
+## 24. Handoff package (2026-11-15)
+
+- `HANDOFF.md` at the project root: a start-here briefing for a new agent. Packaged with
+  the full project (source, data, docs, art, tests, tools; no `.godot`, `export`, `.git`)
+  and screenshots as `export/COMETO_handoff_<date>.zip`.
