@@ -764,3 +764,7 @@ at handheld resolution. Everything is behind one switch, `ArtStyle.handheld`
 Limits: colours, materials and the moody night lighting are unchanged, so it reads as
 "moody HeartGold". Non-integer phone scales make some pixels slightly uneven. Not seen
 on an iPhone or the web; builds in `export/` predate this entry.
+
+Decision (2026-11-15): the director keeps the HeartGold look; `ArtStyle.handheld` stays on
+and is the game's style from here. Next step toward it: brighter, cleaner colours and
+simpler surfaces.
