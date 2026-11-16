@@ -24,10 +24,29 @@ var boot := ""
 var profile := {}
 
 @onready var world: Node2D = $World
+## 3D maps render here: at the base resolution with sharp upscaling when
+## ArtStyle.handheld is on, otherwise straight to the screen.
+var view3d: Node
 @onready var ui: GameUi = $UI
 
 
 func _ready() -> void:
+	view3d = world
+	if ArtStyle.handheld:
+		var layer := CanvasLayer.new()
+		layer.layer = -1
+		add_child(layer)
+		var box := SubViewportContainer.new()
+		box.stretch = true
+		box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		layer.add_child(box)
+		box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var vp := SubViewport.new()
+		vp.own_world_3d = true
+		vp.audio_listener_enable_3d = true
+		box.add_child(vp)
+		view3d = vp
 	SaveManager.world = self
 	ui.new_game_requested.connect(new_game)
 	ui.touch.tapped.connect(_on_tapped)
@@ -103,11 +122,11 @@ func _enter_map(id: String) -> void:
 	Dialogue.cancel()
 	get_tree().paused = false
 	if map != null:
-		world.remove_child(map)
+		map.get_parent().remove_child(map)
 		map.queue_free()
 	map_id = id
 	map = (load(MAPS[id]) as PackedScene).instantiate()
-	world.add_child(map)
+	(view3d if map is GameMap3D else world).add_child(map)
 	if map is Map2D:
 		player = Player2D.new()
 		map.entities.add_child(player)

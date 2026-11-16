@@ -39,6 +39,8 @@ var _elbow_r: Node3D
 var _neck: Node3D
 var _head_parts: Node3D
 var _run := 0.0
+## Hip height; shorter for the chibi proportions of ArtStyle.handheld.
+var _hip_h := 0.82
 var _phase := 0.0
 var _amount := 0.0
 var _speed := 0.0
@@ -52,7 +54,8 @@ func _ready() -> void:
 	var boot_m := _mat(Color(0.1, 0.09, 0.09), 0.6)
 	var accent_m := _mat(accent, 0.6, 0.3)
 	_hips = Node3D.new()
-	_hips.position.y = 0.82
+	_hip_h = 0.82 * (ArtStyle.LEGS if ArtStyle.handheld else 1.0)
+	_hips.position.y = _hip_h
 	add_child(_hips)
 	_leg_l = _limb(_hips, Vector3(-0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
 	_leg_r = _limb(_hips, Vector3(0.1, 0, 0), 0.075, 0.8, dark_m, boot_m)
@@ -139,6 +142,13 @@ func _ready() -> void:
 	_knee_r = _leg_r.get_node("Lower")
 	_elbow_l = _arm_l.get_node("Lower")
 	_elbow_r = _arm_r.get_node("Lower")
+	if ArtStyle.handheld:
+		scale = Vector3.ONE * ArtStyle.FIGURE_SCALE
+		_neck.scale = Vector3.ONE * ArtStyle.HEAD
+		for leg: Node3D in [_leg_l, _leg_r]:
+			leg.scale = Vector3(1.1, ArtStyle.LEGS, 1.1)
+		for arm: Node3D in [_arm_l, _arm_r]:
+			arm.scale = Vector3(1.05, ArtStyle.ARMS, 1.05)
 	for pivot: Node3D in [_torso, _head_parts, _leg_l, _leg_r, _arm_l, _arm_r, _knee_l, _knee_r, _elbow_l, _elbow_r]:
 		_merge(pivot)
 
@@ -359,7 +369,7 @@ func _process(delta: float) -> void:
 	_elbow_r.rotation.x = bend + maxf(sw, 0.0) * 0.3 * a
 	# body
 	var breathe := sin(_t * 2.0) * 0.012 * idle
-	_hips.position.y = 0.82 + absf(cw) * lerpf(0.035, 0.075, _run) * a - 0.03 * _run * a
+	_hips.position.y = _hip_h + absf(cw) * lerpf(0.035, 0.075, _run) * a - 0.03 * _run * a
 	_hips.rotation.z = sw * 0.03 * a
 	var lean := lerpf(0.06, 0.26, _run) * a
 	var twist := sw * lerpf(0.07, 0.17, _run) * a

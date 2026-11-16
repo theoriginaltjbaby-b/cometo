@@ -66,6 +66,8 @@ static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, ver
 	m.set_shader_parameter("wetness", wet)
 	m.set_shader_parameter("puddles", puddles)
 	m.set_shader_parameter("use_vertex_color", vertex_color)
+	if ArtStyle.handheld:
+		m.set_shader_parameter("stone_size", ArtStyle.STONE)
 	m.set_shader_parameter("noise_tex", detail_textures()[0])
 	return m
 

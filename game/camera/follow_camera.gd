@@ -24,6 +24,10 @@ var _lead := Vector3.ZERO
 
 
 func _ready() -> void:
+	if ArtStyle.handheld:
+		pitch_deg = ArtStyle.CAM_PITCH
+		distance = ArtStyle.CAM_DISTANCE
+		fov_deg = ArtStyle.CAM_FOV
 	top_level = true
 	if perspective:
 		projection = PROJECTION_PERSPECTIVE

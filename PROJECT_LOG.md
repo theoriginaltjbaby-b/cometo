@@ -145,6 +145,7 @@ All files were created 2026-11-14 unless noted.
 | `maps/proto2d/environment_controller_2d.gd` | `EnvironmentController2D`: day/night tint, lamps as PointLight2D, night glow, 2D precipitation and mist. |
 | `maps/anjabi/steps_2d.tscn` | The 2D prototype map (`anjabi_steps_2d`). |
 | `tests/screenshot_2d.gd` / `.tscn` | Windowed shots of the 2D prototype. |
+| `core/art_style.gd` | `ArtStyle`: one switch (`handheld`) for the HeartGold-style look test and its constants. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -742,3 +743,24 @@ game is unchanged; the prototype is one extra map reachable from the title (2D P
   The 2D code, the bake tool, the baked art and its tests are kept: the 2D systems
   (height-grid walking, y-sorting, 2D lighting and weather) can carry hand-drawn art if
   the project turns 2D later. The map is still reachable in code as `anjabi_steps_2d`.
+
+## 17. HeartGold-style look test (2026-11-15)
+
+A look test toward Pokemon HeartGold: a 3D world under a fixed, steep camera, rendered
+at handheld resolution. Everything is behind one switch, `ArtStyle.handheld`
+(`core/art_style.gd`, on); set it false and the previous look returns exactly.
+
+- 3D maps render into a SubViewport at the 480x270 base resolution and are scaled up
+  with nearest filtering: crisp, chunky pixels. The interface stays sharp on top.
+  This also cuts the pixels the GPU shades by about 9x at 1440x810.
+- Camera: 52 degrees (was 40), 27 m (was 30), lens 30 degrees (was 32).
+- People: drawn 1.25x larger than life against the buildings, heads 1.38x, legs 0.78x,
+  arms 0.88x (chibi proportions). Applies to the player, NPCs and townsfolk.
+- Paving: cobbles 0.45 m (was 0.3 m) so they read at the low resolution.
+- `game/main.gd` adds 3D maps to the low-res view; 2D maps still go to `World`.
+- Tests: slice 154/154 (the rain lookup now picks the 3D emitter, since the 2D rain is
+  in the same group), menu 42/42. Desktop draws 128-241 per frame.
+
+Limits: colours, materials and the moody night lighting are unchanged, so it reads as
+"moody HeartGold". Non-integer phone scales make some pixels slightly uneven. Not seen
+on an iPhone or the web; builds in `export/` predate this entry.

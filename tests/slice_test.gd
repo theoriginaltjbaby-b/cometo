@@ -609,7 +609,7 @@ func _world() -> void:
 	check(float(ctl.w["rain"]) > 0.0 and float(ctl.w["rain"]) < 0.5, "weather blends in gradually (rain %.2f after 5 frames)" % float(ctl.w["rain"]))
 	ctl.snap()
 	check(is_equal_approx(float(ctl.w["rain"]), 1.0) and ctl.sun.light_energy < clear_sun * 0.6, "heavy rain darkens the day")
-	var rain: Rain3D = get_tree().get_nodes_in_group(&"precipitation")[0]
+	var rain: Rain3D = get_tree().get_nodes_in_group(&"precipitation").filter(func(n: Node) -> bool: return n is Rain3D)[0]
 	check(rain.emitting, "rain falls")
 	Weather.set_weather("snow")
 	ctl.snap()
