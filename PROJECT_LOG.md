@@ -1032,5 +1032,7 @@ implementation is untouched and still runs (its tests pass). Nothing was deleted
   linked from the 2D slice.
 - Maps are written as JSON grids for now; authoring in Godot's TileMap editor is a later
   step (the tile names and catalogue carry over).
-- Not built for web or Mac yet on this branch; the GitHub Pages build is still the 3D
-  game.
+- Builds: `export/COMETO_2d_slice_macos_<date>.zip` and `export/web2d/` (Mac build not
+  launched). The GitHub Pages site (https://theoriginaltjbaby-b.github.io/cometo-web/)
+  now serves the 2D slice, replacing the 3D web build at the director's request; the 3D
+  web build is still in the site repo's history and in `export/web/`.
