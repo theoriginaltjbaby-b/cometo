@@ -13,7 +13,7 @@ func _ready() -> void:
 	add_child(main)
 	WorldTime.minutes_per_second = 0.0
 	await get_tree().create_timer(1.0).timeout
-	var o := Vector3(101.52, 0, 45.72)
+	var o: Vector3 = preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 	var p: Player3D = main.get("player")
 	var looks := [
 		["t_01_dawn_clear", 5, 50, "clear"], ["t_02_morning_clear", 9, 0, "clear"], ["t_03_midday_clear", 13, 0, "clear"],

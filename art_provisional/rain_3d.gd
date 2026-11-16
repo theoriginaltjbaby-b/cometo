@@ -11,7 +11,8 @@ var _snow: GPUParticles3D
 
 func _init() -> void:
 	add_to_group(&"precipitation")
-	amount = 1600
+	# the handheld view is smaller and low-res: fewer streaks read the same
+	amount = 900 if ArtStyle.handheld else 1600
 	lifetime = 0.9
 	preprocess = 1.0
 	local_coords = false
@@ -68,7 +69,7 @@ static func _level(p: GPUParticles3D, level: float) -> void:
 ## Droplets bursting on the ground around the player.
 static func _splashes() -> GPUParticles3D:
 	var p := GPUParticles3D.new()
-	p.amount = 460
+	p.amount = 240 if ArtStyle.handheld else 460
 	p.lifetime = 0.35
 	p.local_coords = false
 	p.position = Vector3(0, -11.9, 0)
@@ -99,7 +100,7 @@ static func _splashes() -> GPUParticles3D:
 ## Slow drifting flakes.
 static func _snowfall() -> GPUParticles3D:
 	var p := GPUParticles3D.new()
-	p.amount = 700
+	p.amount = 420 if ArtStyle.handheld else 700
 	p.lifetime = 7.0
 	p.preprocess = 7.0
 	p.local_coords = false

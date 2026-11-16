@@ -146,6 +146,12 @@ All files were created 2026-11-14 unless noted.
 | `maps/anjabi/steps_2d.tscn` | The 2D prototype map (`anjabi_steps_2d`). |
 | `tests/screenshot_2d.gd` / `.tscn` | Windowed shots of the 2D prototype. |
 | `core/art_style.gd` | `ArtStyle`: one switch (`handheld`) for the HeartGold-style look test and its constants. |
+| `art/shaders/handheld_grade.gdshader` | The handheld photo filter: colour grade, 15-bit colour with ordered dither, vignette. On the low-res 3D image. |
+| `maps/interior_map_3d.gd` | `InteriorMap3D`: base for Pokemon-style interiors (cut-away room, exit mat, indoor light). |
+| `maps/anjabi/interiors/shop.gd` / `.tscn` | 12 Shop interior (`anjabi_shop`), the first interior. |
+| `data/dialogue/anjabi/shop_shelves.json` | Placeholder narration for the shop shelves. |
+| `docs/map_design.md` | Overworld and interiors plan: door rules, interiors per landmark, spacing and routes. |
+| `tests/screenshot_interior.gd` / `.tscn` | Windowed shots of the interiors. |
 | `art_provisional/figure_3d.gd` | `Figure3D`: provisional ~4-heads-tall person from primitives with procedural walk and idle animation. Parts are low-poly and merged into one vertex-coloured mesh per limb (pass 9). |
 | `data/dialogue/anjabi/tavern_keeper.json`, `pod_b17.json`, `mine_approach_sign.json` | Placeholder content for the district (role names only). |
 | `maps/map_builder_3d.gd` | `MapBuilder3D` (entry 5): shared material palette, primitives (box, slab, cyl, dome, beam, stairs, railing, fence, blocker, lamp, tree, sign_text) and the night-rain environment. District and mine extend it. Pass 9: `batch()` and `BATCHED` models as MultiMeshes per 24 m cell, `scatter()`/`railings()` chunked per cell, `merge_static()` merges plain primitives per material per cell. |
@@ -768,3 +774,54 @@ on an iPhone or the web; builds in `export/` predate this entry.
 Decision (2026-11-15): the director keeps the HeartGold look; `ArtStyle.handheld` stays on
 and is the game's style from here. Next step toward it: brighter, cleaner colours and
 simpler surfaces.
+
+
+## 18. Colour pass, first interior, map plan, efficiency (2026-11-15)
+
+### Colour and look
+- `art/shaders/handheld_grade.gdshader` on the low-res 3D image: split toning (teal
+  shadows, warm sand highlights) in the spirit of 70s-80s space opera film, lifted and
+  faded blacks, a little saturation and contrast, 15-bit DS colour (32 levels) with a
+  4x4 ordered dither in source pixels, soft vignette. One texture read per pixel.
+- Handheld daytime is brighter and cleaner: ambient +20%, exposure +12%, saturation
+  +0.08, less fog, scaled by daylight so nights stay moody.
+- Flatter surfaces: models' detail noise range narrowed (0.8-1.02, was 0.6-1.05) and
+  normal strength 0.35 (was 0.8). The ground and sea shaders keep the full-range noise
+  their thresholds expect.
+
+### Interiors (Pokemon style)
+- `InteriorMap3D`: a cut-away room on black with the front open to the camera, a door
+  mat that leads back out, indoor lighting (no sky, sun or weather inside; the clock
+  runs on). `room()` and `ceiling_lamp()` build the shell.
+- First interior: **12 Shop** (`anjabi_shop`): counter, side shelving (examinable,
+  placeholder text), crates, barrels, rug, two lamps. Door on the Steps (`ShopDoor`),
+  return spawn `shop` outside it.
+- `docs/map_design.md`: the overworld + interiors model, door rules, a proposed
+  interior breakdown for every greybox landmark, routes, and the spacing plan.
+
+### Spacing (tried, reverted)
+- Scaling the town 25% larger (PX 0.12 -> 0.15) widened the generated paths but left the
+  hand-built Steps insert at its own size, narrowing its joins to about 1 m and cutting
+  off the tavern landing (4 slice checks failed). Reverted; the fix (rebuild or retire
+  the insert, then rescale) is written up in `docs/map_design.md`. The tests and
+  screenshot scripts now read `INSERT_AT` from `town_3d.gd` instead of copying it.
+
+### Efficiency
+- Lighting updates 10 times a second instead of every frame (every frame while
+  lightning flashes); precipitation nodes are cached instead of looked up each update.
+- People stop animating while off screen (`VisibleOnScreenNotifier3D` on each figure).
+- Handheld: shadow atlas 2048 (was 4096) and the cheapest soft-shadow filter; rain
+  900 streaks (was 1600), 240 splashes (was 460), snow 420 (was 700).
+- `tests/perf_probe.gd` now turns vsync off itself (Settings turned it back on before,
+  so recent runs read 16.6 ms). Desktop frame cost after: 3.6-4.1 ms, about the same
+  as before these changes; the desktop GPU is not the bottleneck since the low-res
+  render. The gains are aimed at phones and are unmeasured there.
+
+### Tests
+- Slice 162/162 (8 new: shop door, entering, indoor light, no rain inside, shelves, the
+  mat, leaving back to the door). Menu 42/42.
+
+### Limits
+- The shop's contents and keeper are placeholders for the director.
+- Interiors are a single camera distance; very small rooms show a lot of black.
+- Not seen on an iPhone or the web; builds in `export/` predate this entry.

@@ -5,6 +5,8 @@ extends Node
 const MAPS := {
 	"anjabi_mine": "res://maps/anjabi/mine_3d.tscn",
 	"anjabi_town": "res://maps/anjabi/town_3d.tscn",
+	# interiors (InteriorMap3D)
+	"anjabi_shop": "res://maps/anjabi/interiors/shop.tscn",
 	# Golden Sun-style 2D prototype baked from the 3D district (tools/bake_2d.gd)
 	"anjabi_steps_2d": "res://maps/anjabi/steps_2d.tscn",
 }
@@ -33,12 +35,19 @@ var view3d: Node
 func _ready() -> void:
 	view3d = world
 	if ArtStyle.handheld:
+		# a 480x270 image needs far less shadow resolution and filtering
+		RenderingServer.directional_shadow_atlas_set_size(2048, true)
+		RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW)
+		RenderingServer.positional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_VERY_LOW)
 		var layer := CanvasLayer.new()
 		layer.layer = -1
 		add_child(layer)
 		var box := SubViewportContainer.new()
 		box.stretch = true
 		box.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		var grade := ShaderMaterial.new()
+		grade.shader = preload("res://art/shaders/handheld_grade.gdshader")
+		box.material = grade
 		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		layer.add_child(box)
 		box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

@@ -430,6 +430,11 @@ func _spawns_and_exits() -> void:
 		if k == "default":
 			m.position = INSERT_AT + Vector3(2, 0.05, 5)
 		spawns.add_child(m)
+	# back out of the shop, on the step in front of its door
+	var shop := Marker3D.new()
+	shop.name = "shop"
+	shop.position = INSERT_AT + Vector3(15, 0.05, -0.6)
+	spawns.add_child(shop)
 	var door := Interactable3D.new()
 	door.name = "PodB17Door"
 	door.prompt = "Knock"

@@ -16,7 +16,7 @@ func _ready() -> void:
 	WorldTime.set_time(21, 30)
 	Weather.set_weather("rain")
 	await get_tree().create_timer(1.0).timeout
-	var o := Vector3(101.52, 0, 45.72)  # the Steps insert in the town
+	var o: Vector3 = preload("res://maps/anjabi/town_3d.gd").INSERT_AT  # the Steps insert in the town
 	var shots := {
 		"3d_01_steps": o + Vector3(2, 0.05, 5),
 		"3d_02_tavern": o + Vector3(-6, 3.05, -11.5),

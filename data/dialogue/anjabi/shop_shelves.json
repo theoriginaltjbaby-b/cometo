@@ -1,0 +1,11 @@
+{
+	"entry": [{"goto": "look"}],
+	"nodes": {
+		"look": {
+			"say": [
+				["", "Shelves of stock, stacked and labelled."],
+				["", "[PLACEHOLDER: what the shop sells, and its keeper, come from the director.]"]
+			]
+		}
+	}
+}

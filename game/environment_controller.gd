@@ -52,6 +52,10 @@ var _flash := 0.0
 var _lamp_lights: Array[Light3D] = []
 var _lamp_level := -1.0
 var _lamp_scan := 0.0
+## Seconds between lighting updates (the clock moves one game minute per second).
+const APPLY_EVERY := 0.1
+var _tick := 0.0
+var _precip: Array[Node] = []
 
 
 func _init() -> void:
@@ -104,6 +108,11 @@ func _process(delta: float) -> void:
 	var snowing := float(p["snow"]) > 0.0
 	w["cover"] = move_toward(w["cover"], 1.0 if snowing else 0.0, delta / (45.0 if snowing else 60.0))
 	_flash = move_toward(_flash, 0.0, delta * 4.0)
+	# the light drifts slowly; ten updates a second are plenty unless lightning flashes
+	_tick -= delta
+	if _tick > 0.0 and _flash <= 0.0:
+		return
+	_tick = APPLY_EVERY
 	_lamp_scan -= delta
 	if _lamp_scan <= 0.0:
 		_lamp_scan = 2.0
@@ -130,12 +139,14 @@ func _apply() -> void:
 	env.background_color = bg.lightened(flash * 0.5)
 	var amb := ambient.sample(t).lerp(Color(0.7, 0.8, 1.0), float(w["snow"]) * 0.3)
 	env.ambient_light_color = amb
-	env.ambient_light_energy = ambient_energy.sample(t) * (1.0 - cloud * 0.25 * day) + flash * 1.2
-	env.tonemap_exposure = exposure.sample(t)
-	env.adjustment_saturation = 1.18 - cloud * 0.3 * day
+	# the handheld style reads brighter and cleaner by day; nights stay moody
+	var hh := day if ArtStyle.handheld else 0.0
+	env.ambient_light_energy = ambient_energy.sample(t) * (1.0 - cloud * 0.25 * day) * (1.0 + 0.2 * hh) + flash * 1.2
+	env.tonemap_exposure = exposure.sample(t) * (1.0 + 0.12 * hh)
+	env.adjustment_saturation = 1.18 - cloud * 0.3 * day + 0.08 * hh
 	var fog_grey := fog_color.sample(t).get_luminance() * (1.0 - cloud * 0.35)
 	env.fog_light_color = fog_color.sample(t).lerp(Color(fog_grey, fog_grey * 1.03, fog_grey * 1.08), cloud * 0.85)
-	env.fog_density = 0.002 + float(w["rain"]) * 0.007 * (1.0 - 0.4 * float(w["fog"])) + float(w["fog"]) * 0.0065 + float(w["snow"]) * 0.003
+	env.fog_density = (1.0 - 0.45 * hh) * 0.002 + (1.0 - 0.3 * hh) * float(w["rain"]) * 0.007 * (1.0 - 0.4 * float(w["fog"])) + float(w["fog"]) * 0.0065 + float(w["snow"]) * 0.003
 
 	var is_day := t > SUNRISE and t < SUNSET
 	if is_day:
@@ -154,8 +165,9 @@ func _apply() -> void:
 	_set_lamps(maxf(lamps.sample(t), cloud * 0.6 * day))
 	RenderingServer.global_shader_parameter_set(&"weather_wet", float(w["wet"]))
 	RenderingServer.global_shader_parameter_set(&"weather_snow", float(w["cover"]))
-	for n in get_tree().get_nodes_in_group(&"precipitation"):
-		n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
+	for n in _precip:
+		if is_instance_valid(n):
+			n.call(&"set_precipitation", float(w["rain"]), float(w["snow"]))
 
 
 func _apply_indoor() -> void:
@@ -178,6 +190,7 @@ func _apply_indoor() -> void:
 func _collect_lamps() -> void:
 	if not is_inside_tree():
 		return
+	_precip = get_tree().get_nodes_in_group(&"precipitation")
 	var found: Array[Light3D] = []
 	for n in get_tree().get_nodes_in_group(&"lamp_lights"):
 		found.append(n as Light3D)

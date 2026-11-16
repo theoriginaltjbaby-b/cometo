@@ -3,10 +3,13 @@ extends Node
 ## at representative spots. A desktop proxy only; it is not an iPhone measurement.
 ##   Godot --path . res://tests/perf_probe.tscn
 
-const O := Vector3(101.52, 0, 45.72)
+const O := preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 
 
 func _ready() -> void:
+	# measure real frame cost: no vsync (Settings would otherwise turn it back on)
+	Settings.vsync = false
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	SaveManager.autosave_enabled = false
 	SaveManager.boot_from_autosave = false
 	var main: Node = (load("res://game/main.tscn") as PackedScene).instantiate()

@@ -20,6 +20,7 @@ func _ready() -> void:
 	await _run()
 	await _town()
 	await _world()
+	await _interiors()
 	await _proto2d()
 	SaveManager.delete_save("test")
 	print("\n%d checks, %d failed" % [_checks, _fails])
@@ -272,7 +273,7 @@ func _town() -> void:
 
 
 ## The Steps: the detailed insert (plaza, stairs, tavern terrace) inside the town map.
-const O := Vector3(101.52, 0, 45.72)
+const O := preload("res://maps/anjabi/town_3d.gd").INSERT_AT
 
 
 func _district() -> void:
@@ -732,4 +733,43 @@ func _proto2d() -> void:
 	await _frames(3)
 	player = main.get("player")
 	check(player is Player2D and player.position.distance_to(at) < 2.0, "load restores the 2D map and position")
+	WorldTime.minutes_per_second = 1.0
+
+
+## Pokemon-style interiors: the shop door on the Steps leads into a room and back.
+func _interiors() -> void:
+	main.call("new_game")
+	await _frames(8)
+	WorldTime.minutes_per_second = 0.0
+	player = main.get("player")
+	var door: MapExit3D = main.get("map").find_child("ShopDoor", true, false)
+	check(door != null and door.target_map == "anjabi_shop", "the shop on the Steps has a door")
+	await _place3(door.global_position - Vector3(0, 0.85, -0.9))
+	await _frames(4)
+	check(player.target == door, "standing at the shop door offers Enter")
+	var door_at: Vector3 = door.global_position
+	player.try_interact()
+	await _frames(8)
+	player = main.get("player")
+	var shop = main.get("map")
+	check(str(main.get("map_id")) == "anjabi_shop" and shop is InteriorMap3D and player.is_on_floor(), "entering puts the player inside the shop, standing")
+	check((shop as MapBuilder3D).environment.indoor, "the shop is lit as an interior")
+	Weather.set_weather("heavy_rain")
+	(shop as MapBuilder3D).environment.snap()
+	var rain: Rain3D = player.find_children("*", "Rain3D", true, false)[0]
+	check(not rain.emitting, "it does not rain indoors")
+	var shelf: Interactable3D = null
+	for n in shop.find_children("*", "Interactable3D", true, false):
+		if (n as Interactable3D).dialogue_id == "anjabi/shop_shelves":
+			shelf = n
+	check(shelf != null and Dialogue.has_method("start"), "the shelves can be examined")
+	var mat: MapExit3D = shop.find_child("ExitMat", true, false)
+	await _place3(Vector3(mat.global_position.x, 0.05, mat.global_position.z - 0.2))
+	await _frames(4)
+	check(player.target == mat, "the door mat offers Leave")
+	player.try_interact()
+	await _frames(8)
+	player = main.get("player")
+	check(str(main.get("map_id")) == "anjabi_town" and player.global_position.distance_to(door_at) < 4.0, "leaving returns to the Steps, at the shop door")
+	Weather.set_weather("rain")
 	WorldTime.minutes_per_second = 1.0

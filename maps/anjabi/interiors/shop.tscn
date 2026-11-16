@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://maps/anjabi/interiors/shop.gd" id="1"]
+
+[node name="Shop" type="Node3D"]
+script = ExtResource("1")
+map_id = "anjabi_shop"
+display_name = "ANJABI  ·  SHOP"
+exit_map = "anjabi_town"
+exit_spawn = "shop"
+
+[node name="Entities" type="Node3D" parent="."]

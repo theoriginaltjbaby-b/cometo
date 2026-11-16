@@ -166,6 +166,16 @@ func _shop() -> void:
 	warm_light(c + Vector3(0, 2.0, 4.2), 1.6, 6.0)
 	for i in 3:
 		box(c + Vector3(-2.8 + i * 0.7, 0.35, 4.4), Vector3(0.6, 0.7, 0.6), M.timber, true)
+	# the shop door: the first interior (maps/anjabi/interiors/shop.tscn)
+	var door := MapExit3D.new()
+	door.name = "ShopDoor"
+	door.prompt = "Enter"
+	door.label = "Shop"
+	door.radius = 1.2
+	door.target_map = "anjabi_shop"
+	door.target_spawn = "default"
+	door.position = c + Vector3(0, 0.9, 3.4)
+	add_child(door)
 
 
 func _pod(at: Vector3, tag := "", _lit := true) -> void:

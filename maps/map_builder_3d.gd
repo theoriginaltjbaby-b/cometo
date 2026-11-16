@@ -41,12 +41,27 @@ static func detail_textures() -> Array:
 	return [_detail, _detail_n]
 
 
+static var _detail_soft: NoiseTexture2D
+
+
+## The detail noise with a narrower range, for the handheld style's flatter surfaces.
+## (The ground and sea shaders keep the full-range texture: their thresholds expect it.)
+static func soft_detail() -> NoiseTexture2D:
+	if _detail_soft == null:
+		_detail_soft = detail_textures()[0].duplicate() as NoiseTexture2D
+		var g := Gradient.new()
+		g.set_color(0, Color(0.8, 0.8, 0.8))
+		g.set_color(1, Color(1.02, 1.02, 1.02))
+		_detail_soft.color_ramp = g
+	return _detail_soft
+
+
 static func add_detail(m: StandardMaterial3D, scale := 0.4) -> void:
 	var t := detail_textures()
-	m.albedo_texture = t[0]
+	m.albedo_texture = soft_detail() if ArtStyle.handheld else t[0]
 	m.normal_enabled = true
 	m.normal_texture = t[1]
-	m.normal_scale = 0.8
+	m.normal_scale = 0.8 if not ArtStyle.handheld else 0.35
 	m.uv1_triplanar = true
 	m.uv1_world_triplanar = true
 	m.uv1_scale = Vector3(scale, scale, scale)

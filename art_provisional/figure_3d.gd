@@ -142,6 +142,12 @@ func _ready() -> void:
 	_knee_r = _leg_r.get_node("Lower")
 	_elbow_l = _arm_l.get_node("Lower")
 	_elbow_r = _arm_r.get_node("Lower")
+	# animate only while on screen
+	var vis := VisibleOnScreenNotifier3D.new()
+	vis.aabb = AABB(Vector3(-0.6, 0, -0.6), Vector3(1.2, 2.2, 1.2))
+	vis.screen_entered.connect(func() -> void: set_process(true))
+	vis.screen_exited.connect(func() -> void: set_process(false))
+	add_child(vis)
 	if ArtStyle.handheld:
 		scale = Vector3.ONE * ArtStyle.FIGURE_SCALE
 		_neck.scale = Vector3.ONE * ArtStyle.HEAD

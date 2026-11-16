@@ -20,6 +20,7 @@ sh tools/package_review.sh                                   # export/COMETO_rev
 $GODOT --path . res://tests/screenshot_time.tscn -- /some/folder  # shots through the day and each weather
 $GODOT --path . res://tools/bake_2d.tscn                       # rebake the 2D prototype art from the 3D district (windowed)
 $GODOT --path . res://tests/screenshot_2d.tscn -- /some/folder  # shots of the 2D prototype
+$GODOT --path . res://tests/screenshot_interior.tscn -- /some/folder  # shots of the interiors
 $GODOT --path . res://tests/perf_probe.tscn                  # render cost per spot (desktop proxy)
 $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs iOS templates, Xcode, team id
 ```
@@ -28,7 +29,7 @@ $GODOT --headless --path . --export-debug "iOS" export/ios/COMETO.ipa  # needs i
 
 - `core/` autoloads: `GameState` (flags, conditions, effects), `Journal`, `Dialogue`, `SaveManager`, `WorldTime` (the only clock and calendar), `Weather`, `Settings`, `Audio` (all sound goes through it; see `audio/README.md` for placeholders). No drawing here.
 - `game/` main scene, player, NPCs, `Interactable` component, puzzle pieces.
-- `maps/<region>/` one scene per location, root script `GameMap` (2D) or `GameMap3D` (3D), with `Entities` and `Spawns`. 3D maps use `Player3D`, `Npc3D`, `Interactable3D`, `MapExit3D`, which keep the 2D classes' interfaces.
+- `maps/<region>/` one scene per location (interiors in `maps/<region>/interiors/`, on `InteriorMap3D`; plan in `docs/map_design.md`), root script `GameMap` (2D) or `GameMap3D` (3D), with `Entities` and `Spawns`. 3D maps use `Player3D`, `Npc3D`, `Interactable3D`, `MapExit3D`, which keep the 2D classes' interfaces.
 - `ui/` all screen-space controls, built in code from `UiTheme`.
 - `data/` narrative content as JSON (dialogue, quests, clues). Formats are documented at the top of `core/dialogue.gd` and `core/game_state.gd`.
 - `art_provisional/` everything drawn in code. All of it is placeholder and is meant to be replaced.
