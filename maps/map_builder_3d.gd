@@ -88,36 +88,36 @@ static func ground_mat(c: Color, cobble := 1.0, wet := 0.8, puddles := 0.55, ver
 
 
 func _materials() -> void:
-	M.paving = ground_mat(Color(0.42, 0.4, 0.38))
-	M.paving_light = ground_mat(Color(0.5, 0.48, 0.45), 1.0, 0.7, 0.3)
+	M.paving = ground_mat(Color(0.46, 0.41, 0.42))
+	M.paving_light = ground_mat(Color(0.55, 0.49, 0.48), 1.0, 0.7, 0.3)
 	M.stone = _mat(Color(0.36, 0.35, 0.33), 0.8)
-	M.rock = _mat(Color(0.2, 0.23, 0.25), 0.95)
-	M.rock_dark = _mat(Color(0.13, 0.15, 0.17), 0.95)
-	M.moss = ground_mat(Color(0.16, 0.26, 0.17), 0.0, 0.5, 0.15)
-	M.concrete = _mat(Color(0.47, 0.47, 0.44), 0.85)
-	M.steel = _mat(Color(0.33, 0.35, 0.37), 0.45, 0.6)
-	M.steel_dark = _mat(Color(0.17, 0.18, 0.2), 0.5, 0.6)
-	M.copper = _mat(Color(0.3, 0.5, 0.45), 0.5, 0.55)
+	M.rock = _mat(Color(0.25, 0.22, 0.27), 0.95)
+	M.rock_dark = _mat(Color(0.14, 0.12, 0.17), 0.95)
+	M.moss = ground_mat(Color(0.17, 0.27, 0.23), 0.0, 0.5, 0.15)
+	M.concrete = _mat(Color(0.5, 0.45, 0.45), 0.85)
+	M.steel = _mat(Color(0.38, 0.33, 0.33), 0.45, 0.6)
+	M.steel_dark = _mat(Color(0.17, 0.15, 0.19), 0.5, 0.6)
+	M.copper = _mat(Color(0.3, 0.53, 0.48), 0.5, 0.45)
 	M.copper_raw = _mat(Color(0.62, 0.36, 0.22), 0.4, 0.75)
-	M.panel = _mat(Color(0.42, 0.45, 0.42), 0.7, 0.2)
+	M.panel = _mat(Color(0.36, 0.45, 0.46), 0.7, 0.2)
 	M.panel_violet = _mat(Color(0.33, 0.29, 0.36), 0.75, 0.15)
-	M.timber = _mat(Color(0.22, 0.15, 0.11), 0.85)
-	M.canvas = _mat(Color(0.45, 0.17, 0.17), 0.95)
-	M.canvas_teal = _mat(Color(0.2, 0.33, 0.33), 0.95)
+	M.timber = _mat(Color(0.28, 0.17, 0.12), 0.85)
+	M.canvas = _mat(Color(0.52, 0.2, 0.24), 0.95)
+	M.canvas_teal = _mat(Color(0.19, 0.38, 0.4), 0.95)
 	M.window = _mat(Color(1.0, 0.72, 0.38), 0.3, 0.0, Color(1.0, 0.62, 0.28), 2.2)
 	M.lamp = _mat(Color(1.0, 0.8, 0.5), 0.3, 0.0, Color(1.0, 0.7, 0.35), 4.0)
 	M.warning = _mat(Color(0.8, 0.6, 0.12), 0.6)
-	M.sand = _mat(Color(0.55, 0.5, 0.42), 0.9)
+	M.sand = _mat(Color(0.58, 0.51, 0.45), 0.9)
 	M.sea = ShaderMaterial.new()
 	M.sea.shader = preload("res://art/shaders/sea.gdshader")
 	M.sea.set_shader_parameter("noise_tex", detail_textures()[0])
-	M.foliage = _mat(Color(0.08, 0.2, 0.15), 0.9)
-	M.foliage_b = _mat(Color(0.11, 0.24, 0.16), 0.9)
+	M.foliage = _mat(Color(0.09, 0.21, 0.19), 0.9)
+	M.foliage_b = _mat(Color(0.12, 0.25, 0.2), 0.9)
 	M.trunk = _mat(Color(0.18, 0.13, 0.1), 0.9)
 	M.mesh_fence = _mat(Color(0.25, 0.27, 0.3, 0.45), 0.6, 0.4)
 	M.mesh_fence.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	M.mud = ground_mat(Color(0.3, 0.26, 0.22), 0.0, 0.95, 0.75)
-	M.gravel = ground_mat(Color(0.4, 0.39, 0.37), 0.0, 0.75, 0.45)
+	M.mud = ground_mat(Color(0.32, 0.26, 0.25), 0.0, 0.95, 0.75)
+	M.gravel = ground_mat(Color(0.44, 0.4, 0.41), 0.0, 0.75, 0.45)
 	M.rust = _mat(Color(0.48, 0.27, 0.17), 0.7, 0.5)
 	M.blue_light = _mat(Color(0.4, 0.6, 1.0), 0.3, 0.0, Color(0.35, 0.55, 1.0), 3.0)
 
@@ -299,9 +299,37 @@ static func weather_model(root: Node) -> void:
 			var nm := m.resource_name.to_lower()
 			if "leaf" in nm or "pine" in nm or "petal" in nm:
 				m.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if not m.emission_enabled:
+				m.albedo_color = harmonize(m.albedo_color)
 			if m.emission_enabled or m.roughness < 0.55:
 				continue
 			add_detail(m, 0.6)
+
+
+## The settlement palette (PROJECT_LOG entry 21): dusty rose, warm stone, ochre,
+## muted teal, verdigris, indigo slate, aged brass, deep violet. Shared by everything
+## that is coloured in code.
+const PALETTE: Array[Color] = [
+	Color(0.62, 0.46, 0.46), Color(0.54, 0.47, 0.45), Color(0.66, 0.53, 0.38),
+	Color(0.3, 0.45, 0.46), Color(0.3, 0.53, 0.48), Color(0.22, 0.2, 0.32),
+	Color(0.62, 0.46, 0.25), Color(0.32, 0.24, 0.38), Color(0.52, 0.2, 0.24),
+	Color(0.14, 0.24, 0.2), Color(0.3, 0.19, 0.13),
+]
+
+
+## Pulls a colour part of the way toward the nearest palette swatch (by hue and
+## value), keeping its own lightness, so imported and code-built things share a family.
+static func harmonize(c: Color, amount := 0.35) -> Color:
+	var best := PALETTE[0]
+	var best_d := INF
+	for p in PALETTE:
+		var dh := absf(fposmod(c.h - p.h + 0.5, 1.0) - 0.5) * (c.s + p.s)
+		var d := dh * 2.0 + absf(c.v - p.v) + absf(c.s - p.s) * 0.5
+		if d < best_d:
+			best_d = d
+			best = p
+	var target := Color.from_hsv(best.h, lerpf(c.s, best.s, 0.6), c.v, c.a)
+	return c.lerp(target, amount)
 
 
 static var _mesh_cache := {}

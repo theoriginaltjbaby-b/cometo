@@ -4,7 +4,7 @@ extends InteriorMap3D
 
 
 func _build() -> void:
-	room(Vector3(10, 3.2, 7), ground_mat(Color(0.36, 0.3, 0.25), 0.0, 0.2, 0.0), M.panel)
+	room(Vector3(10, 3.2, 7), ground_mat(Color(0.4, 0.33, 0.3), 0.0, 0.2, 0.0), M.plaster_teal)
 	# counter along the back, a till on it
 	box(Vector3(1.5, 0.55, -2.2), Vector3(4.2, 1.1, 0.8), M.timber)
 	box(Vector3(2.6, 1.2, -2.2), Vector3(0.6, 0.2, 0.4), M.steel_dark, false)
@@ -26,6 +26,8 @@ func _build() -> void:
 	model("barrel", Vector3(3.9, 0, 2.6))
 	model("planter", Vector3(-3.9, 0, 2.7))
 	# a rug in the middle
-	box(Vector3(0, 0.01, 0.4), Vector3(3.6, 0.02, 2.4), M.canvas_teal, false)
+	box(Vector3(0, 0.01, 0.4), Vector3(3.6, 0.02, 2.4), M.rug, false)
+	SettlementKit.pot(self, Vector3(-4.0, 0, 2.2), "lavender", 1.2)
+	SettlementKit.lantern(self, Vector3(2.0, 1.2, -2.2), 0.8)
 	ceiling_lamp(Vector3(-1.5, 2.9, -0.5))
 	ceiling_lamp(Vector3(2.0, 2.9, -1.0))

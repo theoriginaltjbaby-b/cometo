@@ -219,17 +219,19 @@ func _colour(t: int, n: float) -> Color:
 	# rgb: sRGB colour; a: cobble amount for the wet-ground shader
 	var j := (n - 0.5) * (0.04 if t == PATH or t == SLAB else 0.012)
 	match t:
+		# the settlement palette: rose-grey paving, teal-green grass, rose sand,
+		# violet-grey rock
 		PATH:
-			return Color(0.62 + j, 0.59 + j, 0.55 + j, 1.0)
+			return Color(0.64 + j, 0.56 + j, 0.56 + j, 1.0)
 		GRASS:
-			return Color(0.25 + j, 0.36 + j * 1.5, 0.24 + j, 0.0)
+			return Color(0.22 + j, 0.35 + j * 1.5, 0.3 + j, 0.0)
 		WATER:
-			return Color(0.3, 0.29, 0.26, 0.0)
+			return Color(0.3, 0.27, 0.28, 0.0)
 		SAND:
-			return Color(0.72 + j, 0.65 + j, 0.53 + j, 0.0)
+			return Color(0.72 + j, 0.64 + j, 0.56 + j, 0.0)
 		SLAB:
-			return Color(0.6 + j, 0.59 + j, 0.56 + j, 1.0)
-	return Color(0.36 + j, 0.35 + j, 0.33 + j, 0.0)
+			return Color(0.62 + j, 0.56 + j, 0.56 + j, 1.0)
+	return Color(0.38 + j, 0.33 + j, 0.38 + j, 0.0)
 
 
 func _collision() -> void:

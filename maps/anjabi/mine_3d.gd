@@ -17,6 +17,7 @@ const TR_Z1 := 17.0
 
 func _ready() -> void:
 	_materials()
+	SettlementKit.materials(self)
 	_environment()
 	_ground()
 	_walls_and_fences()

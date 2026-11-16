@@ -18,6 +18,9 @@ var apron := false
 var satchel := true
 ## Draw a faint silhouette wherever the figure is hidden behind scenery (player only).
 var xray := false
+## Pull clothing toward the settlement palette. Off for the player, whose colours are
+## chosen in character creation and must stay exactly as picked.
+var harmonize_clothes := true
 
 
 func configure(look: Dictionary) -> void:
@@ -48,6 +51,10 @@ var _t := 0.0
 
 
 func _ready() -> void:
+	# clothing in the settlement palette's family (skin and hair untouched)
+	if harmonize_clothes:
+		coat = MapBuilder3D.harmonize(coat, 0.4)
+		accent = MapBuilder3D.harmonize(accent, 0.3)
 	var coat_m := _mat(coat, 0.85)
 	var dark_m := _mat(coat.darkened(0.3), 0.9)
 	var skin_m := _mat(skin, 0.7)

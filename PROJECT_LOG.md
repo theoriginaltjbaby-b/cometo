@@ -916,3 +916,27 @@ area.
   look (the kit is ready for it).
 - The planet is visible in play only through reflections; a lower camera would show the
   sky but changes the HeartGold framing.
+
+## 21. The settlement palette across the game (2026-11-15)
+
+The concept render as a palette and mood, not a layout: dusty rose, warm rose-grey stone,
+ochre, muted teal, verdigris, indigo slate, aged brass, deep violet, warm amber light.
+
+- `MapBuilder3D.PALETTE` and `harmonize()`: every imported model's (non-emissive)
+  materials are pulled 35% toward the nearest swatch, keeping their own lightness, so
+  Blender models and code-built pieces read as one family. Applied once per material.
+- Shared materials (`_materials()`, all maps): rose-grey paving and concrete,
+  violet-grey rock, teal panels, warm timber, rose and teal canvas, teal-green foliage,
+  warmer steel.
+- Town terrain colours: rose-grey paths and slabs, teal-green grass, warm sand,
+  violet-grey rock.
+- People's clothing is harmonised the same way (`Figure3D.harmonize_clothes`), except the
+  player and the character-creation preview, whose colours stay exactly as chosen.
+- The mine and every interior now load `SettlementKit` materials (ashlar stone).
+  The shop: teal plaster walls, rose rug, lavender, a counter lantern.
+- Golden hour is gentler (sun 0.85 -> 0.45 over 18:00-19:30), so dusk reads rose and
+  violet rather than red; interiors' ambient is cooler (lilac) under warm lamps.
+- Tests: slice 162/162, menu 42/42 (the created look check caught the player being
+  harmonised; fixed). Cost unchanged (2.2-3.1 ms desktop).
+- Limits: the beach at dawn still reads quite pink; models keep their shapes and only
+  shift colour.

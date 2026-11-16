@@ -17,6 +17,7 @@ extends MapBuilder3D
 func _ready() -> void:
 	indoor = true
 	_materials()
+	SettlementKit.materials(self)
 	_environment()
 	_build()
 	var spawns := Node3D.new()

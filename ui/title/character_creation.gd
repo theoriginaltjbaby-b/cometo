@@ -188,6 +188,7 @@ func _rebuild() -> void:
 	if _figure != null:
 		_figure.queue_free()
 	_figure = Figure3D.new()
+	_figure.harmonize_clothes = false
 	_figure.accent = Color(0.62, 0.42, 0.2)
 	_figure.configure({"hair": "bun", "long_coat": true})
 	Player3D.apply_look(_figure, profile()["player_look"])

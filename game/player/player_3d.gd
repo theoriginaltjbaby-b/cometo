@@ -49,6 +49,7 @@ func _init() -> void:
 	figure.configure({"hair": "bun", "hair_color": Color(0.1, 0.06, 0.05), "long_coat": true})
 	apply_look(figure, GameState.get_flag("player_look", {}))
 	figure.xray = true
+	figure.harmonize_clothes = false
 	add_child(figure)
 	reach = Area3D.new()
 	reach.collision_layer = 0
