@@ -733,3 +733,12 @@ game is unchanged; the prototype is one extra map reachable from the title (2D P
   in `art/baked2d/`.
 - Signs on buildings are drawn with the building, so its sort applies to them.
 - Untested on an iPhone or in a browser; builds in `export/` predate this entry.
+
+## 16. 2D prototype shelved (2026-11-15)
+
+- The director judged the baked 2D look not good enough: pre-rendered placeholder 3D
+  does not read as Golden Sun-style pixel art. Development stays 3D.
+- The title no longer offers 2D PROTOTYPE (`TitleScreen.show_prototype`, default false).
+  The 2D code, the bake tool, the baked art and its tests are kept: the 2D systems
+  (height-grid walking, y-sorting, 2D lighting and weather) can carry hand-drawn art if
+  the project turns 2D later. The map is still reachable in code as `anjabi_steps_2d`.

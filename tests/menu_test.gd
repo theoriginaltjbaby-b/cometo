@@ -22,7 +22,7 @@ func _ready() -> void:
 	# --- the title at rest
 	check(title.is_visible_in_tree() and not app.call("in_game") and app.get("main") == null, "boot shows the title and starts no game")
 	check(WorldTime.is_paused(), "the world clock is paused at the title")
-	var want := ["NEW GAME", "LOAD GAME", "OPTIONS", "2D PROTOTYPE"]
+	var want := ["NEW GAME", "LOAD GAME", "OPTIONS"]
 	if OS.has_feature("pc"):
 		want.append("QUIT")
 	check(Array(title.items()) == want, "menu offers %s (got %s)" % [str(want), str(title.items())])

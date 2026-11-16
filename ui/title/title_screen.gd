@@ -16,6 +16,8 @@ signal prototype_requested
 const TITLE := "COMETOGRAPHIA"
 const SLOT_NAMES := {"auto": "Autosave", "manual": "Manual save"}
 
+## The shelved 2D prototype (entry 15) stays in the code but is off the menu.
+var show_prototype := false
 ## A game is loaded behind the title (returned from the pause menu).
 var session_live := false
 ## False in tests: no fades or delays.
@@ -144,7 +146,8 @@ func show_menu() -> void:
 	_new = _item(_menu, "NEW GAME", _on_new)
 	_item(_menu, "LOAD GAME", show_load)
 	_item(_menu, "OPTIONS", show_options)
-	_item(_menu, "2D PROTOTYPE", func() -> void: prototype_requested.emit())
+	if show_prototype:
+		_item(_menu, "2D PROTOTYPE", func() -> void: prototype_requested.emit())
 	if OS.has_feature("pc"):
 		_item(_menu, "QUIT", func() -> void: quit_requested.emit())
 	_focus_first(_menu)
