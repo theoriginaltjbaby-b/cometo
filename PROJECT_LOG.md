@@ -150,6 +150,7 @@ All files were created 2026-11-14 unless noted.
 | `maps/interior_map_3d.gd` | `InteriorMap3D`: base for Pokemon-style interiors (cut-away room, exit mat, indoor light). |
 | `maps/anjabi/interiors/shop.gd` / `.tscn` | 12 Shop interior (`anjabi_shop`), the first interior. |
 | `data/dialogue/anjabi/shop_shelves.json` | Placeholder narration for the shop shelves. |
+| `docs/2d_migration_assessment.md` | Audit of the project and the proposed path to a native 2D tile-based rebuild (for review; nothing converted). |
 | `docs/map_design.md` | Overworld and interiors plan: door rules, interiors per landmark, spacing and routes. |
 | `tests/screenshot_interior.gd` / `.tscn` | Windowed shots of the interiors. |
 | `maps/settlement_kit.gd` | `SettlementKit`: the settlement art direction as reusable pieces (ashlar, plaster, slate, verdigris, brass; arcade bays, balustrades, stalls, townhouses, armillary, compass inlay, terminal, lanterns, string lights, vines, pots, benches, doorsteps; the distant skyline). |
@@ -940,3 +941,12 @@ ochre, muted teal, verdigris, indigo slate, aged brass, deep violet, warm amber 
   harmonised; fixed). Cost unchanged (2.2-3.1 ms desktop).
 - Limits: the beach at dawn still reads quite pink; models keep their shapes and only
   shift colour.
+
+## 22. 2D pivot: assessment only (2026-11-15)
+
+- The director proposed rebuilding Cometographia as a native 2D, tile-based CRPG.
+  `docs/2d_migration_assessment.md` audits the project (what survives, what is replaced,
+  what does not exist yet), proposes the 2D architecture, lists risks and a safe
+  migration path (tag + `2d` branch, vertical slice of the Steps first, 3D untouched).
+- No code changed. Awaiting the director's decisions on art source, movement, scale and
+  branching.
