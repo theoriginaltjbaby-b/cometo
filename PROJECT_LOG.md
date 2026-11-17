@@ -1354,4 +1354,7 @@ The director asked for modular pieces so new maps can be built in the look-test 
   history is the whole project's) and the `3d-final` tag. `3d-conversion` and
   `mine-yard-relayout` stay local.
 - Review zip of commit `b857283`: `export/COMETO_review_2026-11-16.zip` (80 MB).
+- Made public the same day at the director's request (the link showed a 404 to anyone
+  not signed in). Source, the director's supplied art and the docs are now visible to
+  anyone.
 
