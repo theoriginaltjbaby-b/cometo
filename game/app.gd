@@ -19,7 +19,7 @@ var fade_time := 0.6
 ## False in tests: no title fade-in.
 var animate := true
 ## Where NEW GAME starts: the 2D vertical slice on this branch.
-var start_map := "anjabi_steps"
+var start_map := "coast_village"
 
 var main: Node
 var title: TitleScreen

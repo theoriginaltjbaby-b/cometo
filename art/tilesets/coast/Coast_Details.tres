@@ -1,0 +1,60 @@
+[gd_resource type="TileSet" format=3]
+
+[ext_resource type="Texture2D" path="res://art/tilesets/coast/coast_details.png" id="1_jcbqq"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_wcain"]
+texture = ExtResource("1_jcbqq")
+0:0/size_in_atlas = Vector2i(3, 3)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(-16, 16)
+0:0/0/y_sort_origin = 6
+0:0/0/custom_data_0 = "porch_red"
+3:0/size_in_atlas = Vector2i(3, 3)
+3:0/0 = 0
+3:0/0/texture_origin = Vector2i(-16, 16)
+3:0/0/y_sort_origin = 6
+3:0/0/custom_data_0 = "porch_slate"
+13:0/size_in_atlas = Vector2i(1, 2)
+13:0/0 = 0
+13:0/0/texture_origin = Vector2i(0, 8)
+13:0/0/y_sort_origin = 5
+13:0/0/custom_data_0 = "window_small"
+9:0/size_in_atlas = Vector2i(2, 2)
+9:0/0 = 0
+9:0/0/texture_origin = Vector2i(-8, 8)
+9:0/0/y_sort_origin = 5
+9:0/0/custom_data_0 = "window_wide"
+11:0/size_in_atlas = Vector2i(2, 2)
+11:0/0 = 0
+11:0/0/texture_origin = Vector2i(-8, 8)
+11:0/0/y_sort_origin = 7
+11:0/0/custom_data_0 = "planter_small"
+6:0/size_in_atlas = Vector2i(3, 2)
+6:0/0 = 0
+6:0/0/texture_origin = Vector2i(-16, 8)
+6:0/0/y_sort_origin = 7
+6:0/0/custom_data_0 = "planter_flowers"
+14:0/size_in_atlas = Vector2i(1, 2)
+14:0/0 = 0
+14:0/0/texture_origin = Vector2i(0, 8)
+14:0/0/y_sort_origin = 2
+14:0/0/custom_data_0 = "roof_unit_a"
+15:0/size_in_atlas = Vector2i(1, 2)
+15:0/0 = 0
+15:0/0/texture_origin = Vector2i(0, 8)
+15:0/0/y_sort_origin = 2
+15:0/0/custom_data_0 = "roof_unit_b"
+
+[resource]
+physics_layer_0/collision_layer = 1
+custom_data_layer_0/name = "name"
+custom_data_layer_0/type = 4
+custom_data_layer_1/name = "solid_cells"
+custom_data_layer_1/type = 28
+custom_data_layer_2/name = "flat"
+custom_data_layer_2/type = 1
+custom_data_layer_3/name = "lamp"
+custom_data_layer_3/type = 2
+custom_data_layer_4/name = "flag"
+custom_data_layer_4/type = 4
+sources/0 = SubResource("TileSetAtlasSource_wcain")

@@ -1,0 +1,17 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: the station hall. Its interior is not built yet.]"
+    ]
+   ]
+  }
+ }
+}

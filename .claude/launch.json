@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web2d-build",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8062", "--bind", "127.0.0.1", "--directory", "export/web2d"],
+      "port": 8062
+    }
+  ]
+}

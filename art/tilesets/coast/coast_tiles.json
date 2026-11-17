@@ -1,0 +1,3514 @@
+{
+ "tile_size": 16,
+ "ground": {
+  "texture": "coast_ground.png",
+  "materials": [
+   "forest_floor",
+   "road",
+   "sand",
+   "dock",
+   "water"
+  ],
+  "variants": 4,
+  "solid": [
+   "forest_floor",
+   "water"
+  ]
+ },
+ "categories": {
+  "buildings": {
+   "texture": "coast_buildings.png",
+   "tiles": [
+    {
+     "name": "house_red_a",
+     "atlas": [
+      9,
+      0
+     ],
+     "size": [
+      7,
+      9
+     ],
+     "solid": [
+      [
+       0,
+       8
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       3,
+       8
+      ],
+      [
+       4,
+       8
+      ],
+      [
+       5,
+       8
+      ],
+      [
+       6,
+       8
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       5,
+       7
+      ],
+      [
+       6,
+       7
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       6,
+       6
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       6,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       5,
+       3
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       6,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       6,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "house_slate",
+     "atlas": [
+      16,
+      0
+     ],
+     "size": [
+      6,
+      9
+     ],
+     "solid": [
+      [
+       1,
+       8
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       3,
+       8
+      ],
+      [
+       4,
+       8
+      ],
+      [
+       5,
+       8
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       5,
+       7
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       5,
+       3
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       4,
+       1
+      ],
+      [
+       5,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "shop",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      9,
+      9
+     ],
+     "solid": [
+      [
+       0,
+       8
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       2,
+       8
+      ],
+      [
+       3,
+       8
+      ],
+      [
+       4,
+       8
+      ],
+      [
+       5,
+       8
+      ],
+      [
+       6,
+       8
+      ],
+      [
+       7,
+       8
+      ],
+      [
+       8,
+       8
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       3,
+       7
+      ],
+      [
+       4,
+       7
+      ],
+      [
+       5,
+       7
+      ],
+      [
+       6,
+       7
+      ],
+      [
+       7,
+       7
+      ],
+      [
+       8,
+       7
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       6,
+       6
+      ],
+      [
+       7,
+       6
+      ],
+      [
+       8,
+       6
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       7,
+       5
+      ],
+      [
+       8,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       6,
+       4
+      ],
+      [
+       7,
+       4
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       5,
+       3
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       7,
+       3
+      ],
+      [
+       8,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       6,
+       2
+      ],
+      [
+       7,
+       2
+      ],
+      [
+       8,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       8,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "house_red_b",
+     "atlas": [
+      22,
+      0
+     ],
+     "size": [
+      9,
+      8
+     ],
+     "solid": [
+      [
+       0,
+       6
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       2,
+       6
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       4,
+       6
+      ],
+      [
+       5,
+       6
+      ],
+      [
+       6,
+       6
+      ],
+      [
+       7,
+       6
+      ],
+      [
+       8,
+       6
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       6,
+       5
+      ],
+      [
+       7,
+       5
+      ],
+      [
+       8,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       5,
+       4
+      ],
+      [
+       6,
+       4
+      ],
+      [
+       7,
+       4
+      ],
+      [
+       8,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       4,
+       3
+      ],
+      [
+       5,
+       3
+      ],
+      [
+       6,
+       3
+      ],
+      [
+       7,
+       3
+      ],
+      [
+       8,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       6,
+       2
+      ],
+      [
+       7,
+       2
+      ],
+      [
+       8,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       8,
+       1
+      ],
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       5,
+       0
+      ],
+      [
+       6,
+       0
+      ],
+      [
+       7,
+       0
+      ],
+      [
+       8,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "roof_red_tl",
+     "atlas": [
+      34,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_tr",
+     "atlas": [
+      35,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_t",
+     "atlas": [
+      36,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_l",
+     "atlas": [
+      37,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_r",
+     "atlas": [
+      38,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_bl",
+     "atlas": [
+      39,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_br",
+     "atlas": [
+      40,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_b",
+     "atlas": [
+      41,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_c0",
+     "atlas": [
+      42,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_c1",
+     "atlas": [
+      43,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_c2",
+     "atlas": [
+      44,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_red_c3",
+     "atlas": [
+      45,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_tl",
+     "atlas": [
+      46,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_tr",
+     "atlas": [
+      47,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_t",
+     "atlas": [
+      0,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_l",
+     "atlas": [
+      1,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_r",
+     "atlas": [
+      2,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_bl",
+     "atlas": [
+      3,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_br",
+     "atlas": [
+      4,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_b",
+     "atlas": [
+      5,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_c0",
+     "atlas": [
+      6,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_c1",
+     "atlas": [
+      7,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_c2",
+     "atlas": [
+      8,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "roof_slate_c3",
+     "atlas": [
+      9,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "wall_plain",
+     "atlas": [
+      31,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 4
+    },
+    {
+     "name": "wall_end_l",
+     "atlas": [
+      32,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 4
+    },
+    {
+     "name": "wall_end_r",
+     "atlas": [
+      33,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 4
+    }
+   ]
+  },
+  "details": {
+   "texture": "coast_details.png",
+   "tiles": [
+    {
+     "name": "porch_red",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "porch_slate",
+     "atlas": [
+      3,
+      0
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "window_small",
+     "atlas": [
+      13,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 5
+    },
+    {
+     "name": "window_wide",
+     "atlas": [
+      9,
+      0
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 5
+    },
+    {
+     "name": "planter_small",
+     "atlas": [
+      11,
+      0
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 7
+    },
+    {
+     "name": "planter_flowers",
+     "atlas": [
+      6,
+      0
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 7
+    },
+    {
+     "name": "roof_unit_a",
+     "atlas": [
+      14,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 2
+    },
+    {
+     "name": "roof_unit_b",
+     "atlas": [
+      15,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 2
+    }
+   ]
+  },
+  "edges": {
+   "texture": "coast_edges.png",
+   "tiles": [
+    {
+     "name": "kerb_n",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": -7
+    },
+    {
+     "name": "kerb_e",
+     "atlas": [
+      1,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_ne",
+     "atlas": [
+      2,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_s",
+     "atlas": [
+      3,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_ns",
+     "atlas": [
+      4,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_es",
+     "atlas": [
+      5,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_nes",
+     "atlas": [
+      6,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_w",
+     "atlas": [
+      7,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_nw",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_ew",
+     "atlas": [
+      9,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_new",
+     "atlas": [
+      10,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_sw",
+     "atlas": [
+      11,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_nsw",
+     "atlas": [
+      12,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_esw",
+     "atlas": [
+      13,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "kerb_nesw",
+     "atlas": [
+      14,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_n",
+     "atlas": [
+      15,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 1
+    },
+    {
+     "name": "surf_e",
+     "atlas": [
+      16,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_ne",
+     "atlas": [
+      17,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_s",
+     "atlas": [
+      18,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_ns",
+     "atlas": [
+      19,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_es",
+     "atlas": [
+      20,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_nes",
+     "atlas": [
+      21,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_w",
+     "atlas": [
+      22,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_nw",
+     "atlas": [
+      23,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_ew",
+     "atlas": [
+      24,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_new",
+     "atlas": [
+      25,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_sw",
+     "atlas": [
+      26,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_nsw",
+     "atlas": [
+      27,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_esw",
+     "atlas": [
+      28,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_nesw",
+     "atlas": [
+      29,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_corner_nw",
+     "atlas": [
+      30,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 1
+    },
+    {
+     "name": "surf_corner_ne",
+     "atlas": [
+      31,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 1
+    },
+    {
+     "name": "surf_corner_sw",
+     "atlas": [
+      32,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "surf_corner_se",
+     "atlas": [
+      33,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    }
+   ]
+  },
+  "nature": {
+   "texture": "coast_nature.png",
+   "tiles": [
+    {
+     "name": "pine_stand_nw",
+     "atlas": [
+      5,
+      0
+     ],
+     "size": [
+      3,
+      8
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "pine_stand_sw",
+     "atlas": [
+      16,
+      0
+     ],
+     "size": [
+      3,
+      7
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "pine_stand_s",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      8,
+      7
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "pine_stand_se",
+     "atlas": [
+      33,
+      0
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "rose_bed",
+     "atlas": [
+      25,
+      0
+     ],
+     "size": [
+      3,
+      5
+     ],
+     "solid": [
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -4
+    },
+    {
+     "name": "rock_n_01",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      5,
+      8
+     ],
+     "solid": [
+      [
+       1,
+       7
+      ],
+      [
+       2,
+       7
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       3
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 0
+    },
+    {
+     "name": "rock_s_01",
+     "atlas": [
+      19,
+      0
+     ],
+     "size": [
+      6,
+      6
+     ],
+     "solid": [
+      [
+       1,
+       5
+      ],
+      [
+       2,
+       5
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       4,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       3,
+       4
+      ],
+      [
+       4,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "rock_s_02",
+     "atlas": [
+      30,
+      0
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -2
+    },
+    {
+     "name": "rock_s_03",
+     "atlas": [
+      40,
+      0
+     ],
+     "size": [
+      3,
+      1
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "driftwood",
+     "atlas": [
+      39,
+      0
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "pine",
+     "atlas": [
+      35,
+      0
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "pine_tall",
+     "atlas": [
+      28,
+      0
+     ],
+     "size": [
+      2,
+      4
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "pine_small",
+     "atlas": [
+      37,
+      0
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    }
+   ]
+  },
+  "props": {
+   "texture": "coast_props.png",
+   "tiles": [
+    {
+     "name": "generator",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      2,
+      9
+     ],
+     "solid": [
+      [
+       0,
+       8
+      ],
+      [
+       1,
+       8
+      ],
+      [
+       0,
+       7
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       0,
+       6
+      ],
+      [
+       1,
+       6
+      ],
+      [
+       0,
+       5
+      ],
+      [
+       1,
+       5
+      ],
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "machines",
+     "atlas": [
+      2,
+      0
+     ],
+     "size": [
+      4,
+      6
+     ],
+     "solid": [
+      [
+       0,
+       4
+      ],
+      [
+       1,
+       4
+      ],
+      [
+       2,
+       4
+      ],
+      [
+       0,
+       3
+      ],
+      [
+       1,
+       3
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -4
+    },
+    {
+     "name": "seawall",
+     "atlas": [
+      10,
+      0
+     ],
+     "size": [
+      6,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -4
+    },
+    {
+     "name": "fence_west",
+     "atlas": [
+      16,
+      0
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "lamp_post_a",
+     "atlas": [
+      6,
+      0
+     ],
+     "size": [
+      2,
+      4
+     ],
+     "solid": [
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 36,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "lamp_post_b",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      2,
+      4
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 28,
+     "z": 0,
+     "sort": -9
+    },
+    {
+     "name": "picket_fence",
+     "atlas": [
+      18,
+      0
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "z": 0,
+     "sort": 5
+    }
+   ]
+  },
+  "terrain": {
+   "texture": "coast_terrain.png",
+   "tiles": [
+    {
+     "name": "sea_north",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      8,
+      9
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": -2
+    },
+    {
+     "name": "sea_south",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      10,
+      7
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": 6
+    },
+    {
+     "name": "sea_east",
+     "atlas": [
+      45,
+      0
+     ],
+     "size": [
+      2,
+      4
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 0,
+     "sort": -6
+    },
+    {
+     "name": "pier",
+     "atlas": [
+      30,
+      0
+     ],
+     "size": [
+      8,
+      6
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -4
+    },
+    {
+     "name": "puddle_01",
+     "atlas": [
+      18,
+      0
+     ],
+     "size": [
+      12,
+      6
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -9
+    },
+    {
+     "name": "puddle_02",
+     "atlas": [
+      38,
+      0
+     ],
+     "size": [
+      7,
+      4
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -9
+    },
+    {
+     "name": "puddle_03",
+     "atlas": [
+      5,
+      9
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 4
+    },
+    {
+     "name": "puddle_04",
+     "atlas": [
+      0,
+      9
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 3
+    },
+    {
+     "name": "puddle_05",
+     "atlas": [
+      8,
+      9
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 4
+    },
+    {
+     "name": "puddle_06",
+     "atlas": [
+      10,
+      9
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "puddle_07",
+     "atlas": [
+      13,
+      9
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -9
+    },
+    {
+     "name": "puddle_08",
+     "atlas": [
+      19,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -9
+    },
+    {
+     "name": "puddle_09",
+     "atlas": [
+      12,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -5
+    },
+    {
+     "name": "puddle_10",
+     "atlas": [
+      36,
+      9
+     ],
+     "size": [
+      2,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 1
+    },
+    {
+     "name": "puddle_11",
+     "atlas": [
+      21,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -9
+    },
+    {
+     "name": "glint_01",
+     "atlas": [
+      16,
+      9
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -2
+    },
+    {
+     "name": "glint_02",
+     "atlas": [
+      23,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 0
+    },
+    {
+     "name": "glint_03",
+     "atlas": [
+      25,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_04",
+     "atlas": [
+      27,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_05",
+     "atlas": [
+      29,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -4
+    },
+    {
+     "name": "glint_06",
+     "atlas": [
+      38,
+      9
+     ],
+     "size": [
+      2,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 6
+    },
+    {
+     "name": "glint_07",
+     "atlas": [
+      46,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 5
+    },
+    {
+     "name": "glint_08",
+     "atlas": [
+      47,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 5
+    },
+    {
+     "name": "glint_09",
+     "atlas": [
+      40,
+      9
+     ],
+     "size": [
+      2,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 6
+    },
+    {
+     "name": "glint_10",
+     "atlas": [
+      33,
+      9
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_11",
+     "atlas": [
+      42,
+      9
+     ],
+     "size": [
+      2,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 6
+    },
+    {
+     "name": "glint_12",
+     "atlas": [
+      0,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 6
+    },
+    {
+     "name": "glint_13",
+     "atlas": [
+      34,
+      9
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_14",
+     "atlas": [
+      35,
+      9
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_15",
+     "atlas": [
+      31,
+      9
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -8
+    },
+    {
+     "name": "glint_16",
+     "atlas": [
+      1,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": 6
+    },
+    {
+     "name": "glint_17",
+     "atlas": [
+      44,
+      9
+     ],
+     "size": [
+      2,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -4
+    },
+    {
+     "name": "glint_18",
+     "atlas": [
+      2,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "z": 1,
+     "sort": -1
+    }
+   ]
+  }
+ }
+}

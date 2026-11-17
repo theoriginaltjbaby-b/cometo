@@ -1,12 +1,16 @@
 # COMETOGRAPHIA: handoff for a new agent
 
 Read this first. It tells you what the game is, where it stands, how the code is laid
-out, how to run and test it, and the rules of working on it. Written 2026-11-15.
+out, how to run and test it, and the rules of working on it. Written 2026-11-15,
+updated 2026-11-16 (through PROJECT_LOG entry 30).
+
+**`PROJECT_BIBLE.md` is the full reference** (current look, every map, both tile kits,
+file locations by need, pipelines, publishing). This file is the short briefing.
 
 Then read, in this order:
 1. `CLAUDE.md`: the project's standing instructions (short; binding).
 2. `PROJECT_LOG.md`: the running log. Its file index, limitations and changelog
-   (entries 1-23) are the full history.
+   (entries 1-30) are the full history.
 3. `docs/2d_migration_assessment.md`: why the game is becoming 2D and how.
 4. `docs/map_design.md`: the overworld and interiors model.
 5. `handoff_screens/` (in the handoff zip): what it looks like now.
@@ -36,15 +40,22 @@ Specifics:
 ## 2. Where it stands right now
 
 - **Active branch: `2d`.** The game is being rebuilt as a native 2D, tile-based RPG.
-  The first vertical slice is done and approved to build: the Steps plaza plus the shop
-  interior.
+- **Current look (since 2026-11-16, entries 26-29):** the director's look reference
+  `docs/reference/look_reference_2d_01.png` is the target: 16 px tiles, the full
+  480x270 view, chibi people about 9% of screen height, HeartGold-style stepping. The
+  coast tile kit (`art/tilesets/coast/`) is cut from that picture and has modular
+  houses; **NEW GAME starts in `coast_village`**, built only from those pieces.
+- Earlier 2D work still in the build: the Steps vertical slice (16 px code-drawn art,
+  entry 23), the 32 px Anjabi tileset library from the director's v0.1 sheets and the
+  Boardwalk / Tram Station map (entries 25, 27).
 - **The 3D version is preserved:** tag `3d-final`, branch `3d-conversion`. Its code is
   still present on `2d`, still runs and is still tested. **Do not delete or retire the
   3D code** until the director says so.
-- **The director's instruction after the slice:** stop for review before converting
-  more areas. Nothing beyond the slice has been requested yet.
-- **Live web build:** https://theoriginaltjbaby-b.github.io/cometo-web/ serves the 2D
-  slice. It comes from a separate public repo, `theoriginaltjbaby-b/cometo-web`, which
+- **Since the slice** the director has asked for: the Anjabi tileset (entry 25), the
+  Boardwalk map (27), the look-reference pass (28), modular pieces (29) and publishing
+  the coast build (30).
+- **Live web build:** https://theoriginaltjbaby-b.github.io/cometo-web/ serves the
+  coast kit build (site commit `1111cd9`; the Steps slice build is the one before). It comes from a separate public repo, `theoriginaltjbaby-b/cometo-web`, which
   holds only exported files, no source.
 
 ### What exists in the game
@@ -148,7 +159,8 @@ docs/            assessment, map design, reference images (greybox = canonical l
 ### The boot flow
 1. `project.godot` sets the main scene to `game/app.tscn`, which shows `TitleScreen`.
 2. NEW GAME goes to `CharacterCreation`, then `app._start("new", profile)`. That creates
-   `main.tscn` with `start_map = "anjabi_steps"` and calls `main.new_game()`.
+   `main.tscn` with `start_map = "coast_village"` (set in `game/app.gd`) and calls
+   `main.new_game()`.
 3. `new_game()` resets state, calls `load_map()` and starts the `quiet_mine` quest.
 4. LOAD and CONTINUE call `main` with `boot = "load:<slot>"`, which runs
    `SaveManager.load_game` and then `main.restore_world`.
@@ -156,7 +168,11 @@ docs/            assessment, map design, reference images (greybox = canonical l
    CONTINUE puts it back.
 
 ### How main hosts maps (`game/main.gd`)
-- `MAPS` maps an id to a scene. 2D ids: `anjabi_steps`, `anjabi_steps_shop`.
+- `MAPS` maps an id to a scene. 2D ids: `coast_village`, `coast_look_test`,
+  `anjabi_boardwalk`, `anjabi_tileset_test`, `anjabi_steps`, `anjabi_steps_shop`.
+- `TilesetWorld` (`world2d/tileset_world.gd`) extends `TileWorld` for maps painted as
+  Godot scenes with TileSets (all maps since entry 25); collision and lamps come from
+  tile custom data. See PROJECT_BIBLE section 5.
 - `_enter_map` checks the map type:
   - `TileWorld` goes into `view2d` (a SubViewport at native pixel size, `stretch_shrink 2`,
     pixel snapping) with a `GridPlayer`.
@@ -262,6 +278,8 @@ automatically.
     public actions.
 
 ## 7. Known limits and open threads
+(Current list: PROJECT_BIBLE section 9 and PROJECT_LOG section 8. The items below are
+from the Steps slice.)
 - All 2D art is placeholder. The final identity should come from real pixel art. The
   director: "avoid allowing placeholder aesthetics to dictate the final visual identity."
 - The character-creation preview is still 3D; the 2D sprite does use the chosen colours
@@ -274,6 +292,8 @@ automatically.
 - Nothing has been measured on an actual iPhone.
 
 ## 8. Likely next steps (await the director's go-ahead)
+(Superseded by PROJECT_BIBLE section 10, written 2026-11-16. The list below is from the
+Steps slice.)
 1. Review the slice. Then convert more of Anjabi to 2D from the greybox
    (`docs/reference/anjabi_greybox_01.png`, canonical) and `docs/map_design.md`.
 2. Replace the 2D creation preview with the sprite.

@@ -1,0 +1,17 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: the walkway east toward the Rainforest Approach. That route is not built yet.]"
+    ]
+   ]
+  }
+ }
+}

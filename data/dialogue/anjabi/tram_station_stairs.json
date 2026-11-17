@@ -1,0 +1,17 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: stairs down into the Tram / Subway Station. The station below is not built yet.]"
+    ]
+   ]
+  }
+ }
+}

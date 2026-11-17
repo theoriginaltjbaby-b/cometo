@@ -152,6 +152,7 @@ func _ready() -> void:
 	var app: Node = (load("res://game/app.tscn") as PackedScene).instantiate()
 	app.set("animate", false)
 	app.set("fade_time", 0.0)
+	app.set("start_map", "anjabi_steps")  # NEW GAME now starts in the coast village (entry 30)
 	add_child(app)
 	await _frames(4)
 	var title: TitleScreen = app.get("title")

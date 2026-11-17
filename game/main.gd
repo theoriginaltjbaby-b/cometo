@@ -12,6 +12,14 @@ const MAPS := {
 	# the 2D tile-based rebuild (branch 2d): the Steps vertical slice
 	"anjabi_steps": "res://world2d/maps/steps.tscn",
 	"anjabi_steps_shop": "res://world2d/maps/shop.tscn",
+	# test yard for the Anjabi TileSet library (32 px tiles, TilesetWorld)
+	"anjabi_tileset_test": "res://world2d/maps/Anjabi_Tileset_Test.tscn",
+	# 2D Anjabi at 32 px, from the concept map: the Boardwalk and the Tram / Subway Station
+	"anjabi_boardwalk": "res://world2d/maps/anjabi_boardwalk.tscn",
+	# look test at 16 px tiles: the director's look reference rebuilt from the coast kit
+	"coast_look_test": "res://world2d/maps/coast_look_test.tscn",
+	# a larger village built only from the coast kit's modular pieces
+	"coast_village": "res://world2d/maps/coast_village.tscn",
 }
 const START_MAP := "anjabi_town"
 const START_QUEST := "quiet_mine"

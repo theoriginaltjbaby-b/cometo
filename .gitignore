@@ -2,3 +2,4 @@
 .DS_Store
 *.tmp
 export/
+__pycache__/

@@ -1,0 +1,17 @@
+{
+ "entry": [
+  {
+   "goto": "look"
+  }
+ ],
+ "nodes": {
+  "look": {
+   "say": [
+    [
+     "",
+     "[PLACEHOLDER: the walkway back up to the Steps. The Steps are not joined to this map yet.]"
+    ]
+   ]
+  }
+ }
+}

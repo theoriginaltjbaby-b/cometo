@@ -1,0 +1,5622 @@
+{
+ "tile_size": 32,
+ "ground": {
+  "texture": "anjabi_ground.png",
+  "materials": [
+   "concrete",
+   "grass",
+   "red_dirt",
+   "metal",
+   "wood_deck",
+   "water"
+  ],
+  "variants": 4,
+  "solid": [
+   "water"
+  ],
+  "flags": {
+   "water": "placeholder drawn in code: no water art was supplied"
+  }
+ },
+ "categories": {
+  "terrain": {
+   "texture": "anjabi_terrain.png",
+   "tiles": [
+    {
+     "name": "dirt_rocks_a",
+     "atlas": [
+      14,
+      0
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.421,
+      0.441
+     ],
+     "flag": ""
+    },
+    {
+     "name": "dirt_rocks_b",
+     "atlas": [
+      0,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "dirt_cracked",
+     "atlas": [
+      2,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.438
+     ],
+     "flag": ""
+    },
+    {
+     "name": "mud_tracks",
+     "atlas": [
+      4,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "puddle_large",
+     "atlas": [
+      6,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.424,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "puddle_small",
+     "atlas": [
+      8,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.427,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "dirt_wet",
+     "atlas": [
+      10,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.432,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "furrows",
+     "atlas": [
+      12,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.432,
+      0.432
+     ],
+     "flag": ""
+    },
+    {
+     "name": "paving_a",
+     "atlas": [
+      14,
+      2
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.43,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "paving_b",
+     "atlas": [
+      0,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.441
+     ],
+     "flag": ""
+    },
+    {
+     "name": "paving_c",
+     "atlas": [
+      2,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.438
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_ledge",
+     "atlas": [
+      4,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.43,
+      0.432
+     ],
+     "flag": ""
+    },
+    {
+     "name": "cliff_face",
+     "atlas": [
+      6,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.504,
+      0.43
+     ],
+     "flag": ""
+    },
+    {
+     "name": "cliff_overhang_a",
+     "atlas": [
+      8,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.444,
+      0.43
+     ],
+     "flag": "irregular overhang shape; does not join the cliff face"
+    },
+    {
+     "name": "cliff_overhang_b",
+     "atlas": [
+      10,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.448,
+      0.432
+     ],
+     "flag": "irregular overhang shape; does not join the cliff face"
+    },
+    {
+     "name": "stairs_stone",
+     "atlas": [
+      12,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.43,
+      0.43
+     ],
+     "flag": ""
+    },
+    {
+     "name": "stairs_diagonal",
+     "atlas": [
+      14,
+      4
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.435,
+      0.435
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "leaf_litter",
+     "atlas": [
+      0,
+      6
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.418,
+      0.441
+     ],
+     "flag": ""
+    },
+    {
+     "name": "roots",
+     "atlas": [
+      2,
+      6
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.432,
+      0.438
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plank_bridge_a",
+     "atlas": [
+      5,
+      0
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      78,
+      64
+     ],
+     "scale": [
+      0.488,
+      0.489
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plank_bridge_b",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      66,
+      64
+     ],
+     "scale": [
+      0.446,
+      0.448
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "concrete_steps",
+     "atlas": [
+      11,
+      0
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      87,
+      54
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "rope_bridge",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      5,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      136,
+      60
+     ],
+     "scale": [
+      0.5,
+      0.496
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_plate",
+     "atlas": [
+      10,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.427,
+      0.41
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_grate",
+     "atlas": [
+      11,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.438,
+      0.41
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_planks",
+     "atlas": [
+      12,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.427,
+      0.41
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_plate_wet",
+     "atlas": [
+      13,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.427,
+      0.395
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_dirt",
+     "atlas": [
+      14,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.438,
+      0.395
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_moss",
+     "atlas": [
+      15,
+      6
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.432,
+      0.395
+     ],
+     "flag": ""
+    },
+    {
+     "name": "planks_wet",
+     "atlas": [
+      4,
+      6
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.566,
+      0.542
+     ],
+     "flag": ""
+    },
+    {
+     "name": "planks_mossy",
+     "atlas": [
+      6,
+      6
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.593,
+      0.538
+     ],
+     "flag": ""
+    },
+    {
+     "name": "planks_worn",
+     "atlas": [
+      8,
+      6
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.561,
+      0.542
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_n",
+     "atlas": [
+      0,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_e",
+     "atlas": [
+      1,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_ne",
+     "atlas": [
+      2,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_s",
+     "atlas": [
+      3,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_ns",
+     "atlas": [
+      4,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_es",
+     "atlas": [
+      5,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_nes",
+     "atlas": [
+      6,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_w",
+     "atlas": [
+      7,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_nw",
+     "atlas": [
+      8,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_ew",
+     "atlas": [
+      9,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_new",
+     "atlas": [
+      10,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_sw",
+     "atlas": [
+      11,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_nsw",
+     "atlas": [
+      12,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_esw",
+     "atlas": [
+      13,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_nesw",
+     "atlas": [
+      14,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_corner_ne",
+     "atlas": [
+      15,
+      8
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_corner_nw",
+     "atlas": [
+      0,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_corner_se",
+     "atlas": [
+      1,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "grass_edge_corner_sw",
+     "atlas": [
+      2,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_n",
+     "atlas": [
+      3,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_e",
+     "atlas": [
+      4,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_ne",
+     "atlas": [
+      5,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_s",
+     "atlas": [
+      6,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_ns",
+     "atlas": [
+      7,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_es",
+     "atlas": [
+      8,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_nes",
+     "atlas": [
+      9,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_w",
+     "atlas": [
+      10,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_nw",
+     "atlas": [
+      11,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_ew",
+     "atlas": [
+      12,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_new",
+     "atlas": [
+      13,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_sw",
+     "atlas": [
+      14,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_nsw",
+     "atlas": [
+      15,
+      9
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_esw",
+     "atlas": [
+      0,
+      10
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pier_edge_nesw",
+     "atlas": [
+      1,
+      10
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      1.0,
+      1.0
+     ],
+     "flag": ""
+    }
+   ]
+  },
+  "nature": {
+   "texture": "anjabi_nature.png",
+   "tiles": [
+    {
+     "name": "crop_rows",
+     "atlas": [
+      0,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.441,
+      0.435
+     ],
+     "flag": ""
+    },
+    {
+     "name": "undergrowth_glow",
+     "atlas": [
+      2,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.438,
+      0.448
+     ],
+     "flag": ""
+    },
+    {
+     "name": "broadleaf",
+     "atlas": [
+      4,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.418,
+      0.448
+     ],
+     "flag": ""
+    },
+    {
+     "name": "fern",
+     "atlas": [
+      6,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.416,
+      0.46
+     ],
+     "flag": ""
+    },
+    {
+     "name": "heliconia",
+     "atlas": [
+      8,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.424,
+      0.451
+     ],
+     "flag": ""
+    },
+    {
+     "name": "mushroom_grotto",
+     "atlas": [
+      10,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.432,
+      0.454
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lily_bush",
+     "atlas": [
+      12,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.444,
+      0.448
+     ],
+     "flag": ""
+    },
+    {
+     "name": "ginger_red",
+     "atlas": [
+      14,
+      3
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.432,
+      0.444
+     ],
+     "flag": ""
+    },
+    {
+     "name": "tree_vines_a",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      89
+     ],
+     "scale": [
+      0.475,
+      0.473
+     ],
+     "flag": ""
+    },
+    {
+     "name": "tree_canopy",
+     "atlas": [
+      4,
+      0
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      94
+     ],
+     "scale": [
+      0.487,
+      0.49
+     ],
+     "flag": ""
+    },
+    {
+     "name": "tree_vines_b",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      92
+     ],
+     "scale": [
+      0.487,
+      0.487
+     ],
+     "flag": ""
+    },
+    {
+     "name": "giant_tree_base",
+     "atlas": [
+      12,
+      0
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      127,
+      96
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": "the trunk is cut off flat at the top; it needs a crown or to stand at the map edge"
+    },
+    {
+     "name": "glowplant_teal",
+     "atlas": [
+      0,
+      5
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 24,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.457,
+      0.46
+     ],
+     "flag": ""
+    },
+    {
+     "name": "mushrooms_blue",
+     "atlas": [
+      2,
+      5
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 20,
+     "px": [
+      64,
+      57
+     ],
+     "scale": [
+      0.435,
+      0.438
+     ],
+     "flag": ""
+    }
+   ]
+  },
+  "architecture": {
+   "texture": "anjabi_architecture.png",
+   "tiles": [
+    {
+     "name": "wall_window_wide",
+     "atlas": [
+      12,
+      4
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      84
+     ],
+     "scale": [
+      0.442,
+      0.483
+     ],
+     "flag": "prefab modules have their own end caps; they abut as separate units, not one continuous wall"
+    },
+    {
+     "name": "wall_plain",
+     "atlas": [
+      9,
+      7
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      84
+     ],
+     "scale": [
+      0.525,
+      0.512
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_pipes",
+     "atlas": [
+      11,
+      7
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      84
+     ],
+     "scale": [
+      0.489,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_door",
+     "atlas": [
+      13,
+      7
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      84
+     ],
+     "scale": [
+      0.474,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_window_small",
+     "atlas": [
+      0,
+      10
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      48,
+      84
+     ],
+     "scale": [
+      0.505,
+      0.512
+     ],
+     "flag": "1.5 cells wide: leaves a gap when chained with other modules"
+    },
+    {
+     "name": "wall_end_a",
+     "atlas": [
+      10,
+      10
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      25,
+      84
+     ],
+     "scale": [
+      0.5,
+      0.506
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_end_b",
+     "atlas": [
+      11,
+      10
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      21,
+      84
+     ],
+     "scale": [
+      0.5,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_end_c",
+     "atlas": [
+      12,
+      10
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      32,
+      84
+     ],
+     "scale": [
+      0.485,
+      0.488
+     ],
+     "flag": ""
+    },
+    {
+     "name": "roof_slab_ac",
+     "atlas": [
+      0,
+      4
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      111,
+      96
+     ],
+     "scale": [
+      0.496,
+      0.497
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "roof_ac_unit",
+     "atlas": [
+      0,
+      13
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      51
+     ],
+     "scale": [
+      0.457,
+      0.459
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "roof_corner",
+     "atlas": [
+      2,
+      10
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      76
+     ],
+     "scale": [
+      0.496,
+      0.497
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "station_building",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      8,
+      4
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       5,
+       0
+      ],
+      [
+       6,
+       0
+      ],
+      [
+       7,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ],
+      [
+       5,
+       1
+      ],
+      [
+       6,
+       1
+      ],
+      [
+       7,
+       1
+      ],
+      [
+       0,
+       2
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       2
+      ],
+      [
+       3,
+       2
+      ],
+      [
+       4,
+       2
+      ],
+      [
+       5,
+       2
+      ],
+      [
+       6,
+       2
+      ],
+      [
+       7,
+       2
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      256,
+      101
+     ],
+     "scale": [
+      0.515,
+      0.513
+     ],
+     "flag": ""
+    },
+    {
+     "name": "ticket_booth",
+     "atlas": [
+      0,
+      7
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      85,
+      82
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": ""
+    },
+    {
+     "name": "platform_canopy",
+     "atlas": [
+      8,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      154,
+      88
+     ],
+     "scale": [
+      0.498,
+      0.503
+     ],
+     "flag": "one sprite, so people cannot walk under the roof; needs splitting into posts and an overhead layer"
+    },
+    {
+     "name": "stairwell_down",
+     "atlas": [
+      4,
+      4
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      107,
+      76
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "awning_rust",
+     "atlas": [
+      13,
+      10
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      85,
+      49
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "drain_pipe",
+     "atlas": [
+      2,
+      13
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      31,
+      59
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "vent_grille",
+     "atlas": [
+      3,
+      13
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      28,
+      25
+     ],
+     "scale": [
+      0.509,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "iwall_lamp",
+     "atlas": [
+      4,
+      10
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      96
+     ],
+     "scale": [
+      0.408,
+      0.508
+     ],
+     "flag": ""
+    },
+    {
+     "name": "iwall_vent",
+     "atlas": [
+      6,
+      10
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      96
+     ],
+     "scale": [
+      0.489,
+      0.508
+     ],
+     "flag": ""
+    },
+    {
+     "name": "iwall_pipes",
+     "atlas": [
+      8,
+      10
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      96
+     ],
+     "scale": [
+      0.529,
+      0.516
+     ],
+     "flag": ""
+    },
+    {
+     "name": "idoor_bulkhead",
+     "atlas": [
+      3,
+      7
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      96
+     ],
+     "scale": [
+      0.561,
+      0.545
+     ],
+     "flag": ""
+    },
+    {
+     "name": "idoor_open",
+     "atlas": [
+      6,
+      7
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      96
+     ],
+     "scale": [
+      0.565,
+      0.545
+     ],
+     "flag": ""
+    },
+    {
+     "name": "window_jungle",
+     "atlas": [
+      8,
+      4
+     ],
+     "size": [
+      4,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      128,
+      96
+     ],
+     "scale": [
+      0.5,
+      0.49
+     ],
+     "flag": ""
+    }
+   ]
+  },
+  "industrial": {
+   "texture": "anjabi_industrial.png",
+   "tiles": [
+    {
+     "name": "guideway_long",
+     "atlas": [
+      11,
+      3
+     ],
+     "size": [
+      5,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      160,
+      58
+     ],
+     "scale": [
+      0.483,
+      0.479
+     ],
+     "flag": ""
+    },
+    {
+     "name": "guideway_short",
+     "atlas": [
+      4,
+      6
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      55
+     ],
+     "scale": [
+      0.516,
+      0.514
+     ],
+     "flag": ""
+    },
+    {
+     "name": "guideway_curve",
+     "atlas": [
+      10,
+      0
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      84,
+      80
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": "drawn at a diagonal (isometric) angle that does not match the front-on buildings"
+    },
+    {
+     "name": "guideway_stub",
+     "atlas": [
+      9,
+      8
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      63
+     ],
+     "scale": [
+      0.593,
+      0.589
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pillar_large",
+     "atlas": [
+      6,
+      3
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      89
+     ],
+     "scale": [
+      0.504,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pillar_slim",
+     "atlas": [
+      10,
+      3
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      32,
+      69
+     ],
+     "scale": [
+      0.464,
+      0.466
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pillar_bracket",
+     "atlas": [
+      8,
+      3
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      35,
+      68
+     ],
+     "scale": [
+      0.443,
+      0.439
+     ],
+     "flag": ""
+    },
+    {
+     "name": "train",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      160,
+      83
+     ],
+     "scale": [
+      0.494,
+      0.491
+     ],
+     "flag": "three-quarter view; the track pieces are side-on, so it does not sit on them convincingly"
+    },
+    {
+     "name": "mine_entrance",
+     "atlas": [
+      5,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      160,
+      96
+     ],
+     "scale": [
+      0.483,
+      0.485
+     ],
+     "flag": ""
+    },
+    {
+     "name": "pipes_valve",
+     "atlas": [
+      7,
+      6
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      59
+     ],
+     "scale": [
+      0.457,
+      0.457
+     ],
+     "flag": ""
+    },
+    {
+     "name": "duct_elbow",
+     "atlas": [
+      11,
+      8
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      64
+     ],
+     "scale": [
+      0.5,
+      0.496
+     ],
+     "flag": ""
+    },
+    {
+     "name": "tanks",
+     "atlas": [
+      13,
+      8
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      53,
+      63
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "fence_panel",
+     "atlas": [
+      0,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      57
+     ],
+     "scale": [
+      0.525,
+      0.528
+     ],
+     "flag": ""
+    },
+    {
+     "name": "fence_gate",
+     "atlas": [
+      2,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      57
+     ],
+     "scale": [
+      0.667,
+      0.528
+     ],
+     "flag": "stretched a third wider to match the fence panel"
+    },
+    {
+     "name": "ac_unit",
+     "atlas": [
+      4,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      49,
+      50
+     ],
+     "scale": [
+      0.5,
+      0.495
+     ],
+     "flag": ""
+    },
+    {
+     "name": "vent_box",
+     "atlas": [
+      10,
+      6
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      33,
+      41
+     ],
+     "scale": [
+      0.434,
+      0.441
+     ],
+     "flag": ""
+    },
+    {
+     "name": "junction_box",
+     "atlas": [
+      6,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      44,
+      41
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "rope_fence",
+     "atlas": [
+      13,
+      6
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      88,
+      46
+     ],
+     "scale": [
+      0.5,
+      0.505
+     ],
+     "flag": ""
+    },
+    {
+     "name": "utility_pole",
+     "atlas": [
+      13,
+      0
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      52,
+      96
+     ],
+     "scale": [
+      0.481,
+      0.485
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_lamps",
+     "atlas": [
+      8,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      49
+     ],
+     "scale": [
+      0.457,
+      0.454
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_plain",
+     "atlas": [
+      10,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      64,
+      41
+     ],
+     "scale": [
+      0.489,
+      0.494
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_corner",
+     "atlas": [
+      12,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      57,
+      62
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": "walkway pieces are different widths and do not join on the grid"
+    },
+    {
+     "name": "walkway_tee",
+     "atlas": [
+      0,
+      8
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      72,
+      61
+     ],
+     "scale": [
+      0.497,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_cross",
+     "atlas": [
+      0,
+      3
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      80,
+      80
+     ],
+     "scale": [
+      0.5,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_trestle",
+     "atlas": [
+      3,
+      8
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      77,
+      64
+     ],
+     "scale": [
+      0.453,
+      0.454
+     ],
+     "flag": ""
+    },
+    {
+     "name": "walkway_viaduct",
+     "atlas": [
+      3,
+      3
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      84,
+      72
+     ],
+     "scale": [
+      0.497,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "conduit_corner_a",
+     "atlas": [
+      1,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.485,
+      0.457
+     ],
+     "flag": ""
+    },
+    {
+     "name": "conduit_corner_b",
+     "atlas": [
+      2,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.478,
+      0.464
+     ],
+     "flag": ""
+    },
+    {
+     "name": "conduit_cross",
+     "atlas": [
+      3,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.464,
+      0.395
+     ],
+     "flag": ""
+    },
+    {
+     "name": "conduit_tee",
+     "atlas": [
+      4,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      32,
+      32
+     ],
+     "scale": [
+      0.444,
+      0.432
+     ],
+     "flag": ""
+    },
+    {
+     "name": "wall_fan_unit",
+     "atlas": [
+      14,
+      10
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      43,
+      64
+     ],
+     "scale": [
+      0.467,
+      0.467
+     ],
+     "flag": ""
+    },
+    {
+     "name": "control_panel",
+     "atlas": [
+      0,
+      12
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      23,
+      46
+     ],
+     "scale": [
+      0.5,
+      0.505
+     ],
+     "flag": ""
+    },
+    {
+     "name": "switch_panel",
+     "atlas": [
+      5,
+      12
+     ],
+     "size": [
+      1,
+      1
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      18,
+      32
+     ],
+     "scale": [
+      0.462,
+      0.451
+     ],
+     "flag": ""
+    },
+    {
+     "name": "tool_board",
+     "atlas": [
+      6,
+      8
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      72,
+      64
+     ],
+     "scale": [
+      0.477,
+      0.474
+     ],
+     "flag": ""
+    },
+    {
+     "name": "turnstiles",
+     "atlas": [
+      0,
+      6
+     ],
+     "size": [
+      4,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      101,
+      64
+     ],
+     "scale": [
+      0.483,
+      0.481
+     ],
+     "flag": "gates are solid; passing through needs the sprite split and a gate script"
+    }
+   ]
+  },
+  "props": {
+   "texture": "anjabi_props.png",
+   "tiles": [
+    {
+     "name": "flood_lamp",
+     "atlas": [
+      10,
+      3
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 72,
+     "px": [
+      48,
+      84
+     ],
+     "scale": [
+      0.505,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "street_lamp",
+     "atlas": [
+      2,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 66,
+     "px": [
+      32,
+      73
+     ],
+     "scale": [
+      0.457,
+      0.456
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bollard_lamp",
+     "atlas": [
+      10,
+      14
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 28,
+     "px": [
+      28,
+      43
+     ],
+     "scale": [
+      0.509,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lamp_teal",
+     "atlas": [
+      11,
+      14
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 36,
+     "px": [
+      32,
+      54
+     ],
+     "scale": [
+      0.471,
+      0.474
+     ],
+     "flag": ""
+    },
+    {
+     "name": "floor_lamp",
+     "atlas": [
+      3,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 62,
+     "px": [
+      32,
+      73
+     ],
+     "scale": [
+      0.464,
+      0.462
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lantern_paper_a",
+     "atlas": [
+      4,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 44,
+     "px": [
+      29,
+      80
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lantern_paper_b",
+     "atlas": [
+      12,
+      14
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 40,
+     "px": [
+      27,
+      64
+     ],
+     "scale": [
+      0.458,
+      0.464
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lantern_paper_c",
+     "atlas": [
+      13,
+      14
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 40,
+     "px": [
+      25,
+      64
+     ],
+     "scale": [
+      0.463,
+      0.454
+     ],
+     "flag": ""
+    },
+    {
+     "name": "crate_stack",
+     "atlas": [
+      8,
+      12
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      78,
+      62
+     ],
+     "scale": [
+      0.5,
+      0.504
+     ],
+     "flag": ""
+    },
+    {
+     "name": "jerrycan_crate",
+     "atlas": [
+      14,
+      12
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      42,
+      33
+     ],
+     "scale": [
+      0.442,
+      0.44
+     ],
+     "flag": ""
+    },
+    {
+     "name": "cargo_cases",
+     "atlas": [
+      11,
+      12
+     ],
+     "size": [
+      3,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      86,
+      56
+     ],
+     "scale": [
+      0.503,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "luggage_cart",
+     "atlas": [
+      13,
+      3
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      79,
+      74
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": ""
+    },
+    {
+     "name": "terminal_kiosk",
+     "atlas": [
+      0,
+      14
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      49,
+      64
+     ],
+     "scale": [
+      0.467,
+      0.464
+     ],
+     "flag": ""
+    },
+    {
+     "name": "sign_gantry",
+     "atlas": [
+      0,
+      6
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      88,
+      90
+     ],
+     "scale": [
+      0.5,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "route_board",
+     "atlas": [
+      0,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      146,
+      96
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "vending_machine",
+     "atlas": [
+      9,
+      6
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      90
+     ],
+     "scale": [
+      0.474,
+      0.474
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bench_seats",
+     "atlas": [
+      8,
+      9
+     ],
+     "size": [
+      4,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      112,
+      58
+     ],
+     "scale": [
+      0.498,
+      0.504
+     ],
+     "flag": ""
+    },
+    {
+     "name": "service_counter",
+     "atlas": [
+      5,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      145,
+      96
+     ],
+     "scale": [
+      0.488,
+      0.49
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bunk_alcove",
+     "atlas": [
+      10,
+      0
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      160,
+      96
+     ],
+     "scale": [
+      0.513,
+      0.471
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bed",
+     "atlas": [
+      12,
+      9
+     ],
+     "size": [
+      4,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      114,
+      64
+     ],
+     "scale": [
+      0.487,
+      0.489
+     ],
+     "flag": ""
+    },
+    {
+     "name": "coat_rack",
+     "atlas": [
+      11,
+      6
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      40,
+      87
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "desk_holo",
+     "atlas": [
+      0,
+      3
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ],
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       1
+      ],
+      [
+       2,
+       1
+      ],
+      [
+       3,
+       1
+      ],
+      [
+       4,
+       1
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      137,
+      96
+     ],
+     "scale": [
+      0.481,
+      0.482
+     ],
+     "flag": ""
+    },
+    {
+     "name": "office_chair",
+     "atlas": [
+      13,
+      6
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      49,
+      80
+     ],
+     "scale": [
+      0.5,
+      0.503
+     ],
+     "flag": ""
+    },
+    {
+     "name": "shelf_wall",
+     "atlas": [
+      5,
+      3
+     ],
+     "size": [
+      5,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ],
+      [
+       3,
+       0
+      ],
+      [
+       4,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      140,
+      86
+     ],
+     "scale": [
+      0.5,
+      0.497
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bar_counter",
+     "atlas": [
+      3,
+      6
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      96,
+      67
+     ],
+     "scale": [
+      0.468,
+      0.465
+     ],
+     "flag": ""
+    },
+    {
+     "name": "bar_corner",
+     "atlas": [
+      2,
+      14
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      64,
+      63
+     ],
+     "scale": [
+      0.454,
+      0.457
+     ],
+     "flag": ""
+    },
+    {
+     "name": "stool",
+     "atlas": [
+      14,
+      14
+     ],
+     "size": [
+      1,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      27,
+      51
+     ],
+     "scale": [
+      0.5,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "round_table",
+     "atlas": [
+      4,
+      14
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      58,
+      64
+     ],
+     "scale": [
+      0.487,
+      0.489
+     ],
+     "flag": ""
+    },
+    {
+     "name": "guitar",
+     "atlas": [
+      5,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      32,
+      75
+     ],
+     "scale": [
+      0.508,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "rope_post",
+     "atlas": [
+      6,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      18,
+      78
+     ],
+     "scale": [
+      0.514,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "timber_bracket",
+     "atlas": [
+      6,
+      6
+     ],
+     "size": [
+      3,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      84,
+      77
+     ],
+     "scale": [
+      0.503,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "papers_books",
+     "atlas": [
+      0,
+      12
+     ],
+     "size": [
+      4,
+      2
+     ],
+     "solid": [],
+     "flat": true,
+     "lamp": 0,
+     "px": [
+      105,
+      48
+     ],
+     "scale": [
+      0.5,
+      0.505
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plant_broadleaf",
+     "atlas": [
+      4,
+      12
+     ],
+     "size": [
+      4,
+      2
+     ],
+     "solid": [
+      [
+       1,
+       0
+      ],
+      [
+       2,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      66,
+      64
+     ],
+     "scale": [
+      0.455,
+      0.454
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plant_bush",
+     "atlas": [
+      6,
+      14
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      41,
+      52
+     ],
+     "scale": [
+      0.5,
+      0.495
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plant_fern",
+     "atlas": [
+      8,
+      14
+     ],
+     "size": [
+      2,
+      2
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      44,
+      53
+     ],
+     "scale": [
+      0.494,
+      0.5
+     ],
+     "flag": ""
+    },
+    {
+     "name": "plant_hanging",
+     "atlas": [
+      7,
+      9
+     ],
+     "size": [
+      1,
+      3
+     ],
+     "solid": [],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      32,
+      72
+     ],
+     "scale": [
+      0.478,
+      0.48
+     ],
+     "flag": ""
+    },
+    {
+     "name": "lockers",
+     "atlas": [
+      0,
+      9
+     ],
+     "size": [
+      2,
+      3
+     ],
+     "solid": [
+      [
+       0,
+       0
+      ],
+      [
+       1,
+       0
+      ]
+     ],
+     "flat": false,
+     "lamp": 0,
+     "px": [
+      49,
+      76
+     ],
+     "scale": [
+      0.5,
+      0.497
+     ],
+     "flag": ""
+    }
+   ]
+  }
+ }
+}
