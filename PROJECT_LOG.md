@@ -1347,3 +1347,11 @@ The director asked for modular pieces so new maps can be built in the look-test 
 - `docs/ALL_SOURCE.txt` regenerated.
 - Entries 25-31 committed to `2d` in one commit (they had not been committed before).
 
+## 32. Source on GitHub (2026-11-16)
+
+- New private repo https://github.com/theoriginaltjbaby-b/cometo (remote `origin`),
+  created at the director's request with only the `2d` branch (default branch; its
+  history is the whole project's) and the `3d-final` tag. `3d-conversion` and
+  `mine-yard-relayout` stay local.
+- Review zip of commit `b857283`: `export/COMETO_review_2026-11-16.zip` (80 MB).
+

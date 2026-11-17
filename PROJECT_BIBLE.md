@@ -54,6 +54,10 @@ Set by the director on 2026-11-16 (PROJECT_LOG entries 26–29):
 `3d-conversion`; its code is still on `2d`, still runs and is still tested. Do not
 delete it until the director says so.
 
+**Source repo:** https://github.com/theoriginaltjbaby-b/cometo (private; remote
+`origin`). It holds the `2d` branch (default) and the `3d-final` tag; the local
+branches `3d-conversion` and `mine-yard-relayout` were not pushed.
+
 **NEW GAME** starts in **`coast_village`** (title → character creation → village).
 
 **Live web build:** https://theoriginaltjbaby-b.github.io/cometo-web/ — the coast
@@ -251,6 +255,7 @@ docs/               references, screenshots, design notes (ignored by Godot)
 | Day/night and weather | `core/world_time_manager.gd`, `core/weather_manager.gd`, `maps/proto2d/environment_controller_2d.gd` |
 | Export settings | `export_presets.cfg` (Web: threads off; `tools/`, `tests/`, `docs/`, `art/source/` excluded) |
 | Builds | `export/` (git-ignored): `web2d/`, `web/`, zips |
+| The source on GitHub | https://github.com/theoriginaltjbaby-b/cometo (private, branch `2d`) |
 | Every file and its purpose | `PROJECT_LOG.md` section 3 |
 | All source in one file | `docs/ALL_SOURCE.txt` (`python3 tools/bundle_source.py`) |
 
